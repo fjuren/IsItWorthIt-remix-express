@@ -1,0 +1,66 @@
+/* commenting below for now while trying tailwind */
+
+/* html {
+  font-family: 'Roboto', 'Helvetica', Arial, sans-serif;
+}
+
+
+body,
+h1,
+h2,
+h3,
+p,
+figure,
+figcaption,
+blockquote,
+dl,
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  color: #000;
+}
+
+p {
+  margin-bottom: 1.5em;
+}
+
+em {
+  font-style: italic;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+} */
