@@ -1,6 +1,7 @@
-// import { cssBundleHref } from "@remix-run/css-bundle";
+import { cssBundleHref } from '@remix-run/css-bundle';
 import type { LinksFunction } from '@remix-run/node';
 import {
+  Link,
   Links,
   LiveReload,
   Meta,
@@ -9,11 +10,10 @@ import {
   ScrollRestoration,
 } from '@remix-run/react';
 import faviconAssetUrl from './assets/favicon.ico';
-import globalStylesheet from './styles/global.css';
 import tailwindFontsStylesheet from './styles/tailwind.css';
+import './styles/global.css';
 
 export const links: LinksFunction = () => {
-  // ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
   return [
     {
       rel: 'icon',
@@ -22,12 +22,9 @@ export const links: LinksFunction = () => {
     },
     {
       rel: 'stylesheet',
-      href: globalStylesheet,
-    },
-    {
-      rel: 'stylesheet',
       href: tailwindFontsStylesheet,
     },
+    ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
   ];
 };
 
@@ -40,8 +37,15 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
-        <Outlet />
+      <body className="flex h-full flex-col justify-between bg-background text-foreground">
+        <header className="container mx-auto py-6">
+          <nav className="flex justify-between">
+            <Link to="/">Home</Link>
+          </nav>
+        </header>
+        <div className="flex-1">
+          <Outlet />
+        </div>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
