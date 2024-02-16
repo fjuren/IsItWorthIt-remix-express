@@ -1,13 +1,18 @@
 // import type { MetaFunction } from '@remix-run/node';
 
+import { Link } from '@remix-run/react';
+
 // export const meta: MetaFunction = () => {
 //   return [{ title: 'Home' }, { name: 'description', content: 'Homepage' }];
 // };
 
-export default function user() {
+export default function UserSettings() {
   return (
     <div>
-      <h1>profile page</h1>
+      <h1>Settings</h1>
+      <Link to=".." relative="path">
+        back
+      </Link>
     </div>
   );
 }

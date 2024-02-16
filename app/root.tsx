@@ -41,6 +41,7 @@ export default function App() {
         <header className="container mx-auto py-6">
           <nav className="flex justify-between">
             <Link to="/">Home</Link>
+            <Link to="/users/johndoe">Profile</Link>
           </nav>
         </header>
         <div className="flex-1">
