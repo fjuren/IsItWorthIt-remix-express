@@ -12,6 +12,7 @@ import {
 import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
 import './styles/global.css';
+import { GeneralErrorBoundary } from './components/error-boundary';
 
 export const links: LinksFunction = () => {
   return [
@@ -28,7 +29,12 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export default function App() {
+// export async function loader() {
+//   throw new Error('loader error');
+//   return json({});
+// }
+
+export function Document({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -44,13 +50,30 @@ export default function App() {
             <Link to="/users/johndoe">Profile</Link>
           </nav>
         </header>
-        <div className="flex-1">
-          <Outlet />
-        </div>
+        {children}
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
       </body>
     </html>
+  );
+}
+
+export default function App() {
+  // throw new Error('Component error');
+  return (
+    <Document>
+      <div className="flex-1">
+        <Outlet />
+      </div>
+    </Document>
+  );
+}
+
+export function ErrorBoundary() {
+  return (
+    <Document>
+      <GeneralErrorBoundary />
+    </Document>
   );
 }
