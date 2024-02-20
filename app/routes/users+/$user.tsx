@@ -1,13 +1,18 @@
 // import type { MetaFunction } from '@remix-run/node';
 
-import { LoaderFunctionArgs, json } from '@remix-run/node';
+import { LoaderFunctionArgs, MetaFunction, json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import { db } from 'app/utils/db.server';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { invariantResponse } from '~/utils/misc';
-// export const meta: MetaFunction = () => {
-//   return [{ title: 'Home' }, { name: 'description', content: 'Homepage' }];
-// };
+
+export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
+  const displayName = data?.user ?? params.user;
+  return [
+    { title: `${displayName}'s profile` },
+    { name: 'description', content: `${displayName}'s profile page` },
+  ];
+};
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const user = db.user.findFirst({

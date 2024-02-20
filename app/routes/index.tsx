@@ -4,7 +4,13 @@ import { GeneralErrorBoundary } from '~/components/error-boundary';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
-  return [{ title: 'Home' }, { name: 'description', content: 'Homepage' }];
+  return [
+    { title: 'Home | IsItWorthIt?' },
+    {
+      name: 'description',
+      content: 'Find games that are worth it for the price',
+    },
+  ];
 };
 
 interface dealsList {
@@ -29,39 +35,44 @@ interface dealsList {
   thumb: string;
 }
 
-const requestOptions = {
-  method: 'GET',
-};
+// const requestOptions = {
+//   method: 'GET',
+// };
 
-export async function loader() {
-  const gamesList = await fetch(
-    'https://www.cheapshark.com/api/1.0/deals',
-    requestOptions
-  );
-  return json(await gamesList.json());
-}
+// export async function loader() {
+//   const gamesList = await fetch(
+//     'https://www.cheapshark.com/api/1.0/deals',
+//     requestOptions
+//   );
+//   return json(await gamesList.json());
+// }
 
-export default function HomeRoute() {
-  const listOfDeals = useLoaderData<typeof loader>();
-  return (
-    <div>
-      <h1>Home</h1>
-      {listOfDeals.map((game: dealsList, index: number) => (
-        <div key={index}>
-          <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
-        </div>
-      ))}
-    </div>
-  );
-}
+// export default function HomeRoute() {
+//   // throw new Response('Not found', { status: 500 });
+//   const listOfDeals = useLoaderData<typeof loader>();
+//   return (
+//     <div>
+//       <h1>Home</h1>
+//       {listOfDeals.map((game: dealsList, index: number) => (
+//         <div key={index}>
+//           <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }
 
 export function ErrorBoundary() {
   return (
     <GeneralErrorBoundary
       statusHandlers={{
-        404: ({ params }) => (
-          <p>No user with the username {params.user} exists</p>
+        404: () => (
+          // {
+          // params
+          // }
+          <p>Page does not exist</p>
         ),
+        500: () => <p>Sorry, something went wrong! Try again later.</p>,
       }}
     />
   );

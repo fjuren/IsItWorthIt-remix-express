@@ -1,7 +1,6 @@
 import { cssBundleHref } from '@remix-run/css-bundle';
 import type { LinksFunction } from '@remix-run/node';
 import {
-  Link,
   Links,
   LiveReload,
   Meta,
@@ -13,6 +12,7 @@ import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
 import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
+import { Nav } from './components/UI/nav';
 
 export const links: LinksFunction = () => {
   return [
@@ -43,12 +43,9 @@ export function Document({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="flex h-full flex-col justify-between bg-background text-foreground">
-        <header className="container mx-auto py-6">
-          <nav className="flex justify-between">
-            <Link to="/">Home</Link>
-            <Link to="/users/johndoe">Profile</Link>
-          </nav>
+      <body className="flex h-full flex-col bg-background text-foreground">
+        <header className="">
+          <Nav />
         </header>
         {children}
         <ScrollRestoration />

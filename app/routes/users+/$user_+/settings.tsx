@@ -1,10 +1,13 @@
 // import type { MetaFunction } from '@remix-run/node';
 
-import { Link } from '@remix-run/react';
+import { Link, MetaFunction } from '@remix-run/react';
 
-// export const meta: MetaFunction = () => {
-//   return [{ title: 'Home' }, { name: 'description', content: 'Homepage' }];
-// };
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'Settings' },
+    { name: 'description', content: 'Settings page' },
+  ];
+};
 
 export default function UserSettings() {
   return (
