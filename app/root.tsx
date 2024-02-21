@@ -12,7 +12,7 @@ import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
 import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
-import { Nav } from './components/UI/nav';
+import { TopNav } from './components/UI/TopNav';
 
 export const links: LinksFunction = () => {
   return [
@@ -44,8 +44,8 @@ export function Document({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="flex h-full flex-col bg-background text-foreground">
-        <header className="h-full">
-          <Nav />
+        <header>
+          <TopNav />
         </header>
         {children}
         <ScrollRestoration />
@@ -60,9 +60,9 @@ export default function App() {
   // throw new Error('Component error');
   return (
     <Document>
-      <div className="flex-1">
+      <>
         <Outlet />
-      </div>
+      </>
     </Document>
   );
 }
