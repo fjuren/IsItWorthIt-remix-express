@@ -53,17 +53,17 @@ export default function HomeRoute() {
   // const listOfDeals = useLoaderData<typeof loader>();
   return (
     <>
-      <main className="flex h-full">
+      <div className="flex h-full">
         <SideNav />
         <main className="flex flex-col w-full h-full">
           <h1>Home</h1>
+          {/* {listOfDeals.map((game: dealsList, index: number) => (
+            <div key={index}>
+              <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
+            </div>
+          ))} */}
         </main>
-      </main>
-      {/* {listOfDeals.map((game: dealsList, index: number) => (
-        <div key={index}>
-          <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
-        </div>
-      ))} */}
+      </div>
     </>
   );
 }
