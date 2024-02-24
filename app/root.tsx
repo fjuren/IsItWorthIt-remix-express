@@ -44,9 +44,8 @@ export function Document({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="flex h-full flex-col bg-background text-foreground">
-        <header>
-          <TopNav />
-        </header>
+        {/* header in TopNav */}
+        <TopNav />
         {children}
         <ScrollRestoration />
         <Scripts />
