@@ -22,7 +22,7 @@ export function TopNav() {
           </ul>
 
           {/* Mobile top navigation */}
-          <ul className="flex md:hidden items-center justify-between h-16 bg-gray-300">
+          <ul className="flex md:hidden items-center justify-between h-16 bg-gray-300 z">
             <button className="grow px-3" onClick={() => setOpen(!open)}>
               Hamburger menu
             </button>
@@ -38,11 +38,18 @@ export function TopNav() {
 
       {/* Mobile menu (same as sidenav but for mobile) */}
       <aside
-        style={{ top: '11%' }}
-        className={`md:hidden absolute h-full bg-gray-300 ${
-          open ? 'w-full' : 'hidden'
+        className={`md:hidden ${
+          open
+            ? 'z-10 flex flex-col bg-gray-300 w-full h-full fixed overflow-x-hidden'
+            : 'hidden'
         } `}
       >
+        {/* <aside
+        // style={{ top: '10%' }}
+        className={`md:hidden z-10 fixed h-full bg-gray-300 ${
+          open ? 'w-full' : 'hidden'
+        } `}
+      > */}
         <nav>
           <li>
             <Link to="/">Placeholder</Link>

@@ -1,7 +1,6 @@
 import { json, MetaFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
-import { SideNav } from '~/components/UI/SideNav';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -36,34 +35,29 @@ interface dealsList {
   thumb: string;
 }
 
-// const requestOptions = {
-//   method: 'GET',
-// };
+const requestOptions = {
+  method: 'GET',
+};
 
-// export async function loader() {
-//   const gamesList = await fetch(
-//     'https://www.cheapshark.com/api/1.0/deals',
-//     requestOptions
-//   );
-//   return json(await gamesList.json());
-// }
+export async function loader() {
+  const gamesList = await fetch(
+    'https://www.cheapshark.com/api/1.0/deals',
+    requestOptions
+  );
+  return json(await gamesList.json());
+}
 
 export default function HomeRoute() {
   // throw new Response('Not found', { status: 500 });
-  // const listOfDeals = useLoaderData<typeof loader>();
+  const listOfDeals = useLoaderData<typeof loader>();
   return (
     <>
-      <div className="flex h-full">
-        <SideNav />
-        <main className="flex flex-col w-full h-full">
-          <h1>Home</h1>
-          {/* {listOfDeals.map((game: dealsList, index: number) => (
-            <div key={index}>
-              <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
-            </div>
-          ))} */}
-        </main>
-      </div>
+      <h1>Home</h1>
+      {listOfDeals.map((game: dealsList, index: number) => (
+        <div key={index}>
+          <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
+        </div>
+      ))}
     </>
   );
 }

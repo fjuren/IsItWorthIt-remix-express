@@ -6,9 +6,9 @@ export function SideNav() {
   return (
     <>
       {/* Desktop side navigation */}
-      <aside
+      <div
         className={`hidden md:flex flex-col h-full bg-gray-300 ${
-          open ? 'w-72' : 'w-20'
+          open ? 'w-60' : 'w-20'
         } relative`}
       >
         <button className="absolute right-0" onClick={() => setOpen(!open)}>
@@ -43,7 +43,7 @@ export function SideNav() {
             </li>
           </ul>
         </nav>
-      </aside>
+      </div>
       {/* Mobile side nav is contained in TopNav component as full screen menu */}
     </>
   );

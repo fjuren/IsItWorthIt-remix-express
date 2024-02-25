@@ -13,6 +13,7 @@ import tailwindFontsStylesheet from './styles/tailwind.css';
 import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
 import { TopNav } from './components/UI/TopNav';
+import { SideNav } from './components/UI/SideNav';
 
 export const links: LinksFunction = () => {
   return [
@@ -43,10 +44,18 @@ export function Document({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="flex h-full flex-col bg-background text-foreground">
+      <body>
         {/* header in TopNav */}
         <TopNav />
-        {children}
+
+        <div className="fixed flex w-full h-full">
+          {/* desktop sidenav (sidenav hidden on mobile) */}
+          <aside>
+            <SideNav />
+          </aside>
+          {/* main content */}
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
