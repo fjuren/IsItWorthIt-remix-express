@@ -7,7 +7,7 @@ export function SideNav() {
     <>
       {/* Desktop side navigation */}
       <div
-        className={`hidden md:flex flex-col h-full bg-gray-300 ${
+        className={`hidden md:flex flex-col h-full ${
           open ? 'w-60' : 'w-20'
         } relative`}
       >

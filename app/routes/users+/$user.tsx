@@ -40,9 +40,16 @@ export default function UsernameRoute() {
 export function ErrorBoundary() {
   return (
     <GeneralErrorBoundary
+      defaultStatusHandler={({ error }) => (
+        <p>
+          Default Error Handler: {error.status} - {error.data}
+        </p>
+      )}
       statusHandlers={{
-        404: ({ params }) => (
-          <p>No user with the username {params.user} exists</p>
+        404: ({ error, params }) => (
+          <p>
+            {error.status}: No user with the username {params.user} exists
+          </p>
         ),
       }}
     />

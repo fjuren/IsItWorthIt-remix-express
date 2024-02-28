@@ -14,6 +14,8 @@ import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
 import { TopNav } from './components/UI/TopNav';
 import { SideNav } from './components/UI/SideNav';
+import { ThemeProvider, useTheme } from './utils/theme-provider';
+import clsx from 'clsx';
 
 export const links: LinksFunction = () => {
   return [
@@ -36,8 +38,9 @@ export const links: LinksFunction = () => {
 // }
 
 export function Document({ children }: { children: React.ReactNode }) {
+  const [theme] = useTheme();
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className={clsx(theme)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -67,11 +70,13 @@ export function Document({ children }: { children: React.ReactNode }) {
 export default function App() {
   // throw new Error('Component error');
   return (
-    <Document>
-      <>
-        <Outlet />
-      </>
-    </Document>
+    <ThemeProvider>
+      <Document>
+        <>
+          <Outlet />
+        </>
+      </Document>
+    </ThemeProvider>
   );
 }
 

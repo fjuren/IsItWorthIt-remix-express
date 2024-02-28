@@ -4,6 +4,14 @@
   font-family: 'Roboto', 'Helvetica', Arial, sans-serif;
 } */
 
+html.dark {
+  --text-colour: white;
+  --background-colour: black;
+
+  color: var(--text-colour);
+  background-color: var(--background-colour);
+}
+
 body,
 h1,
 h2,
@@ -26,7 +34,6 @@ body {
   font-family: 'Roboto', sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: #333;
 }
 
 h1,
@@ -34,7 +41,7 @@ h2,
 h3 {
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
-  color: #000;
+  /* color: #000; */
 }
 
 p {
