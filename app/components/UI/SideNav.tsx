@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from '@remix-run/react';
 
 export function SideNav() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <>
       {/* Desktop side navigation */}

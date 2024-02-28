@@ -4,12 +4,17 @@ import { Theme, useTheme } from '~/utils/theme-provider';
 
 export function TopNav() {
   // ---- dark mode for mobile menu ----
-  const [theme] = useTheme();
+  const [theme, setTheme] = useTheme();
   const darkModeClasses =
     theme === Theme.DARK ? 'bg-black text-white' : 'bg-white text-black';
   // ------------------------------------
-
   const [open, setOpen] = useState(false);
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) =>
+      prevTheme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT
+    );
+  };
 
   return (
     <>
@@ -19,6 +24,9 @@ export function TopNav() {
           <ul className="hidden md:flex items-center justify-between h-16">
             <li className="grow px-3">
               <Link to="/">Home (logo)</Link>
+            </li>
+            <li>
+              <button onClick={toggleTheme}>toggle</button>
             </li>
             <li className="flex-none px-3">
               <Link to="/users/johndoe">Sign up</Link>
@@ -69,6 +77,9 @@ export function TopNav() {
             </li>
             <li>
               <Link to="/">Placeholder</Link>
+            </li>
+            <li>
+              <button onClick={toggleTheme}>toggle</button>
             </li>
           </ul>
         </nav>

@@ -36,37 +36,29 @@ interface dealsList {
   thumb: string;
 }
 
-const requestOptions = {
-  method: 'GET',
-};
+// const requestOptions = {
+//   method: 'GET',
+// };
 
-export async function loader() {
-  // throw new Response('Not found', { status: 500 });
-  const gamesList = await fetch(
-    'https://www.cheapshark.com/api/1.0/deals',
-    requestOptions
-  );
-  return json(await gamesList.json());
-}
+// export async function loader() {
+//   // throw new Response('Not found', { status: 500 });
+//   const gamesList = await fetch(
+//     'https://www.cheapshark.com/api/1.0/deals',
+//     requestOptions
+//   );
+//   return json(await gamesList.json());
+// }
 
 export default function HomeRoute() {
-  const listOfDeals = useLoaderData<typeof loader>();
-  const [, setTheme] = useTheme();
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) =>
-      prevTheme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT
-    );
-  };
+  // const listOfDeals = useLoaderData<typeof loader>();
   return (
     <>
       <h1>Home</h1>
-      <button onClick={toggleTheme}>toggle</button>
-      {listOfDeals.map((game: dealsList, index: number) => (
+      {/* {listOfDeals.map((game: dealsList, index: number) => (
         <div key={index}>
           <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
         </div>
-      ))}
+      ))} */}
     </>
   );
 }
