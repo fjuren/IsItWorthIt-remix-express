@@ -4,7 +4,6 @@ import {
   Links,
   LiveReload,
   Meta,
-  Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
@@ -12,9 +11,7 @@ import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
 import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
-import { TopNav } from './components/UI/TopNav';
-import { SideNav } from './components/UI/SideNav';
-import { ThemeProvider, useTheme } from './utils/theme-provider';
+import { useTheme } from './utils/theme-provider';
 import clsx from 'clsx';
 
 export const links: LinksFunction = () => {
@@ -32,51 +29,23 @@ export const links: LinksFunction = () => {
   ];
 };
 
-// export async function loader() {
-//   throw new Error('loader error');
-//   return json({});
-// }
-
 export function Document({ children }: { children: React.ReactNode }) {
   const [theme] = useTheme();
   return (
     <html lang="en" className={clsx(theme)}>
       <head>
+        <Meta />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
         <Links />
       </head>
       <body>
-        {/* header in TopNav */}
-        <TopNav />
-
-        <div className="fixed flex w-full h-full">
-          {/* desktop sidenav (sidenav hidden on mobile) */}
-          <aside>
-            <SideNav />
-          </aside>
-          {/* main content */}
-          <main className="flex-1 overflow-auto">{children}</main>
-        </div>
+        {children}
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
       </body>
     </html>
-  );
-}
-
-export default function App() {
-  // throw new Error('Component error');
-  return (
-    <ThemeProvider>
-      <Document>
-        <>
-          <Outlet />
-        </>
-      </Document>
-    </ThemeProvider>
   );
 }
 

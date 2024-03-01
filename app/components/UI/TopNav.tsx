@@ -29,10 +29,10 @@ export function TopNav() {
               <button onClick={toggleTheme}>toggle</button>
             </li>
             <li className="flex-none px-3">
-              <Link to="/users/johndoe">Sign up</Link>
+              <Link to="/signup">Sign up</Link>
             </li>
             <li className="flex-none px-3">
-              <Link to="/users/johndoe">Login</Link>
+              <Link to="/login">Login</Link>
             </li>
           </ul>
 
@@ -42,10 +42,10 @@ export function TopNav() {
               Hamburger menu
             </button>
             <li className="flex-none px-3">
-              <Link to="/users/johndoe">Sign up</Link>
+              <Link to="/signup">Sign up</Link>
             </li>
             <li className="flex-none px-3">
-              <Link to="/users/johndoe">Login</Link>
+              <Link to="/login">Login</Link>
             </li>
           </ul>
         </nav>
