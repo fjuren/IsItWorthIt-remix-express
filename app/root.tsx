@@ -4,6 +4,7 @@ import {
   Links,
   LiveReload,
   Meta,
+  Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
@@ -11,7 +12,7 @@ import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
 import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
-import { useTheme } from './utils/theme-provider';
+import { ThemeProvider, useTheme } from './utils/theme-provider';
 import clsx from 'clsx';
 
 export const links: LinksFunction = () => {
@@ -31,6 +32,8 @@ export const links: LinksFunction = () => {
 
 export function Document({ children }: { children: React.ReactNode }) {
   const [theme] = useTheme();
+  // throw new Response('Not found', { status: 500 });
+
   return (
     <html lang="en" className={clsx(theme)}>
       <head>
@@ -46,6 +49,14 @@ export function Document({ children }: { children: React.ReactNode }) {
         <LiveReload />
       </body>
     </html>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <Outlet />
+    </ThemeProvider>
   );
 }
 
