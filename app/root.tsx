@@ -10,7 +10,7 @@ import {
 } from '@remix-run/react';
 import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
-import './styles/global.css';
+// import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
 import { ThemeProvider, useTheme } from './utils/theme-provider';
 import clsx from 'clsx';
@@ -42,7 +42,7 @@ export function Document({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Links />
       </head>
-      <body>
+      <body className="font-sans">
         {children}
         <ScrollRestoration />
         <Scripts />

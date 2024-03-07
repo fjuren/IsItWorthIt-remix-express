@@ -2,6 +2,15 @@ import { json, MetaFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '~/components/UI/Card';
+
 // look at data mutations
 export const meta: MetaFunction = () => {
   return [
@@ -55,7 +64,24 @@ export default function HomeRoute() {
       <h1>Home</h1>
       {listOfDeals.map((game: dealsList, index: number) => (
         <div key={index}>
-          <pre className="flex flex-col ">{JSON.stringify(game)}</pre>
+          <Card>
+            <CardHeader>
+              <img src={game.thumb} alt="" />
+              <CardTitle>{game.title}</CardTitle>
+              <CardDescription>
+                Price: {game.normalPrice} Discount: {game.salePrice}{' '}
+                {game.savings}% off
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Card Content</p>
+            </CardContent>
+            <CardFooter>
+              <p>Comments</p>
+              <p>Save</p>
+            </CardFooter>
+          </Card>
+          {/* <pre className="flex flex-col ">{JSON.stringify(game)}</pre> */}
         </div>
       ))}
     </>

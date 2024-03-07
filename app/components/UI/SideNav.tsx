@@ -7,7 +7,7 @@ export function SideNav() {
     <>
       {/* Desktop side navigation */}
       <div
-        className={`hidden md:flex flex-col h-full ${
+        className={`hidden md:flex flex-col h-full border-r border-black ${
           open ? 'w-60' : 'w-20'
         } relative`}
       >
@@ -31,10 +31,10 @@ export function SideNav() {
           </svg>
         </button>
         <nav>
-          <li>
-            <Link to="/">Placeholder</Link>
-          </li>
           <ul className="flex-col ">
+            <li>
+              <Link to="/">Placeholder</Link>
+            </li>
             <li>
               <Link to="/">Placeholder</Link>
             </li>

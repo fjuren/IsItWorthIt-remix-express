@@ -19,7 +19,7 @@ export function TopNav() {
   return (
     <>
       <header className="relative">
-        <nav className="h-full">
+        <nav className="h-full border-b border-black">
           {/* Desktop top navigation */}
           <ul className="hidden md:flex items-center justify-between h-16">
             <li className="grow px-3">
