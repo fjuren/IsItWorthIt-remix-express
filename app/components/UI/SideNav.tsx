@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from '@remix-run/react';
 
 export function SideNav() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <>
       {/* Desktop side navigation */}
@@ -33,7 +33,7 @@ export function SideNav() {
         <nav>
           <ul className="flex-col ">
             <li>
-              <Link to="/">Placeholder</Link>
+              <Link to="/">Games</Link>
             </li>
             <li>
               <Link to="/">Placeholder</Link>

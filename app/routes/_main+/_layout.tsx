@@ -15,7 +15,7 @@ export default function MainLayout() {
           <SideNav />
         </aside>
         {/* main content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto md:w-full">
           <Outlet />
         </main>
       </div>

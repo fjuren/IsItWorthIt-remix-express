@@ -62,9 +62,9 @@ export default function HomeRoute() {
   return (
     <>
       <h1>Home</h1>
-      {listOfDeals.map((game: dealsList, index: number) => (
-        <div key={index}>
-          <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3">
+        {listOfDeals.map((game: dealsList, index: number) => (
+          <Card key={index}>
             <CardHeader>
               <img src={game.thumb} alt="" />
               <CardTitle>{game.title}</CardTitle>
@@ -73,17 +73,15 @@ export default function HomeRoute() {
                 {game.savings}% off
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p>Card Content</p>
-            </CardContent>
+            <CardContent>{/* <p>Card Content</p> */}</CardContent>
             <CardFooter>
-              <p>Comments</p>
-              <p>Save</p>
+              {/* <p>Comments</p>
+              <p>Save</p> */}
             </CardFooter>
           </Card>
-          {/* <pre className="flex flex-col ">{JSON.stringify(game)}</pre> */}
-        </div>
-      ))}
+          // {/* <pre className="flex flex-col ">{JSON.stringify(game)}</pre> */}
+        ))}
+      </div>
     </>
   );
 }

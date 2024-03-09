@@ -1,20 +1,15 @@
 import { Link } from '@remix-run/react';
 import { useState } from 'react';
-import { Theme, useTheme } from '~/utils/theme-provider';
+// import { Theme, useTheme } from '~/utils/theme-provider';
 
 export function TopNav() {
-  // ---- dark mode for mobile menu ----
-  const [theme, setTheme] = useTheme();
-  const darkModeClasses =
-    theme === Theme.DARK ? 'bg-black text-white' : 'bg-white text-black';
-  // ------------------------------------
   const [open, setOpen] = useState(false);
 
-  const toggleTheme = () => {
-    setTheme((prevTheme) =>
-      prevTheme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT
-    );
-  };
+  // const toggleTheme = () => {
+  //   setTheme((prevTheme) =>
+  //     prevTheme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT
+  //   );
+  // };
 
   return (
     <>
@@ -25,9 +20,7 @@ export function TopNav() {
             <li className="grow px-3">
               <Link to="/">Home (logo)</Link>
             </li>
-            <li>
-              <button onClick={toggleTheme}>toggle</button>
-            </li>
+            <li>{/* <button onClick={toggleTheme}>toggle</button> */}</li>
             <li className="flex-none px-3">
               <Link to="/signup">Sign up</Link>
             </li>
@@ -57,30 +50,21 @@ export function TopNav() {
           open
             ? 'z-10 flex flex-col w-full h-full fixed overflow-x-hidden'
             : 'hidden'
-        } ${
-          darkModeClasses // Handles mobile menu dark mode
-        }`}
+        } bg-inherit dark: bg-inherit
+        `}
       >
-        {/* <aside
-        // style={{ top: '10%' }}
-        className={`md:hidden z-10 fixed h-full bg-gray-300 ${
-          open ? 'w-full' : 'hidden'
-        } `}
-      > */}
         <nav>
-          <li>
-            <Link to="/">Placeholder</Link>
-          </li>
           <ul className="flex-col ">
             <li>
-              <Link to="/">Placeholder</Link>
+              <Link to="/">Games</Link>
             </li>
             <li>
               <Link to="/">Placeholder</Link>
             </li>
             <li>
-              <button onClick={toggleTheme}>toggle</button>
+              <Link to="/">Placeholder</Link>
             </li>
+            <li>{/* <button onClick={toggleTheme}>toggle</button> */}</li>
           </ul>
         </nav>
       </aside>

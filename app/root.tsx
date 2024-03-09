@@ -12,8 +12,6 @@ import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
 // import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
-import { ThemeProvider, useTheme } from './utils/theme-provider';
-import clsx from 'clsx';
 
 export const links: LinksFunction = () => {
   return [
@@ -31,18 +29,17 @@ export const links: LinksFunction = () => {
 };
 
 export function Document({ children }: { children: React.ReactNode }) {
-  const [theme] = useTheme();
   // throw new Response('Not found', { status: 500 });
 
   return (
-    <html lang="en" className={clsx(theme)}>
+    <html lang="en" className="dark">
       <head>
         <Meta />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Links />
       </head>
-      <body className="font-sans">
+      <body className="font-sans ">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -53,11 +50,7 @@ export function Document({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return (
-    <ThemeProvider>
-      <Outlet />
-    </ThemeProvider>
-  );
+  return <Outlet />;
 }
 
 export function ErrorBoundary() {
