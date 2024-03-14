@@ -72,12 +72,9 @@ export default function HomeRoute() {
                 Price: {game.normalPrice} Discount: {game.salePrice}{' '}
                 {game.savings}% off
               </CardDescription>
+              <CardContent>{/* <p>Card Content</p> */}</CardContent>
             </CardHeader>
-            <CardContent>{/* <p>Card Content</p> */}</CardContent>
-            <CardFooter>
-              {/* <p>Comments</p>
-              <p>Save</p> */}
-            </CardFooter>
+            <CardFooter></CardFooter>
           </Card>
           // {/* <pre className="flex flex-col ">{JSON.stringify(game)}</pre> */}
         ))}
