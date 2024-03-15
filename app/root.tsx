@@ -32,7 +32,7 @@ export function Document({ children }: { children: React.ReactNode }) {
   // throw new Response('Not found', { status: 500 });
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="">
       <head>
         <Meta />
         <meta charSet="utf-8" />
