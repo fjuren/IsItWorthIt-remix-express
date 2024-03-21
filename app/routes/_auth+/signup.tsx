@@ -12,6 +12,7 @@ import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
+import { FieldErrorsList } from '~/utils/misc';
 
 export const meta: MetaFunction = () => {
   return [
@@ -104,8 +105,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function SignupRoute() {
   const actionData = useActionData<typeof action>();
+
   const formHasErrors = false; // placeholder
   const hasErrors = false; // placeholder
+  const fieldErrors = actionData?.errors.fieldErrors; // placeholder
+  const formErrors = null; // placeholder
+
+  console.log(actionData?.errors.fieldErrors);
 
   return (
     <div>
@@ -116,7 +122,7 @@ export default function SignupRoute() {
         <div className="w-80 ">
           <Form
             method="post"
-            aria-invalid={formHasErrors || undefined}
+            aria-invalid={formHasErrors}
             aria-describedby={formHasErrors ? 'form-error' : undefined}
           >
             <div>
@@ -125,19 +131,32 @@ export default function SignupRoute() {
                 id="firstName"
                 name="firstName"
                 type="string"
-                aria-invalid={hasErrors || undefined} //TODO make this conditional per error logic
+                aria-invalid={hasErrors} //TODO make this conditional per error logic
                 aria-describedby={hasErrors ? 'firstName-error' : undefined}
                 autoFocus
               />
               <div>
-                <ul id="firstName-error">
-                  <li>{/*TODO error message - create an error utility */}</li>
-                </ul>
+                <FieldErrorsList
+                  data={fieldErrors?.firstName}
+                  errorID={'firstName-error'}
+                />
               </div>
             </div>
             <div>
               <Label htmlFor="lastName">Last name (Optional)</Label>
-              <Input id="lastName" name="lastName" type="string" />
+              <Input
+                id="lastName"
+                name="lastName"
+                type="string"
+                aria-invalid={hasErrors}
+                aria-describedby={hasErrors ? 'lastName-error' : undefined}
+              />
+              <div>
+                <FieldErrorsList
+                  data={fieldErrors?.lastName}
+                  errorID={'lastName-error'}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="username">Username</Label>
@@ -145,8 +164,16 @@ export default function SignupRoute() {
                 id="username"
                 name="username"
                 type="string"
+                aria-invalid={hasErrors}
+                aria-describedby={hasErrors ? 'username-error' : undefined}
                 // required
               />
+              <div>
+                <FieldErrorsList
+                  data={fieldErrors?.username}
+                  errorID={'username-error'}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
@@ -154,8 +181,16 @@ export default function SignupRoute() {
                 id="email"
                 name="email"
                 type="email"
+                aria-invalid={hasErrors}
+                aria-describedby={hasErrors ? 'email-error' : undefined}
                 // required
               />
+              <div>
+                <FieldErrorsList
+                  data={fieldErrors?.email}
+                  errorID={'email-error'}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
@@ -163,8 +198,16 @@ export default function SignupRoute() {
                 id="password"
                 name="password"
                 type="password"
+                aria-invalid={hasErrors}
+                aria-describedby={hasErrors ? 'password-error' : undefined}
                 // required
               />
+              <div>
+                <FieldErrorsList
+                  data={fieldErrors?.password}
+                  errorID={'password-error'}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="confirmPassword">Confirm password</Label>
@@ -172,8 +215,18 @@ export default function SignupRoute() {
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
+                aria-invalid={hasErrors}
+                aria-describedby={
+                  hasErrors ? 'confirmPassword-error' : undefined
+                }
                 // required
               />
+              <div>
+                <FieldErrorsList
+                  data={fieldErrors?.confirmPassword}
+                  errorID={'confirmPassword-error'}
+                />
+              </div>
             </div>
             <div>
               <Button type="submit">Sign up</Button>

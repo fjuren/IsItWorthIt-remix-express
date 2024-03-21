@@ -39,3 +39,21 @@ export function invariantResponse(
     );
   }
 }
+
+export function FieldErrorsList({
+  data,
+  errorID,
+}: {
+  data?: string[] | undefined;
+  errorID?: string;
+}) {
+  return (
+    <ul id={errorID}>
+      {data?.map((e, i) => (
+        <li className={'text-destructive text-xs'} key={i}>
+          {e}
+        </li>
+      ))}
+    </ul>
+  );
+}
