@@ -6,7 +6,7 @@ import {
   redirect,
 } from '@remix-run/node';
 import { Form, useActionData } from '@remix-run/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
@@ -44,25 +44,22 @@ const signupSchema = z
         message: 'Must be 20 or fewer characters long',
       })
       .trim(),
-    email: z
-      .string()
-      .min(minLength, { message: 'please enter your email' })
-      .email({ message: 'Invalid email address' }),
+    email: z.string().email({ message: 'Please enter a valid email address' }),
     password: z
       .string()
-      .min(minLength, { message: 'please enter your password' })
+      .min(minLength, { message: 'Please enter your password' })
       .max(passwordMaxLength, {
         message: 'Must be 100 or fewer characters long',
       }),
     confirmPassword: z
       .string()
-      .min(minLength, { message: 'please re-enter your password' })
+      .min(minLength, { message: 'Please re-enter your password' })
       .max(passwordMaxLength, {
         message: 'Must be 100 or fewer characters long',
       }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Passwords don't match!",
     path: ['confirmPassword'],
   });
 
@@ -101,27 +98,47 @@ export async function action({ request }: ActionFunctionArgs) {
   return redirect('/');
 }
 
-// need loader?
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false);
+  console.log(hydrated);
+  useEffect(() => setHydrated(true), []);
+  return hydrated;
+}
 
 export default function SignupRoute() {
   const actionData = useActionData<typeof action>();
 
+  const fieldErrors =
+    actionData?.status == 'error' ? actionData.errors.fieldErrors : null;
+  // const firstNameHasError = fieldErrors?.firstName && fieldErrors?.firstName?.length > 0 ? true : false;
+  const firstNameHasError = Boolean(fieldErrors?.firstName?.length);
+  const firstNameErrorID = firstNameHasError ? 'firstName-error' : undefined;
+  const lastNameHasError = Boolean(fieldErrors?.lastName?.length);
+  const lastNameErrorID = lastNameHasError ? 'lastName-error' : undefined;
+  const usernameHasError = Boolean(fieldErrors?.username?.length);
+  const usernameErrorID = usernameHasError ? 'username-error' : undefined;
+  const emailHasError = Boolean(fieldErrors?.email?.length);
+  const emailHasErrorID = emailHasError ? 'email-error' : undefined;
+  const passwordHasError = Boolean(fieldErrors?.password?.length);
+  const passwordHasErrorID = passwordHasError ? 'password-error' : undefined;
+  const confirmPasswordHasError = Boolean(fieldErrors?.confirmPassword?.length);
+  const confirmPasswordHasErrorID = confirmPasswordHasError
+    ? 'confirmPassword-error'
+    : undefined;
   const formHasErrors = false; // placeholder
-  const hasErrors = false; // placeholder
-  const fieldErrors = actionData?.errors.fieldErrors; // placeholder
-  const formErrors = null; // placeholder
-
-  console.log(actionData?.errors.fieldErrors);
+  const isHydrated = useHydrated(); // to support those with slower networks; prevents waiting for JS to load on the browser and would default to browser validation
 
   return (
-    <div>
+    <div className="flex w-fit m-auto py-10">
       <Card>
         <div>
           <p>Signup for an account</p>
         </div>
         <div className="w-80 ">
           <Form
+            id="signup-form"
             method="post"
+            noValidate={isHydrated}
             aria-invalid={formHasErrors}
             aria-describedby={formHasErrors ? 'form-error' : undefined}
           >
@@ -131,8 +148,8 @@ export default function SignupRoute() {
                 id="firstName"
                 name="firstName"
                 type="string"
-                aria-invalid={hasErrors} //TODO make this conditional per error logic
-                aria-describedby={hasErrors ? 'firstName-error' : undefined}
+                aria-invalid={firstNameHasError}
+                aria-describedby={firstNameErrorID}
                 autoFocus
               />
               <div>
@@ -148,8 +165,8 @@ export default function SignupRoute() {
                 id="lastName"
                 name="lastName"
                 type="string"
-                aria-invalid={hasErrors}
-                aria-describedby={hasErrors ? 'lastName-error' : undefined}
+                aria-invalid={lastNameHasError}
+                aria-describedby={lastNameErrorID}
               />
               <div>
                 <FieldErrorsList
@@ -164,9 +181,9 @@ export default function SignupRoute() {
                 id="username"
                 name="username"
                 type="string"
-                aria-invalid={hasErrors}
-                aria-describedby={hasErrors ? 'username-error' : undefined}
-                // required
+                aria-invalid={usernameHasError}
+                aria-describedby={usernameErrorID}
+                required
               />
               <div>
                 <FieldErrorsList
@@ -181,9 +198,9 @@ export default function SignupRoute() {
                 id="email"
                 name="email"
                 type="email"
-                aria-invalid={hasErrors}
-                aria-describedby={hasErrors ? 'email-error' : undefined}
-                // required
+                aria-invalid={emailHasError}
+                aria-describedby={emailHasErrorID}
+                required
               />
               <div>
                 <FieldErrorsList
@@ -198,9 +215,9 @@ export default function SignupRoute() {
                 id="password"
                 name="password"
                 type="password"
-                aria-invalid={hasErrors}
-                aria-describedby={hasErrors ? 'password-error' : undefined}
-                // required
+                aria-invalid={passwordHasError}
+                aria-describedby={passwordHasErrorID}
+                required
               />
               <div>
                 <FieldErrorsList
@@ -215,11 +232,9 @@ export default function SignupRoute() {
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
-                aria-invalid={hasErrors}
-                aria-describedby={
-                  hasErrors ? 'confirmPassword-error' : undefined
-                }
-                // required
+                aria-invalid={confirmPasswordHasError}
+                aria-describedby={confirmPasswordHasErrorID}
+                required
               />
               <div>
                 <FieldErrorsList
