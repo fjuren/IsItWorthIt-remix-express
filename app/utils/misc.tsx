@@ -44,7 +44,7 @@ export function FieldErrorsList({
   data,
   errorID,
 }: {
-  data?: string[] | undefined;
+  data?: string[] | null | undefined;
   errorID?: string;
 }) {
   return (

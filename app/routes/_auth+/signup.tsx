@@ -1,4 +1,6 @@
 /* eslint-disable jsx-a11y/no-autofocus */
+import { parseWithZod } from '@conform-to/zod';
+import { useForm } from '@conform-to/react';
 import {
   MetaFunction,
   type ActionFunctionArgs,
@@ -26,64 +28,74 @@ export const meta: MetaFunction = () => {
 
 const nameMaxLength: number = 100;
 const usernameMaxLength: number = 20;
-const minLength: number = 1;
+const minLength: number = 3;
 const passwordMaxLength: number = 100;
+const emailMaxLength: number = 100;
 
 const signupSchema = z
   .object({
-    firstName: z.string().max(nameMaxLength, {
-      message: 'Must be 100 or fewer characters long',
-    }),
-    lastName: z.string().max(nameMaxLength, {
-      message: 'Must be 100 or fewer characters long',
-    }),
-    username: z
+    firstName: z
       .string()
-      .min(1, { message: 'Please enter your username' })
+      .max(nameMaxLength, {
+        message: 'Must be 100 or fewer characters long',
+      })
+      .optional(),
+    lastName: z
+      .string()
+      .max(nameMaxLength, {
+        message: 'Must be 100 or fewer characters long',
+      })
+      .optional(),
+    username: z
+      .string({ required_error: 'Please enter your username' })
+      .min(minLength, { message: 'Username is too short' })
       .max(usernameMaxLength, {
         message: 'Must be 20 or fewer characters long',
-      })
-      .trim(),
-    email: z.string().email({ message: 'Please enter a valid email address' }),
+      }),
+    email: z
+      .string({ required_error: 'Please enter your email address' })
+      .min(minLength, { message: 'Email is too short' })
+      .max(emailMaxLength, { message: 'Email is too long' })
+      .email({
+        message: 'Please enter a valid email address',
+      }),
     password: z
-      .string()
-      .min(minLength, { message: 'Please enter your password' })
+      .string({ required_error: 'Please enter your password' })
+      .min(minLength, { message: 'Password is too short' })
       .max(passwordMaxLength, {
         message: 'Must be 100 or fewer characters long',
       }),
     confirmPassword: z
-      .string()
-      .min(minLength, { message: 'Please re-enter your password' })
+      .string({ required_error: 'Please confirm your password' })
       .max(passwordMaxLength, {
         message: 'Must be 100 or fewer characters long',
       }),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match!",
-    path: ['confirmPassword'],
+  .superRefine((val, ctx) => {
+    if (val.password !== val.confirmPassword) {
+      ctx.addIssue({
+        path: ['confirmPassword'],
+        code: 'custom',
+        message: "Passwords don't match",
+      });
+    }
   });
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const result = signupSchema.safeParse({
-    firstName: formData.get('firstName'),
-    lastName: formData.get('lastName'),
-    username: formData.get('username'),
-    email: formData.get('email'),
-    password: formData.get('password'),
-    confirmPassword: formData.get('confirmPassword'),
-  });
+  const submission = parseWithZod(formData, { schema: signupSchema });
 
-  if (!result.success) {
-    return json({
-      status: 'error',
-      statusCode: 400,
-      errors: result.error.flatten(),
-    });
+  if (submission.status !== 'success') {
+    return json(
+      submission.reply({ hideFields: ['password', 'confirmPassword'] }), // do not want to make entered pw's accessible via http response
+      {
+        status: submission.status === 'error' ? 400 : 200,
+      }
+    );
   }
 
   const { firstName, lastName, username, email, password, confirmPassword } =
-    result.data;
+    await submission.value;
 
   console.log({
     // TODO add to db when ready
@@ -95,22 +107,23 @@ export async function action({ request }: ActionFunctionArgs) {
     confirmPassword,
   });
 
-  return redirect('/');
+  if (submission.status === 'success') {
+    return redirect('/');
+  } else {
+    // status 500?
+  }
 }
 
 function useHydrated() {
   const [hydrated, setHydrated] = useState(false);
-  console.log(hydrated);
   useEffect(() => setHydrated(true), []);
   return hydrated;
 }
 
 export default function SignupRoute() {
-  const actionData = useActionData<typeof action>();
+  const lastResult = useActionData<typeof action>();
+  const fieldErrors = lastResult?.status == 'error' ? lastResult.error : null;
 
-  const fieldErrors =
-    actionData?.status == 'error' ? actionData.errors.fieldErrors : null;
-  // const firstNameHasError = fieldErrors?.firstName && fieldErrors?.firstName?.length > 0 ? true : false;
   const firstNameHasError = Boolean(fieldErrors?.firstName?.length);
   const firstNameErrorID = firstNameHasError ? 'firstName-error' : undefined;
   const lastNameHasError = Boolean(fieldErrors?.lastName?.length);
