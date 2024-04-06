@@ -1,6 +1,9 @@
 /* eslint-disable jsx-a11y/no-autofocus */
-import { parseWithZod } from '@conform-to/zod';
-import { useForm } from '@conform-to/react';
+// using conform to support with:
+// - Schema validation support
+// - Progressively enhanced experience (eg. hydrating to leverage out of box browser errors for slow network speeds)
+// - Accessibility support (ie. using getZodConstraint which assigns values to input attributes like aria-describedby)
+
 import {
   MetaFunction,
   type ActionFunctionArgs,
@@ -10,11 +13,14 @@ import {
 import { Form, useActionData } from '@remix-run/react';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
+import { getZodConstraint, parseWithZod } from '@conform-to/zod';
+import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
 import { FieldErrorsList } from '~/utils/misc';
+import { GeneralErrorBoundary } from '~/components/error-boundary';
 
 export const meta: MetaFunction = () => {
   return [
@@ -83,11 +89,17 @@ const signupSchema = z
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
+  console.log(formData);
   const submission = parseWithZod(formData, { schema: signupSchema });
+  console.log(submission);
 
   if (submission.status !== 'success') {
     return json(
-      submission.reply({ hideFields: ['password', 'confirmPassword'] }), // do not want to make entered pw's accessible via http response
+      {
+        result: submission.reply({
+          hideFields: ['password', 'confirmPassword'],
+        }), // do not want to make entered pw's accessible via http response
+      },
       {
         status: submission.status === 'error' ? 400 : 200,
       }
@@ -110,36 +122,26 @@ export async function action({ request }: ActionFunctionArgs) {
   if (submission.status === 'success') {
     return redirect('/');
   } else {
-    // status 500?
+    throw new Response('Not found', { status: 500 });
   }
-}
-
-function useHydrated() {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
-  return hydrated;
 }
 
 export default function SignupRoute() {
   const lastResult = useActionData<typeof action>();
-  const fieldErrors = lastResult?.status == 'error' ? lastResult.error : null;
+  const [form, fields] = useForm({
+    lastResult: lastResult?.result,
+    // getZodConstraint configures the Zod fields with appropriate attributes
+    constraint: getZodConstraint(signupSchema),
+    // runs validation logic on the client (before it runs on the server, quicker validation for slow networks)
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: signupSchema });
+    },
+  });
 
-  const firstNameHasError = Boolean(fieldErrors?.firstName?.length);
-  const firstNameErrorID = firstNameHasError ? 'firstName-error' : undefined;
-  const lastNameHasError = Boolean(fieldErrors?.lastName?.length);
-  const lastNameErrorID = lastNameHasError ? 'lastName-error' : undefined;
-  const usernameHasError = Boolean(fieldErrors?.username?.length);
-  const usernameErrorID = usernameHasError ? 'username-error' : undefined;
-  const emailHasError = Boolean(fieldErrors?.email?.length);
-  const emailHasErrorID = emailHasError ? 'email-error' : undefined;
-  const passwordHasError = Boolean(fieldErrors?.password?.length);
-  const passwordHasErrorID = passwordHasError ? 'password-error' : undefined;
-  const confirmPasswordHasError = Boolean(fieldErrors?.confirmPassword?.length);
-  const confirmPasswordHasErrorID = confirmPasswordHasError
-    ? 'confirmPassword-error'
-    : undefined;
-  const formHasErrors = false; // placeholder
-  const isHydrated = useHydrated(); // to support those with slower networks; prevents waiting for JS to load on the browser and would default to browser validation
+  // Using conform utilities to replace manual field settings (eg input id's, aria fields) to support with accessbility (https://conform.guide/accessibility). Left fieldErrors below to show old way without conform
+  // const fieldErrors = lastResult?.status == 'error' ? lastResult.error : null;
+  // const firstNameHasError = Boolean(fieldErrors?.firstName?.length);
+  // const firstNameErrorID = firstNameHasError ? 'firstName-error' : undefined;
 
   return (
     <div className="flex w-fit m-auto py-10">
@@ -148,111 +150,81 @@ export default function SignupRoute() {
           <p>Signup for an account</p>
         </div>
         <div className="w-80 ">
-          <Form
-            id="signup-form"
-            method="post"
-            noValidate={isHydrated}
-            aria-invalid={formHasErrors}
-            aria-describedby={formHasErrors ? 'form-error' : undefined}
-          >
+          <Form method="post" {...getFormProps(form)}>
             <div>
-              <Label htmlFor="firstName">First name (Optional)</Label>
+              <Label htmlFor={fields.firstName.id}>First name (Optional)</Label>
               <Input
-                id="firstName"
-                name="firstName"
-                type="string"
-                aria-invalid={firstNameHasError}
-                aria-describedby={firstNameErrorID}
+                // id="firstName"
+                // name="firstName"
+                // type="string"
+                // aria-invalid={firstNameHasError}
+                // aria-describedby={firstNameErrorID}
+                {...getInputProps(fields.firstName, { type: 'text' })}
                 autoFocus
               />
               <div>
                 <FieldErrorsList
-                  data={fieldErrors?.firstName}
-                  errorID={'firstName-error'}
+                  data={fields.firstName.errors}
+                  errorID={fields.firstName.id}
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="lastName">Last name (Optional)</Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                type="string"
-                aria-invalid={lastNameHasError}
-                aria-describedby={lastNameErrorID}
-              />
+              <Label htmlFor={fields.lastName.id}>Last name (Optional)</Label>
+              <Input {...getInputProps(fields.lastName, { type: 'text' })} />
               <div>
                 <FieldErrorsList
-                  data={fieldErrors?.lastName}
-                  errorID={'lastName-error'}
+                  data={fields.firstName.errors}
+                  errorID={fields.lastName.errorId}
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor={fields.username.id}>Username</Label>
               <Input
-                id="username"
-                name="username"
-                type="string"
-                aria-invalid={usernameHasError}
-                aria-describedby={usernameErrorID}
-                required
+                {...getInputProps(fields.username, { type: 'text' })}
+                // required
               />
               <div>
                 <FieldErrorsList
-                  data={fieldErrors?.username}
-                  errorID={'username-error'}
+                  data={fields.username.errors}
+                  errorID={fields.username.errorId}
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                aria-invalid={emailHasError}
-                aria-describedby={emailHasErrorID}
-                required
-              />
+              <Label htmlFor={fields.email.id}>Email</Label>
+              <Input {...getInputProps(fields.email, { type: 'email' })} />
               <div>
                 <FieldErrorsList
-                  data={fieldErrors?.email}
-                  errorID={'email-error'}
+                  data={fields.email.errors}
+                  errorID={fields.email.errorId}
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor={fields.password.id}>Password</Label>
               <Input
-                id="password"
-                name="password"
-                type="password"
-                aria-invalid={passwordHasError}
-                aria-describedby={passwordHasErrorID}
-                required
+                {...getInputProps(fields.password, { type: 'password' })}
               />
               <div>
                 <FieldErrorsList
-                  data={fieldErrors?.password}
-                  errorID={'password-error'}
+                  data={fields.password.errors}
+                  errorID={fields.password.errorId}
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="confirmPassword">Confirm password</Label>
+              <Label htmlFor={fields.confirmPassword.id}>
+                Confirm password
+              </Label>
               <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                aria-invalid={confirmPasswordHasError}
-                aria-describedby={confirmPasswordHasErrorID}
-                required
+                {...getInputProps(fields.confirmPassword, { type: 'password' })}
               />
               <div>
                 <FieldErrorsList
-                  data={fieldErrors?.confirmPassword}
-                  errorID={'confirmPassword-error'}
+                  data={fields.confirmPassword.errors}
+                  errorID={fields.confirmPassword.errorId}
                 />
               </div>
             </div>
@@ -263,5 +235,15 @@ export default function SignupRoute() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export function ErrorBoundary() {
+  return (
+    <GeneralErrorBoundary
+      statusHandlers={{
+        500: () => <p>Sorry, something went wrong! Try again later.</p>,
+      }}
+    />
   );
 }
