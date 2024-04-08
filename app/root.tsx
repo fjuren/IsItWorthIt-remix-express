@@ -7,11 +7,15 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  json,
+  useLoaderData,
 } from '@remix-run/react';
 import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css';
 // import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
+import { HoneypotProvider } from 'remix-utils/honeypot/react';
+import { honeypot } from './utils/honeypot.server';
 
 export const links: LinksFunction = () => {
   return [
@@ -27,6 +31,11 @@ export const links: LinksFunction = () => {
     ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
   ];
 };
+
+export async function loader() {
+  const honeyProps = honeypot.getInputProps();
+  return json({ honeyProps });
+}
 
 export function Document({ children }: { children: React.ReactNode }) {
   // throw new Response('Not found', { status: 500 });
@@ -50,7 +59,12 @@ export function Document({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const data = useLoaderData<typeof loader>();
+  return (
+    <HoneypotProvider {...data.honeyProps}>
+      <Outlet />
+    </HoneypotProvider>
+  );
 }
 
 export function ErrorBoundary() {
