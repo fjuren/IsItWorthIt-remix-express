@@ -1,5 +1,5 @@
 import { cssBundleHref } from '@remix-run/css-bundle';
-import type { LinksFunction } from '@remix-run/node';
+import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
 import {
   Links,
   LiveReload,
@@ -16,6 +16,8 @@ import tailwindFontsStylesheet from './styles/tailwind.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
 import { HoneypotProvider } from 'remix-utils/honeypot/react';
 import { honeypot } from './utils/honeypot.server';
+import { csrf } from './utils/csrf.server';
+import { AuthenticityTokenProvider } from 'remix-utils/csrf/react';
 
 export const links: LinksFunction = () => {
   return [
@@ -32,9 +34,14 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export async function loader() {
+export async function loader({ request }: LoaderFunctionArgs) {
   const honeyProps = honeypot.getInputProps();
-  return json({ honeyProps });
+  const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request);
+
+  return json(
+    { honeyProps, csrfToken },
+    { headers: csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : {} }
+  );
 }
 
 export function Document({ children }: { children: React.ReactNode }) {
@@ -61,9 +68,11 @@ export function Document({ children }: { children: React.ReactNode }) {
 export default function App() {
   const data = useLoaderData<typeof loader>();
   return (
-    <HoneypotProvider {...data.honeyProps}>
-      <Outlet />
-    </HoneypotProvider>
+    <AuthenticityTokenProvider token={data.csrfToken}>
+      <HoneypotProvider {...data.honeyProps}>
+        <Outlet />
+      </HoneypotProvider>
+    </AuthenticityTokenProvider>
   );
 }
 

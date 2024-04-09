@@ -23,6 +23,8 @@ import { FieldErrorsList } from '~/utils/misc';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
+import { checkCSRF } from '~/utils/csrf.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -92,6 +94,8 @@ const signupSchema = z
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const submission = parseWithZod(formData, { schema: signupSchema });
+
+  await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
 
   if (submission.status !== 'success') {
@@ -153,6 +157,7 @@ export default function SignupRoute() {
         <div className="w-80 ">
           <Form method="post" {...getFormProps(form)}>
             <HoneypotInputs />
+            <AuthenticityTokenInput />
             <div>
               <Label htmlFor={fields.firstName.id}>First name (Optional)</Label>
               <Input
