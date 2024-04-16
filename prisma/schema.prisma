@@ -22,27 +22,37 @@ model User {
   username  String     @unique
   firstname String?
   lastname  String?
+  // role?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  
   comments  Comment[]
-  userImage UserImage?
+  likedComments Comment[] @relation("LikedCommentsByUser")
+  gameRatings UserGameRating[]
+  gameFavourites  GamePost[] @relation("FavoritedGamesByUser")
+
+  image UserImage?
 }
 
 model Comment {
   id        String   @id @default(cuid())
   content   String
-  votes     Int
+  likes Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  childComments Comment[] @relation("ChildComment")
+  
+  likedBy User[] @relation("LikedCommentsByUser")
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
+  gamePostId String @unique
+  gamePost GamePost @relation(fields: [gamePostId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
   // marks the commentID of a paretnComment on a childComment (if is a parent of any child comment - optional field)
   parentCommentId String?
   parentComment   Comment? @relation("ChildComment", fields: [parentCommentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-  childComments Comment[] @relation("ChildComment")
 }
 
 model UserImage {
@@ -53,6 +63,36 @@ model UserImage {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // a user can only have one profile image
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
+
+model GamePost {
+  id String @id @default(cuid())
+  gameId String @unique // gameID from API. This will be used to query the appropriate game data.
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  favouritedBy User[] @relation("FavoritedGamesByUser")
+  
+  // game can have many user ratings
+  userGameRating     UserGameRating[]
+  comments   Comment[]
+}
+
+model UserGameRating {
+  id String @id @default(cuid())
+  name String // field that will have 3 types of ratings, Can't seem to define these explicitly at the schema definition level
+
+  gamePostId String
+  gamePost GamePost @relation(fields: [gamePostId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // users can only give a single rating per game
+  @@unique([userId, gamePostId])
+}
+
