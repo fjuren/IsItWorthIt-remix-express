@@ -51,7 +51,7 @@ const requestOptions = {
 export async function loader() {
   // throw new Response('Not found', { status: 500 });
   const gamesList = await fetch(
-    'https://www.cheapshark.com/api/1.0/deals',
+    'https://www.cheapshark.com/api/1.0/deals?pageNumber=0',
     requestOptions
   );
   return json(await gamesList.json());

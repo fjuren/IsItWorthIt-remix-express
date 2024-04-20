@@ -1,14 +1,46 @@
 import { PrismaClient } from '@prisma/client';
+import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
+let listOfGames = [];
+
+async function fetchGameData() {
+  try {
+    const api = await fetch(
+      'https://www.cheapshark.com/api/1.0/deals?pageNumber=0',
+      {
+        method: 'GET',
+      }
+    );
+    if (!api.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await api.json();
+    console.log(data[0].internalName);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+
 async function main() {
+  listOfGames = [];
+  await fetchGameData();
   await prisma.user.deleteMany();
   await prisma.gamePost.deleteMany();
 
   // Custom users
 
   // Faker generated
+
+  const randEmail = faker.internet.email();
+  const randUsername = faker.internet.userName();
+  const randFirstname = faker.person.firstName();
+  const randLastname = faker.person.lastName();
+  const randSentence = faker.lorem.sentence();
+  const randParagraph = faker.lorem.paragraph();
+  // const randImageUrl = faker.image.imageUrl();
 
   await prisma.gamePost.create({
     data: {
@@ -22,11 +54,11 @@ async function main() {
 
   const user = await prisma.user.create({
     data: {
-      // id: '1234',
-      email: 'SallySmith@gmail.com',
-      username: 'foxy_cleo',
-      firstname: 'Sally',
-      lastname: 'Smith',
+      id: '1234',
+      email: randEmail,
+      username: randUsername,
+      firstname: randFirstname,
+      lastname: randLastname,
       comments: {},
       likedComments: {},
       gameRatings: {},
@@ -37,8 +69,8 @@ async function main() {
 
   await prisma.comment.create({
     data: {
-      content: 'This game is wicked! Recommend getting this at full price :)',
-      likes: 1,
+      content: randParagraph,
+      likes: 0,
       childComments: {},
       likedBy: {},
       userId: user.id,
@@ -49,11 +81,12 @@ async function main() {
 
   await prisma.userGameRating.create({
     data: {
-      name: 'Worth it',
+      name: randSentence,
       gamePostId: 'clv1rxxek0000119a2w7l0783',
       userId: user.id,
     },
   });
 }
 
-main();
+fetchGameData();
+// main();
