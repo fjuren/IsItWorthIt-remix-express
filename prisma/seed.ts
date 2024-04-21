@@ -3,12 +3,21 @@ import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
-let listOfGames = [];
+const listOfGames: string[] = [];
+const userGameRating: string[] = [
+  'Not worth it',
+  'Worth it on sale',
+  'Worth it full price',
+];
+
+function getRandArrayIndex(array: string[]) {
+  return Math.floor(Math.random() * array.length);
+}
 
 async function fetchGameData() {
   try {
     const api = await fetch(
-      'https://www.cheapshark.com/api/1.0/deals?pageNumber=0',
+      'https://www.cheapshark.com/api/1.0/games?title=a',
       {
         method: 'GET',
       }
@@ -16,77 +25,118 @@ async function fetchGameData() {
     if (!api.ok) {
       throw new Error('Network response was not ok');
     }
-
     const data = await api.json();
-    console.log(data[0].internalName);
+    data.forEach((game: any) => {
+      listOfGames.push(game.gameID);
+    });
   } catch (error) {
     console.error('Error fetching data:', error);
   }
 }
 
-async function main() {
-  listOfGames = [];
-  await fetchGameData();
+function createGamePost(gameId: string) {
+  return {
+    gameId: gameId,
+    favouritedBy: {},
+    userGameRating: {},
+    comments: {},
+  };
+}
+
+function createUser() {
+  const randFirstname = faker.person.firstName();
+  const randLastname = faker.person.lastName();
+  const randUsername = faker.internet.userName({
+    firstName: randFirstname.toLowerCase(),
+    lastName: randLastname.toLowerCase(),
+  });
+  return {
+    username: randUsername,
+    firstname: randFirstname,
+    lastname: randLastname,
+    email: `${randUsername}@domain.com`,
+    // comments: {},
+    likedComments: {},
+    // gameRatings: {},
+    gameFavourites: {},
+    // image: {},
+  };
+}
+
+async function seed() {
   await prisma.user.deleteMany();
   await prisma.gamePost.deleteMany();
 
-  // Custom users
-
+  // Custom DATA
+  // ADD CUSTOM DATA
+  // ------------------
   // Faker generated
+  const totalUsers = 15;
+  console.time(`Created ${totalUsers} users`);
+  const totalGamePosts = listOfGames.length;
+  console.time(`Created ${totalGamePosts} gamePosts`);
 
-  const randEmail = faker.internet.email();
-  const randUsername = faker.internet.userName();
-  const randFirstname = faker.person.firstName();
-  const randLastname = faker.person.lastName();
+  const listOfGamePosts: any = [];
+  await fetchGameData(); // Add list of gameIds to listOfGames
+  for (let index = 0; index < listOfGames.length; index++) {
+    const gameId = listOfGames[index];
+
+    const gamePostRecord = await prisma.gamePost.create({
+      data: {
+        ...createGamePost(gameId),
+      },
+    });
+    listOfGamePosts.push(gamePostRecord.id);
+  }
+  console.timeEnd(`Created ${totalGamePosts} users`);
+
   const randSentence = faker.lorem.sentence();
   const randParagraph = faker.lorem.paragraph();
-  // const randImageUrl = faker.image.imageUrl();
+  const randImage = faker.image.avatar();
 
-  await prisma.gamePost.create({
-    data: {
-      id: 'clv1rxxek0000119a2w7l0783',
-      gameId: 'HhzMJAgQYGZ%2B%2BFPpBG%2BRFcuUQZJO3KXvlnyYYGwGUfU%3D',
-      favouritedBy: {},
-      userGameRating: {},
-      comments: {},
-    },
-  });
+  for (let index = 0; index < totalUsers; index++) {
+    await prisma.user.create({
+      data: {
+        ...createUser(),
 
-  const user = await prisma.user.create({
-    data: {
-      id: '1234',
-      email: randEmail,
-      username: randUsername,
-      firstname: randFirstname,
-      lastname: randLastname,
-      comments: {},
-      likedComments: {},
-      gameRatings: {},
-      gameFavourites: {},
-      image: {},
-    },
-  });
-
-  await prisma.comment.create({
-    data: {
-      content: randParagraph,
-      likes: 0,
-      childComments: {},
-      likedBy: {},
-      userId: user.id,
-      gamePostId: 'clv1rxxek0000119a2w7l0783',
-      // parentCommentId: '',
-    },
-  });
-
-  await prisma.userGameRating.create({
-    data: {
-      name: randSentence,
-      gamePostId: 'clv1rxxek0000119a2w7l0783',
-      userId: user.id,
-    },
-  });
+        comments: {
+          // randomize length of array for number of comments (0-4 per user)
+          create: [
+            {
+              content: randParagraph || randSentence,
+              likes: 0,
+              childComments: {},
+              likedBy: {},
+              // userId: user.id,
+              gamePostId: listOfGamePosts[getRandArrayIndex(listOfGamePosts)],
+              // parentCommentId: '',
+            },
+          ],
+        },
+        gameRatings: {
+          // randomize number of ratings like done for comments
+          create: [
+            {
+              name: userGameRating[getRandArrayIndex(userGameRating)],
+              gamePostId: listOfGamePosts[getRandArrayIndex(listOfGamePosts)],
+            },
+          ],
+        },
+        // gameFavourites: {
+        //   // randomize number of ratings like done for comments
+        //   connect:
+        // },
+        image: {
+          create: {
+            altText: randSentence,
+            contentType: '',
+            blob: randImage,
+          },
+        },
+      },
+    });
+  }
+  console.timeEnd(`Created ${totalUsers} users`);
 }
 
-fetchGameData();
-// main();
+seed();
