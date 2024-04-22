@@ -1,6 +1,42 @@
 import crypto from 'crypto';
 import { factory, manyOf, nullable, oneOf, primaryKey } from '@mswjs/data';
 import { singleton } from './singleton.server';
+import { PrismaClient } from '@prisma/client';
+
+// to prevent the app from making multiple connections to my db, using the singleton utility to check if a connection is already made. If it does, it doesn't reconnect and continues to use the same one. Recall that making multipl connections to a db = run out of memory = error
+export const prisma = singleton('prisma', () => {
+  const client = new PrismaClient({
+    log: [
+      {
+        emit: 'event',
+        level: 'query',
+      },
+      {
+        emit: 'stdout',
+        level: 'error',
+      },
+      {
+        emit: 'stdout',
+        level: 'info',
+      },
+      {
+        emit: 'stdout',
+        level: 'warn',
+      },
+    ],
+  });
+
+  client.$on('query', (e) => {
+    console.log('Query: ' + e.query);
+    console.log('Params: ' + e.params);
+    console.log('Duration: ' + e.duration + 'ms');
+  });
+
+  client.$connect();
+  return client;
+});
+
+// --------
 
 const getId = () => crypto.randomBytes(16).toString('hex').slice(0, 8);
 
