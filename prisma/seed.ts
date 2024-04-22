@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
-const listOfGames: string[] = [];
+const listOfGames: any[] = []; // games from cheapshark
 const userGameRating: string[] = [
   'Not worth it',
   'Worth it on sale',
@@ -27,7 +27,7 @@ async function fetchGameData() {
     }
     const data = await api.json();
     data.forEach((game: any) => {
-      listOfGames.push(game.gameID);
+      listOfGames.push(game);
     });
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -58,7 +58,7 @@ function createUser() {
     // comments: {},
     likedComments: {},
     // gameRatings: {},
-    gameFavourites: {},
+    // gameFavourites: {},
     // image: {},
   };
 }
@@ -68,10 +68,114 @@ async function seed() {
   await prisma.gamePost.deleteMany();
 
   // Custom DATA
-  // ADD CUSTOM DATA
-  // ------------------
-  // Faker generated
-  const totalUsers = 15;
+
+  const gamePost1 = await prisma.gamePost.create({
+    data: {
+      id: '2345bcde',
+      gameId: '217162',
+      // favouritedBy: {},
+      // userGameRating: {},
+      // comments: {},
+    },
+  });
+
+  const user1 = await prisma.user.create({
+    data: {
+      id: '1234abcd',
+      email: 'testuser1@gmail.com',
+      username: 'testUser1',
+      firstname: 'Test',
+      lastname: 'User1',
+      // comments: {},
+      likedComments: {},
+      // gameRatings: {},
+      gameFavourites: {
+        connect: [gamePost1],
+      },
+      image: {},
+    },
+  });
+
+  const comment1 = await prisma.comment.create({
+    data: {
+      id: '4321dcba',
+      content:
+        "This game is so good! Here's a summary of what I thought: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam tincidunt tellus ut quam facilisis, non ornare massa rutrum. Duis vitae augue in nisi scelerisque sodales ut id enim. Fusce eget tellus volutpat, mollis quam sed, fringilla arcu. Morbi malesuada hendrerit ex, quis pretium felis viverra eu. Pellentesque eleifend nisi in pretium elementum. Proin semper, sem at pellentesque bibendum, quam ligula venenatis ante, non tristique tortor velit a massa. Vivamus mi neque, malesuada imperdiet libero tempor, lobortis dignissim nibh. Duis efficitur vehicula dapibus. Sed vestibulum, massa lacinia efficitur fringilla, arcu quam posuere magna, nec vestibulum lacus dui sed velit. Nam dapibus egestas massa ac tempus. Donec vitae mauris eget arcu vestibulum lacinia.",
+      likes: 0,
+      childComments: {},
+      likedBy: {},
+      userId: user1.id,
+      gamePostId: gamePost1.id,
+      // parentCommentId: '',
+    },
+  });
+
+  await prisma.userGameRating.create({
+    data: {
+      id: '3456cdef',
+      name: userGameRating[2],
+      gamePostId: gamePost1.id,
+      userId: user1.id,
+    },
+  });
+
+  const gamePost2 = await prisma.gamePost.create({
+    data: {
+      id: '5432edcb',
+      gameId: '96977',
+      // favouritedBy: {},
+      // userGameRating: {},
+      // comments: {},
+    },
+  });
+
+  const user2 = await prisma.user.create({
+    data: {
+      id: '6543fedc',
+      email: 'testuser2@gmail.com',
+      username: 'testUser2',
+      firstname: 'Testlongname',
+      lastname: 'User2reallylong',
+      // comments: {},
+      likedComments: {},
+      // gameRatings: {},
+      gameFavourites: {
+        connect: [gamePost1, gamePost2],
+      },
+      image: {},
+    },
+  });
+
+  await prisma.comment.create({
+    data: {
+      id: '0987zyxw',
+      content:
+        'Oh my, this brings me back. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam tincidunt tellus ut quam facilisis, non ornare massa rutrum. Duis vitae augue in nisi scelerisque sodales ut id enim. Fusce eget tellus volutpat, mollis quam sed, fringilla arcu. Morbi malesuada hendrerit ex, quis pretium felis viverra eu. Pellentesque eleifend nisi in pretium elementum. Proin semper, sem at pellentesque bibendum, quam ligula venenatis ante, non tristique tortor velit a massa. Vivamus mi neque, malesuada imperdiet libero tempor, lobortis dignissim nibh. Duis efficitur vehicula dapibus. Sed vestibulum, massa lacinia efficitur fringilla, arcu quam posuere magna, nec vestibulum lacus dui sed velit. Nam dapibus egestas massa ac tempus. Donec vitae mauris eget arcu vestibulum lacinia.',
+      likes: 1,
+      childComments: {
+        connect: [comment1],
+      },
+      likedBy: {
+        connect: [user1],
+      },
+      userId: user2.id,
+      gamePostId: gamePost2.id,
+      // parentCommentId: '',
+    },
+  });
+
+  await prisma.userGameRating.create({
+    data: {
+      id: 'wxyz1234',
+      name: userGameRating[1],
+      gamePostId: gamePost2.id,
+      userId: user2.id,
+    },
+  });
+
+  // --------------------------------------------------------------------------------------
+  // // Faker generated
+  const totalUsers = 20;
   console.time(`Created ${totalUsers} users`);
   const totalGamePosts = listOfGames.length;
   console.time(`Created ${totalGamePosts} gamePosts`);
@@ -79,20 +183,21 @@ async function seed() {
   const listOfGamePosts: any = [];
   await fetchGameData(); // Add list of gameIds to listOfGames
   for (let index = 0; index < listOfGames.length; index++) {
-    const gameId = listOfGames[index];
+    const game = listOfGames[index];
 
     const gamePostRecord = await prisma.gamePost.create({
       data: {
-        ...createGamePost(gameId),
+        ...createGamePost(game.gameID),
       },
     });
-    listOfGamePosts.push(gamePostRecord.id);
+    listOfGamePosts.push(gamePostRecord);
   }
   console.timeEnd(`Created ${totalGamePosts} users`);
 
   const randSentence = faker.lorem.sentence();
   const randParagraph = faker.lorem.paragraph();
   const randImage = faker.image.avatar();
+  const selectedGamePostIds = new Set();
 
   for (let index = 0; index < totalUsers; index++) {
     await prisma.user.create({
@@ -100,32 +205,47 @@ async function seed() {
         ...createUser(),
 
         comments: {
-          // randomize length of array for number of comments (0-4 per user)
-          create: [
-            {
-              content: randParagraph || randSentence,
+          // randomize length of array for number of comments (0-3 per user) and vary length of comments using faker
+          create: Array.from({
+            length: faker.number.int({ min: 0, max: 4 }),
+          }).map(() => {
+            return {
+              content: Math.random() > 0.5 ? randSentence : randParagraph,
               likes: 0,
               childComments: {},
               likedBy: {},
               // userId: user.id,
-              gamePostId: listOfGamePosts[getRandArrayIndex(listOfGamePosts)],
+              gamePostId:
+                listOfGamePosts[getRandArrayIndex(listOfGamePosts)].id,
               // parentCommentId: '',
-            },
-          ],
+            };
+          }),
         },
         gameRatings: {
-          // randomize number of ratings like done for comments
-          create: [
-            {
+          // randomize length of array for game ratings (2-4 per user)
+          create: Array.from({
+            length: faker.number.int({ min: 2, max: 4 }),
+          }).map(() => {
+            let selectedId;
+            do {
+              // Select a random gamePostId
+              selectedId =
+                listOfGamePosts[getRandArrayIndex(listOfGamePosts)].id;
+            } while (selectedGamePostIds.has(selectedId)); // Check if it's already selected
+
+            // Add the selected ID to the set
+            selectedGamePostIds.add(selectedId);
+
+            // Return the created gameRating object
+            return {
               name: userGameRating[getRandArrayIndex(userGameRating)],
-              gamePostId: listOfGamePosts[getRandArrayIndex(listOfGamePosts)],
-            },
-          ],
+              gamePostId: selectedId,
+            };
+          }),
         },
-        // gameFavourites: {
-        //   // randomize number of ratings like done for comments
-        //   connect:
-        // },
+        gameFavourites: {
+          connect: [listOfGamePosts[getRandArrayIndex(listOfGamePosts)]],
+        },
         image: {
           create: {
             altText: randSentence,
