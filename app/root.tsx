@@ -1,5 +1,9 @@
 import { cssBundleHref } from '@remix-run/css-bundle';
-import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
+import type {
+  // ActionFunctionArgs,
+  LinksFunction,
+  LoaderFunctionArgs,
+} from '@remix-run/node';
 import {
   Links,
   LiveReload,
@@ -18,6 +22,7 @@ import { HoneypotProvider } from 'remix-utils/honeypot/react';
 import { honeypot } from './utils/honeypot.server';
 import { csrf } from './utils/csrf.server';
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react';
+import { TopNav } from './components/UI/TopNav';
 
 export const links: LinksFunction = () => {
   return [
@@ -44,11 +49,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
   );
 }
 
+// light/dark array
+
+// export async function action({request}: ActionFunctionArgs) {
+
+// }
+
 export function Document({ children }: { children: React.ReactNode }) {
   // throw new Response('Not found', { status: 500 });
 
   return (
-    <html lang="en" className="">
+    <html lang="en" className="dark">
       <head>
         <Meta />
         <meta charSet="utf-8" />
@@ -65,14 +76,25 @@ export function Document({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+function App() {
+  return (
+    <Document>
+      <TopNav />
+      <div className="fixed flex w-full h-full">
+        <Outlet />
+      </div>
+    </Document>
+  );
+}
+
+export default function AppWithProviders() {
   const data = useLoaderData<typeof loader>();
   return (
-    <AuthenticityTokenProvider token={data.csrfToken}>
-      <HoneypotProvider {...data.honeyProps}>
-        <Outlet />
-      </HoneypotProvider>
-    </AuthenticityTokenProvider>
+    <HoneypotProvider {...data.honeyProps}>
+      <AuthenticityTokenProvider token={data.csrfToken}>
+        <App />
+      </AuthenticityTokenProvider>
+    </HoneypotProvider>
   );
 }
 
