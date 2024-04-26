@@ -23,6 +23,7 @@ import { honeypot } from './utils/honeypot.server';
 import { csrf } from './utils/csrf.server';
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react';
 import { TopNav } from './components/UI/TopNav';
+import { getTheme } from './utils/theme.server';
 
 export const links: LinksFunction = () => {
   return [
@@ -44,7 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request);
 
   return json(
-    { honeyProps, csrfToken },
+    { honeyProps, csrfToken, headers: getTheme(request) },
     { headers: csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : {} }
   );
 }
@@ -57,9 +58,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export function Document({ children }: { children: React.ReactNode }) {
   // throw new Response('Not found', { status: 500 });
+  const data = useLoaderData<typeof loader>();
+  const theme = data.headers;
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={theme}>
       <head>
         <Meta />
         <meta charSet="utf-8" />

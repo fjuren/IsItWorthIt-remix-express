@@ -20,6 +20,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const user = await prisma.user.findUnique({
     select: {
       id: true,
+      username: true,
+      email: true,
       firstname: true,
       lastname: true,
       createdAt: true,
@@ -37,10 +39,33 @@ export default function UsernameRoute() {
   const data = useLoaderData<typeof loader>();
   return (
     <div>
-      <img src={data.user.image?.blob} alt="" />
-      <h1>{data.user.firstname}&apos;s profile page</h1>
-      <p>Joined {data.user.createdAt}</p>
-      <Link to="settings">Settings</Link>
+      <div>
+        <div>Profile</div>
+        <Link to="settings">
+          Settings (add this to profile dropdown or open slide-out menu. Design
+          tbd)
+        </Link>
+      </div>
+      <div>
+        <div>
+          <img src={data.user.image?.blob} alt="" />
+        </div>
+        <div>
+          <h2>{data.user.firstname}</h2>
+        </div>
+        <div>
+          <h2>{data.user.lastname}</h2>
+        </div>
+        <div>
+          <p>
+            Joined {new Date(data.user.createdAt).toISOString().split('T')[0]}
+          </p>
+        </div>
+      </div>
+      <div>
+        <div>Username: {data.user.username}</div>
+        <div>Email: {data.user.email}</div>
+      </div>
     </div>
   );
 }
