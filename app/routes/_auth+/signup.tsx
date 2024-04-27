@@ -25,6 +25,7 @@ import { checkHoneypot } from '~/utils/honeypot.server';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { checkCSRF } from '~/utils/csrf.server';
+import { toastSessionStorage } from '~/utils/toast.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -125,7 +126,21 @@ export async function action({ request }: ActionFunctionArgs) {
   });
 
   if (submission.status === 'success') {
-    return redirect('/');
+    // show toaster success message using cookieSession
+    const cookie = request.headers.get('cookie');
+    const cookieSession = await toastSessionStorage.getSession(cookie);
+    cookieSession.set('authMessage', {
+      type: 'success',
+      title: 'Signed in',
+      description: 'You are signed in',
+    });
+    const setCookieHeader = await toastSessionStorage.commitSession(
+      cookieSession
+    );
+
+    return redirect('/', {
+      headers: { 'set-cookie': setCookieHeader },
+    });
   } else {
     throw new Response('Not found', { status: 500 });
   }

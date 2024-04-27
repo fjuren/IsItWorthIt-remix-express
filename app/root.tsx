@@ -25,6 +25,11 @@ import { AuthenticityTokenProvider } from 'remix-utils/csrf/react';
 import { TopNav } from './components/UI/TopNav';
 import { getTheme } from './utils/theme.server';
 import { useOptimisticUITheme } from './routes/_main+/users+/$user_+/settings';
+import { Toaster } from './components/UI/Toaster';
+import { toastSessionStorage } from './utils/toast.server';
+import { useToast } from './utils/Use-Toast';
+import { combineHeaders } from './utils/misc';
+import { useEffect } from 'react';
 
 export const links: LinksFunction = () => {
   return [
@@ -44,10 +49,28 @@ export const links: LinksFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const honeyProps = honeypot.getInputProps();
   const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request);
+  const cookie = request.headers.get('cookie');
+  const toastCookieSession = await toastSessionStorage.getSession(cookie);
+  const toast = toastCookieSession.get('authMessage');
+  toastCookieSession.unset('authMessage');
 
   return json(
-    { honeyProps, csrfToken, headers: getTheme(request) },
-    { headers: csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : {} }
+    {
+      honeyProps,
+      csrfToken,
+      headers: getTheme(request),
+      toast,
+    },
+    {
+      headers: combineHeaders(
+        csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : null,
+        {
+          'set-cookie': await toastSessionStorage.commitSession(
+            toastCookieSession
+          ),
+        }
+      ),
+    }
   );
 }
 
@@ -67,6 +90,7 @@ export function Document({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans ">
         {children}
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
@@ -76,12 +100,15 @@ export function Document({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  const data = useLoaderData<typeof loader>();
+
   return (
     <Document>
       <TopNav />
       <div className="fixed flex w-full h-full">
         <Outlet />
       </div>
+      {data.toast ? <RenderToast toastCookie={data.toast} /> : null}
     </Document>
   );
 }
@@ -95,6 +122,19 @@ export default function AppWithProviders() {
       </AuthenticityTokenProvider>
     </HoneypotProvider>
   );
+}
+
+function RenderToast({ toastCookie }: { toastCookie: any }) {
+  const { toast } = useToast();
+  useEffect(() => {
+    toast({
+      type: 'foreground',
+      variant: 'success',
+      title: toastCookie.title,
+      description: toastCookie.description,
+    });
+  }, [toastCookie, toast]);
+  return null;
 }
 
 export function ErrorBoundary() {

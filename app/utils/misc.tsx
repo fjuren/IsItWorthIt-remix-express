@@ -57,3 +57,17 @@ export function FieldErrorsList({
     </ul>
   );
 }
+
+// A header can't have multiple of the same property (eg. set-cookie). So this utility effectively combines the values into a single header property
+export function combineHeaders(
+  ...headers: Array<ResponseInit['headers'] | null>
+) {
+  const combined = new Headers();
+  headers.forEach((header) => {
+    if (header) {
+      const [value] = new Headers(header).entries();
+      combined.append(value[0], value[1]);
+    }
+  });
+  return combined;
+}
