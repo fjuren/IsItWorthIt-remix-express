@@ -4,10 +4,10 @@ import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node';
 import {
-  Form,
   Link,
   MetaFunction,
   useFetcher,
+  useFetchers,
   useLoaderData,
 } from '@remix-run/react';
 import { z } from 'zod';
@@ -46,8 +46,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function UserSettings() {
-  const data = useLoaderData<typeof loader>();
-  const theme = data.headers;
+  // const data = useLoaderData<typeof loader>(); // commented out because useOptimisticUITheme handles the loader data, to help with optimistic UI on slower networks
+  const theme = useOptimisticUITheme();
 
   return (
     <div>
@@ -96,6 +96,21 @@ function ThemeToggle({ userPreferences }: { userPreferences?: Theme }) {
       {/* TODO need FormError handler??? */}
     </fetcher.Form>
   );
+}
+
+// useUITheme is to support slower networks
+export function useOptimisticUITheme() {
+  const data = useLoaderData<typeof loader>();
+  // useFetchers hook captures all page fetchers as an array
+  const fetchers = useFetchers();
+  const themeFetcher = fetchers.find(
+    (fetcher) => fetcher.formData?.get('intent') == 'update-theme'
+  );
+  const optimisticUITheme = themeFetcher?.formData?.get('theme');
+
+  return optimisticUITheme === 'light' || optimisticUITheme === 'dark'
+    ? optimisticUITheme
+    : data.headers;
 }
 
 export function ErrorBoundary() {

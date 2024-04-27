@@ -24,6 +24,7 @@ import { csrf } from './utils/csrf.server';
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react';
 import { TopNav } from './components/UI/TopNav';
 import { getTheme } from './utils/theme.server';
+import { useOptimisticUITheme } from './routes/_main+/users+/$user_+/settings';
 
 export const links: LinksFunction = () => {
   return [
@@ -50,16 +51,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   );
 }
 
-// light/dark array
-
-// export async function action({request}: ActionFunctionArgs) {
-
-// }
-
 export function Document({ children }: { children: React.ReactNode }) {
   // throw new Response('Not found', { status: 500 });
-  const data = useLoaderData<typeof loader>();
-  const theme = data.headers;
+  // const data = useLoaderData<typeof loader>();
+  // const theme = data.headers;
+  const theme = useOptimisticUITheme();
 
   return (
     <html lang="en" className={theme}>
