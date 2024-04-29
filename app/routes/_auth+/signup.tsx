@@ -129,7 +129,8 @@ export async function action({ request }: ActionFunctionArgs) {
     // show toaster success message using cookieSession
     const cookie = request.headers.get('cookie');
     const cookieSession = await toastSessionStorage.getSession(cookie);
-    cookieSession.set('authMessage', {
+    // replace 'set' with 'flash'. flash method automatically unsets value after the next 'get' for 'authMessage'
+    cookieSession.flash('authMessage', {
       type: 'success',
       title: 'Signed in',
       description: 'You are signed in',

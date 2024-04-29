@@ -52,7 +52,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const cookie = request.headers.get('cookie');
   const toastCookieSession = await toastSessionStorage.getSession(cookie);
   const toast = toastCookieSession.get('authMessage');
-  toastCookieSession.unset('authMessage');
+  // unset removes value from the session (prevents toast cookiesession from being parsed until it is set again when needed)
+  // toastCookieSession.unset('authMessage');
 
   return json(
     {
@@ -124,12 +125,13 @@ export default function AppWithProviders() {
   );
 }
 
+// from docs; if the toast only renders once when making repeatable changes (ie. delete), it's because no id is set (BUG)
 function RenderToast({ toastCookie }: { toastCookie: any }) {
   const { toast } = useToast();
   useEffect(() => {
     toast({
       type: 'foreground',
-      variant: 'success',
+      variant: toastCookie.type, // success
       title: toastCookie.title,
       description: toastCookie.description,
     });
