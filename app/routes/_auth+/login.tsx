@@ -1,6 +1,11 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
-import { ActionFunctionArgs, MetaFunction, json } from '@remix-run/node';
+import {
+  ActionFunctionArgs,
+  MetaFunction,
+  json,
+  redirect,
+} from '@remix-run/node';
 import { Form, useActionData } from '@remix-run/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
@@ -11,8 +16,10 @@ import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { checkCSRF } from '~/utils/csrf.server';
+import { prisma } from '~/utils/db.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { FieldErrorsList } from '~/utils/misc';
+import { authSessionStorage } from '~/utils/session.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -28,7 +35,7 @@ const usernameMaxLength: number = 20;
 const minLength: number = 3;
 const passwordMaxLength: number = 100;
 
-const loginSchema = z.object({
+const LoginSchema = z.object({
   username: z
     .string({ required_error: 'Please enter your username' })
     .min(minLength, { message: 'Username is too short' })
@@ -45,10 +52,34 @@ const loginSchema = z.object({
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const submission = parseWithZod(formData, { schema: loginSchema });
   await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
-  if (submission.status !== 'success') {
+  const submission = await parseWithZod(formData, {
+    schema: LoginSchema.transform(async (val, ctx) => {
+      // query username in db, entered in login form
+      const checkUser = await prisma.user.findUnique({
+        select: { id: true },
+        where: {
+          username: val.username,
+        },
+      });
+      console.log(checkUser);
+      // if user doesn't exist
+      if (!checkUser) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Invalid username or password',
+        });
+        return z.NEVER;
+      }
+      return { ...val, checkUser };
+    }),
+    async: true,
+  });
+  // remove this from the submission back to the client
+  delete submission.payload.password;
+
+  if (submission.status != 'success') {
     return json(
       {
         result: submission.reply({
@@ -60,20 +91,47 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   }
-  const { username, password } = await submission.value;
-  console.log(username, password);
-  return null;
+
+  if (!submission.value?.username) {
+    return json({ staus: 'error', submission });
+  }
+
+  const { username } = await submission.value;
+  console.log(username);
+  console.log(submission);
+  // if user exists and the submission is successful
+  if (submission.status === 'success') {
+    // login cook set
+    const cookie = request.headers.get('cookie');
+    const cookieAuthSession = await authSessionStorage.getSession(cookie);
+    cookieAuthSession.set('authSession', {
+      type: 'success',
+      username,
+    });
+    const setCookieHeader = await authSessionStorage.commitSession(
+      cookieAuthSession
+    );
+    return redirect('/login', {
+      headers: {
+        'set-cookie': setCookieHeader,
+      },
+    });
+  } else {
+    throw new Response('Not found', { status: 500 });
+  }
 }
 
 export default function LoginRoute() {
   const lastResult = useActionData<typeof action>();
   const [form, fields] = useForm({
     lastResult: lastResult?.result,
-    constraint: getZodConstraint(loginSchema),
+    constraint: getZodConstraint(LoginSchema),
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema: loginSchema });
+      return parseWithZod(formData, { schema: LoginSchema });
     },
   });
+
+  console.log('lastResult: ', lastResult);
 
   return (
     <div className="flex w-fit m-auto py-10">

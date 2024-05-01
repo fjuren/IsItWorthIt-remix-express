@@ -52,8 +52,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const cookie = request.headers.get('cookie');
   const toastCookieSession = await toastSessionStorage.getSession(cookie);
   const toast = toastCookieSession.get('authMessage');
-  // unset removes value from the session (prevents toast cookiesession from being parsed until it is set again when needed)
-  // toastCookieSession.unset('authMessage');
 
   return json(
     {
@@ -64,7 +62,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
     {
       headers: combineHeaders(
-        csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : null,
+        csrfCookieHeader
+          ? {
+              'set-cookie': csrfCookieHeader,
+            }
+          : null,
         {
           'set-cookie': await toastSessionStorage.commitSession(
             toastCookieSession

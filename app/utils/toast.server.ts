@@ -4,7 +4,7 @@ import { createCookieSessionStorage } from '@remix-run/node';
 
 export const toastSessionStorage = createCookieSessionStorage({
   cookie: {
-    name: 'iiwi-toast',
+    name: 'iiwi_toast',
     sameSite: 'lax',
     path: '/',
     httpOnly: true,
