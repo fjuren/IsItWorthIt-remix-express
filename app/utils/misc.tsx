@@ -40,7 +40,7 @@ export function invariantResponse(
   }
 }
 
-export function FieldErrorsList({
+export function FormOrFieldErrorsList({
   data,
   errorID,
 }: {

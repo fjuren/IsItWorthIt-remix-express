@@ -13,7 +13,7 @@ import {
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
-import { FieldErrorsList } from '~/utils/misc';
+import { FormOrFieldErrorsList } from '~/utils/misc';
 import { Theme, getTheme, setTheme } from '~/utils/theme.server';
 
 export const meta: MetaFunction = () => {
@@ -92,7 +92,7 @@ function ThemeToggle({ userPreferences }: { userPreferences?: Theme }) {
           {themeLabel[theme]}
         </Button>
       </div>
-      <FieldErrorsList errorID={form.errorId} data={form.errors} />
+      <FormOrFieldErrorsList errorID={form.errorId} data={form.errors} />
       {/* TODO need FormError handler??? */}
     </fetcher.Form>
   );

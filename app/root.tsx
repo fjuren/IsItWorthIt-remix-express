@@ -30,6 +30,8 @@ import { toastSessionStorage } from './utils/toast.server';
 import { useToast } from './utils/Use-Toast';
 import { combineHeaders } from './utils/misc';
 import { useEffect } from 'react';
+import { authSessionStorage } from './utils/session.server';
+import { prisma } from './utils/db.server';
 
 export const links: LinksFunction = () => {
   return [
@@ -51,7 +53,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request);
   const cookie = request.headers.get('cookie');
   const toastCookieSession = await toastSessionStorage.getSession(cookie);
-  const toast = toastCookieSession.get('authMessage');
+  const toast = toastCookieSession.get('registrationMessage');
+  const authCookieSession = await authSessionStorage.getSession(cookie);
+  const userId = authCookieSession.get('authSession');
+  const user = userId
+    ? await prisma.user.findUnique({
+        select: { firstname: true },
+        where: {
+          id: userId,
+        },
+      })
+    : null;
 
   return json(
     {
@@ -59,6 +71,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       csrfToken,
       headers: getTheme(request),
       toast,
+      user,
     },
     {
       headers: combineHeaders(
@@ -104,10 +117,11 @@ export function Document({ children }: { children: React.ReactNode }) {
 
 function App() {
   const data = useLoaderData<typeof loader>();
+  const firstName = data.user?.firstname;
 
   return (
     <Document>
-      <TopNav />
+      <TopNav firstName={firstName} />
       <div className="fixed flex w-full h-full">
         <Outlet />
       </div>

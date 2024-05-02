@@ -18,7 +18,7 @@ import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
-import { FieldErrorsList } from '~/utils/misc';
+import { FormOrFieldErrorsList } from '~/utils/misc';
 import { authSessionStorage } from '~/utils/session.server';
 
 export const meta: MetaFunction = () => {
@@ -57,22 +57,21 @@ export async function action({ request }: ActionFunctionArgs) {
   const submission = await parseWithZod(formData, {
     schema: LoginSchema.transform(async (val, ctx) => {
       // query username in db, entered in login form
-      const checkUser = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         select: { id: true },
         where: {
           username: val.username,
         },
       });
-      console.log(checkUser);
       // if user doesn't exist
-      if (!checkUser) {
+      if (!user) {
         ctx.addIssue({
           code: 'custom',
           message: 'Invalid username or password',
         });
         return z.NEVER;
       }
-      return { ...val, checkUser };
+      return { ...val, user };
     }),
     async: true,
   });
@@ -92,26 +91,18 @@ export async function action({ request }: ActionFunctionArgs) {
     );
   }
 
-  if (!submission.value?.username) {
-    return json({ staus: 'error', submission });
-  }
+  const { user } = await submission.value;
 
-  const { username } = await submission.value;
-  console.log(username);
-  console.log(submission);
   // if user exists and the submission is successful
   if (submission.status === 'success') {
     // login cook set
     const cookie = request.headers.get('cookie');
     const cookieAuthSession = await authSessionStorage.getSession(cookie);
-    cookieAuthSession.set('authSession', {
-      type: 'success',
-      username,
-    });
+    cookieAuthSession.set('authSession', user.id);
     const setCookieHeader = await authSessionStorage.commitSession(
       cookieAuthSession
     );
-    return redirect('/login', {
+    return redirect('/', {
       headers: {
         'set-cookie': setCookieHeader,
       },
@@ -124,14 +115,13 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function LoginRoute() {
   const lastResult = useActionData<typeof action>();
   const [form, fields] = useForm({
-    lastResult: lastResult?.result,
+    id: 'login',
     constraint: getZodConstraint(LoginSchema),
+    lastResult: lastResult?.result,
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: LoginSchema });
     },
   });
-
-  console.log('lastResult: ', lastResult);
 
   return (
     <div className="flex w-fit m-auto py-10">
@@ -150,7 +140,7 @@ export default function LoginRoute() {
                 // autoFocus
               />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.username.errors}
                   errorID={fields.username.id}
                 />
@@ -162,14 +152,22 @@ export default function LoginRoute() {
                 {...getInputProps(fields.password, { type: 'password' })}
               />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.password.errors}
                   errorID={fields.password.id}
                 />
               </div>
             </div>
             <div>
-              <Button type="submit">Log in</Button>
+              <FormOrFieldErrorsList
+                data={form.errors}
+                errorID={form.errorId}
+              />
+            </div>
+            <div>
+              <Button type="submit" name="intent" value="login">
+                Log in
+              </Button>
             </div>
           </Form>
         </div>

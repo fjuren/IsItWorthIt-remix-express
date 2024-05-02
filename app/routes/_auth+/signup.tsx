@@ -19,7 +19,7 @@ import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
-import { FieldErrorsList } from '~/utils/misc';
+import { FormOrFieldErrorsList } from '~/utils/misc';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
@@ -130,7 +130,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const cookie = request.headers.get('cookie');
     const cookieSession = await toastSessionStorage.getSession(cookie);
     // replace 'set' with 'flash'. flash method automatically unsets value after the next 'get' for 'authMessage'
-    cookieSession.flash('authMessage', {
+    cookieSession.flash('registrationMessage', {
       type: 'success',
       title: 'Signed in',
       description: 'You are signed in',
@@ -186,7 +186,7 @@ export default function SignupRoute() {
                 autoFocus
               />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.firstName.errors}
                   errorID={fields.firstName.id}
                 />
@@ -196,7 +196,7 @@ export default function SignupRoute() {
               <Label htmlFor={fields.lastName.id}>Last name (Optional)</Label>
               <Input {...getInputProps(fields.lastName, { type: 'text' })} />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.firstName.errors}
                   errorID={fields.lastName.errorId}
                 />
@@ -209,7 +209,7 @@ export default function SignupRoute() {
                 // required
               />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.username.errors}
                   errorID={fields.username.errorId}
                 />
@@ -219,7 +219,7 @@ export default function SignupRoute() {
               <Label htmlFor={fields.email.id}>Email</Label>
               <Input {...getInputProps(fields.email, { type: 'email' })} />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.email.errors}
                   errorID={fields.email.errorId}
                 />
@@ -231,7 +231,7 @@ export default function SignupRoute() {
                 {...getInputProps(fields.password, { type: 'password' })}
               />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.password.errors}
                   errorID={fields.password.errorId}
                 />
@@ -245,7 +245,7 @@ export default function SignupRoute() {
                 {...getInputProps(fields.confirmPassword, { type: 'password' })}
               />
               <div>
-                <FieldErrorsList
+                <FormOrFieldErrorsList
                   data={fields.confirmPassword.errors}
                   errorID={fields.confirmPassword.errorId}
                 />
