@@ -30,6 +30,12 @@ module.exports = {
       rules: {
         'react/prop-types': [2, { ignore: ['className'] }],
         'react-refresh/only-export-components': 'off',
+        'jsx-a11y/no-autofocus': [
+          2,
+          {
+            ignoreNonDOM: true,
+          },
+        ],
       },
       plugins: ['react', 'jsx-a11y'],
       extends: [

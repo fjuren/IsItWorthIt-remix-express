@@ -10,7 +10,7 @@ import {
   json,
   redirect,
 } from '@remix-run/node';
-import { Form, useActionData } from '@remix-run/react';
+import { Form, Link, useActionData } from '@remix-run/react';
 // import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
@@ -255,6 +255,11 @@ export default function SignupRoute() {
               <Button type="submit">Sign up</Button>
             </div>
           </Form>
+          <div>
+            <Button variant="link" asChild>
+              <Link to="/login">Already have an account? Log in</Link>
+            </Button>
+          </div>
         </div>
       </Card>
     </div>

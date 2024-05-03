@@ -6,7 +6,7 @@ import {
   json,
   redirect,
 } from '@remix-run/node';
-import { Form, useActionData } from '@remix-run/react';
+import { Form, Link, useActionData } from '@remix-run/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
 import { z } from 'zod';
@@ -54,7 +54,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
-  const submission = await parseWithZod(formData, {
+  const submission: any = await parseWithZod(formData, {
     schema: LoginSchema.transform(async (val, ctx) => {
       // query username in db, entered in login form
       const user = await prisma.user.findUnique({
@@ -137,7 +137,7 @@ export default function LoginRoute() {
               <Label htmlFor={fields.username.id}>Username</Label>
               <Input
                 {...getInputProps(fields.username, { type: 'text' })}
-                // autoFocus
+                autoFocus
               />
               <div>
                 <FormOrFieldErrorsList
@@ -170,6 +170,11 @@ export default function LoginRoute() {
               </Button>
             </div>
           </Form>
+          <div>
+            <Button variant="link" asChild>
+              <Link to="/signup">Don&apos;t have an account? Sign up</Link>
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
