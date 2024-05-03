@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+// @ts-expect-error no real solution found. Running this file using "npx tsx db seed" runs the seed successfully regardless of this error
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -55,11 +57,22 @@ function createUser() {
     firstname: randFirstname,
     lastname: randLastname,
     email: `${randUsername}@domain.com`,
+    password: {
+      create: createPassword(randUsername), // pw is same as the username for easy testing
+    },
     // comments: {},
     likedComments: {},
     // gameRatings: {},
     // gameFavourites: {},
     // image: {},
+  };
+}
+
+function createPassword(password: string) {
+  const fakePassword = faker.internet.password();
+  // defaults to a fake password
+  return {
+    hash: bcrypt.hashSync(password ? password : fakePassword, 10),
   };
 }
 
@@ -86,6 +99,11 @@ async function seed() {
       username: 'testUser1',
       firstname: 'Test',
       lastname: 'User1',
+      password: {
+        create: {
+          hash: bcrypt.hashSync('testuser1', 10),
+        },
+      },
       // comments: {},
       likedComments: {},
       // gameRatings: {},
@@ -132,10 +150,15 @@ async function seed() {
   const user2 = await prisma.user.create({
     data: {
       id: '6543fedc',
-      email: 'testuser2@gmail.com',
-      username: 'testUser2',
-      firstname: 'Testlongname',
-      lastname: 'User2reallylong',
+      email: 'schwarzenegger_weight_lifter@gmail.com',
+      username: 'arnie',
+      firstname: 'Arnold',
+      lastname: 'Schwarzenegger',
+      password: {
+        create: {
+          hash: bcrypt.hashSync('pizzashop', 10),
+        },
+      },
       // comments: {},
       likedComments: {},
       // gameRatings: {},
@@ -203,7 +226,6 @@ async function seed() {
     await prisma.user.create({
       data: {
         ...createUser(),
-
         comments: {
           // randomize length of array for number of comments (0-3 per user) and vary length of comments using faker
           create: Array.from({
