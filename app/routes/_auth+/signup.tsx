@@ -26,6 +26,8 @@ import { HoneypotInputs } from 'remix-utils/honeypot/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { checkCSRF } from '~/utils/csrf.server';
 import { toastSessionStorage } from '~/utils/toast.server';
+import { prisma } from '~/utils/db.server';
+import { bcrypt } from '~/utils/auth.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -94,10 +96,48 @@ const signupSchema = z
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const submission = parseWithZod(formData, { schema: signupSchema });
-
   await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
+
+  const submission = await parseWithZod(formData, {
+    schema: signupSchema.transform(async (val, ctx) => {
+      //  get the user using username
+      const existingUsername = await prisma.user.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          username: val.username,
+        },
+      });
+      // check if user already exists with the same username
+      if (existingUsername) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Username already exists',
+          fatal: true,
+        });
+        return z.NEVER;
+      }
+      // create user if username checks out and hash the submitted password
+      const user = await prisma.user.create({
+        data: {
+          email: val.email.toLowerCase(),
+          username: val.username.toLowerCase().trim(),
+          firstname: val.firstName,
+          lastname: val.lastName,
+          password: {
+            create: {
+              hash: bcrypt.hashSync(val.password, 10),
+            },
+          },
+        },
+      });
+      return { val, user };
+    }),
+    async: true,
+  });
+  delete submission.payload.password;
 
   if (submission.status !== 'success') {
     return json(
@@ -111,19 +151,6 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   }
-
-  const { firstName, lastName, username, email, password, confirmPassword } =
-    await submission.value;
-
-  console.log({
-    // TODO add to db when ready
-    firstName,
-    lastName,
-    username,
-    email,
-    password,
-    confirmPassword,
-  });
 
   if (submission.status === 'success') {
     // show toaster success message using cookieSession
@@ -250,6 +277,12 @@ export default function SignupRoute() {
                   errorID={fields.confirmPassword.errorId}
                 />
               </div>
+            </div>
+            <div>
+              <FormOrFieldErrorsList
+                data={form.errors}
+                errorID={form.errorId}
+              />
             </div>
             <div>
               <Button type="submit">Sign up</Button>
