@@ -15,6 +15,7 @@ import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
+import { bcrypt } from '~/utils/auth.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
@@ -57,21 +58,40 @@ export async function action({ request }: ActionFunctionArgs) {
   const submission: any = await parseWithZod(formData, {
     schema: LoginSchema.transform(async (val, ctx) => {
       // query username in db, entered in login form
-      const user = await prisma.user.findUnique({
-        select: { id: true },
+      const userAndPassword = await prisma.user.findUnique({
+        select: {
+          id: true,
+          password: {
+            select: { hash: true },
+          },
+        },
         where: {
           username: val.username,
         },
       });
       // if user doesn't exist
-      if (!user) {
+      if (!userAndPassword || !userAndPassword.password) {
         ctx.addIssue({
           code: 'custom',
           message: 'Invalid username or password',
         });
         return z.NEVER;
       }
-      return { ...val, user };
+      // validate the submitted password
+
+      const isPWvalid = await bcrypt.compare(
+        val.password,
+        userAndPassword.password.hash
+      );
+      if (!isPWvalid) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Invalid username or password',
+        });
+        return z.NEVER;
+      }
+
+      return { ...val, user: { id: userAndPassword.id } };
     }),
     async: true,
   });
