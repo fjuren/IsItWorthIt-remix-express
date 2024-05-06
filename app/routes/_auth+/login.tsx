@@ -99,12 +99,12 @@ export async function action({ request }: ActionFunctionArgs) {
     const cookie = request.headers.get('cookie');
     const cookieAuthSession = await authSessionStorage.getSession(cookie);
     cookieAuthSession.set('authSession', user.id);
-    const setCookieHeader = await authSessionStorage.commitSession(
+    const setAuthCookieHeader = await authSessionStorage.commitSession(
       cookieAuthSession
     );
     return redirect('/', {
       headers: {
-        'set-cookie': setCookieHeader,
+        'set-cookie': setAuthCookieHeader,
       },
     });
   } else {

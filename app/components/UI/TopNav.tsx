@@ -1,9 +1,8 @@
 import { Link } from '@remix-run/react';
 import { useState } from 'react';
 
-export function TopNav({ firstName }: { firstName: any }) {
+export function TopNav({ username }: { username: any }) {
   const [open, setOpen] = useState(false);
-
   return (
     <>
       <header className="relative">
@@ -13,9 +12,9 @@ export function TopNav({ firstName }: { firstName: any }) {
             <li className="grow px-3">
               <Link to="/">Home (logo)</Link>
             </li>
-            {firstName ? (
+            {username ? (
               <li className="flex-none px-3">
-                <Link to="/">{firstName}</Link>
+                <Link to="/">{username}</Link>
               </li>
             ) : (
               <>
@@ -34,9 +33,9 @@ export function TopNav({ firstName }: { firstName: any }) {
             <button className="grow px-3" onClick={() => setOpen(!open)}>
               Hamburger menu
             </button>
-            {firstName ? (
+            {username ? (
               <li className="flex-none px-3">
-                <Link to="/">{firstName}</Link>
+                <Link to="/">{username}</Link>
               </li>
             ) : (
               <>

@@ -19,7 +19,7 @@ import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
-import { FormOrFieldErrorsList } from '~/utils/misc';
+import { FormOrFieldErrorsList, combineHeaders } from '~/utils/misc';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
@@ -28,6 +28,7 @@ import { checkCSRF } from '~/utils/csrf.server';
 import { toastSessionStorage } from '~/utils/toast.server';
 import { prisma } from '~/utils/db.server';
 import { bcrypt } from '~/utils/auth.server';
+import { authSessionStorage } from '~/utils/session.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -72,7 +73,7 @@ const signupSchema = z
       .email({
         message: 'Please enter a valid email address',
       }),
-    password: z
+    password: z // TODO improve security requirement validation for passwords
       .string({ required_error: 'Please enter your password' })
       .min(minLength, { message: 'Password is too short' })
       .max(passwordMaxLength, {
@@ -100,41 +101,65 @@ export async function action({ request }: ActionFunctionArgs) {
   checkHoneypot(formData);
 
   const submission = await parseWithZod(formData, {
-    schema: signupSchema.transform(async (val, ctx) => {
-      //  get the user using username
-      const existingUsername = await prisma.user.findUnique({
-        select: {
-          id: true,
-        },
-        where: {
-          username: val.username,
-        },
-      });
-      // check if user already exists with the same username
-      if (existingUsername) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Username already exists',
-          fatal: true,
+    schema: signupSchema
+      .superRefine(async (val, ctx) => {
+        // get the user using email if it exists
+        const existingEmail = await prisma.user.findUnique({
+          select: {
+            id: true,
+          },
+          where: {
+            email: val.email,
+          },
         });
-        return z.NEVER;
-      }
-      // create user if username checks out and hash the submitted password
-      const user = await prisma.user.create({
-        data: {
-          email: val.email.toLowerCase(),
-          username: val.username.toLowerCase().trim(),
-          firstname: val.firstName,
-          lastname: val.lastName,
-          password: {
-            create: {
-              hash: bcrypt.hashSync(val.password, 10),
+        // throw validation error if the email already exists
+        if (existingEmail) {
+          ctx.addIssue({
+            path: ['email'],
+            code: 'custom',
+            message: 'Email already exists',
+            fatal: true,
+          });
+          return z.NEVER;
+        }
+        //  get the user using username if it exists
+        const existingUsername = await prisma.user.findUnique({
+          select: {
+            id: true,
+          },
+          where: {
+            username: val.username,
+          },
+        });
+        // throw validation error if the username already exists
+        if (existingUsername) {
+          ctx.addIssue({
+            path: ['username'],
+            code: 'custom',
+            message: 'Username already exists',
+            fatal: true,
+          });
+          return z.NEVER;
+        }
+      })
+      .transform(async (val) => {
+        // create user if username checks out and hash the submitted password
+        const user = await prisma.user.create({
+          select: { id: true },
+          data: {
+            email: val.email.toLowerCase(),
+            username: val.username.toLowerCase().trim(),
+            firstname: val.firstName,
+            lastname: val.lastName,
+            password: {
+              create: {
+                hash: bcrypt.hashSync(val.password, 10),
+              },
             },
           },
-        },
-      });
-      return { val, user };
-    }),
+        });
+        return { val, user };
+      }),
     async: true,
   });
   delete submission.payload.password;
@@ -162,12 +187,23 @@ export async function action({ request }: ActionFunctionArgs) {
       title: 'Signed in',
       description: 'You are signed in',
     });
-    const setCookieHeader = await toastSessionStorage.commitSession(
+    const setToastCookieHeader = await toastSessionStorage.commitSession(
       cookieSession
     );
 
+    // set cookie session for authentication
+    const { user } = submission.value;
+    const cookieAuthSession = await authSessionStorage.getSession(cookie);
+    cookieAuthSession.set('authSession', user.id);
+    const setAuthCookieHeader = await authSessionStorage.commitSession(
+      cookieAuthSession
+    );
+
     return redirect('/', {
-      headers: { 'set-cookie': setCookieHeader },
+      headers: combineHeaders(
+        { 'set-cookie': setToastCookieHeader },
+        { 'set-cookie': setAuthCookieHeader }
+      ),
     });
   } else {
     throw new Response('Not found', { status: 500 });

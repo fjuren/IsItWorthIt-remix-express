@@ -56,9 +56,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const toast = toastCookieSession.get('registrationMessage');
   const authCookieSession = await authSessionStorage.getSession(cookie);
   const userId = authCookieSession.get('authSession');
+  console.log(userId);
   const user = userId
     ? await prisma.user.findUnique({
-        select: { firstname: true },
+        select: { username: true },
         where: {
           id: userId,
         },
@@ -117,11 +118,11 @@ export function Document({ children }: { children: React.ReactNode }) {
 
 function App() {
   const data = useLoaderData<typeof loader>();
-  const firstName = data.user?.firstname;
+  const username = data.user?.username;
 
   return (
     <Document>
-      <TopNav firstName={firstName} />
+      <TopNav username={username} />
       <div className="fixed flex w-full h-full">
         <Outlet />
       </div>
