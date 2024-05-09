@@ -28,7 +28,7 @@ module.exports = {
     {
       files: ['**/*.{js,jsx,ts,tsx}'],
       rules: {
-        'react/prop-types': [2, { ignore: ['className'] }],
+        'react/prop-types': 'off', // off since Typescript handles this
         'react-refresh/only-export-components': 'off',
         'jsx-a11y/no-autofocus': [
           2,

@@ -77,8 +77,8 @@ export async function action({ request }: ActionFunctionArgs) {
         });
         return z.NEVER;
       }
-      // validate the submitted password
 
+      // validate the submitted password
       const isPWvalid = await bcrypt.compare(
         val.password,
         userAndPassword.password.hash

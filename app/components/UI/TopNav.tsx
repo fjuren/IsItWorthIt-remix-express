@@ -1,7 +1,42 @@
 import { Link } from '@remix-run/react';
 import { useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/UI/Avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '~/components/UI/DropdownMenu';
 
-export function TopNav({ username }: { username: any }) {
+function ProfileDesktopMenu({ username }: { username: string }) {
+  const firstLetter = username.charAt(0).toUpperCase();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger>
+        <Avatar>
+          <AvatarImage
+          // src=""
+          />
+          <AvatarFallback>{firstLetter}</AvatarFallback>
+        </Avatar>
+        {/* {username} */}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <Link to="/">
+          <DropdownMenuItem>Logout</DropdownMenuItem>
+        </Link>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function TopNav({ user }: { user: any }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -12,9 +47,10 @@ export function TopNav({ username }: { username: any }) {
             <li className="grow px-3">
               <Link to="/">Home (logo)</Link>
             </li>
-            {username ? (
+            {user ? (
               <li className="flex-none px-3">
-                <Link to="/">{username}</Link>
+                <ProfileDesktopMenu username={user.username} />
+                {/* <Link to="/">{username}</Link> */}
               </li>
             ) : (
               <>
@@ -33,9 +69,9 @@ export function TopNav({ username }: { username: any }) {
             <button className="grow px-3" onClick={() => setOpen(!open)}>
               Hamburger menu
             </button>
-            {username ? (
+            {user ? (
               <li className="flex-none px-3">
-                <Link to="/">{username}</Link>
+                <ProfileDesktopMenu username={user.username} />
               </li>
             ) : (
               <>

@@ -32,6 +32,7 @@ import { combineHeaders } from './utils/misc';
 import { useEffect } from 'react';
 import { authSessionStorage } from './utils/session.server';
 import { prisma } from './utils/db.server';
+import { useOptionalUser } from './utils/user';
 
 export const links: LinksFunction = () => {
   return [
@@ -56,7 +57,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const toast = toastCookieSession.get('registrationMessage');
   const authCookieSession = await authSessionStorage.getSession(cookie);
   const userId = authCookieSession.get('authSession');
-  console.log(userId);
   const user = userId
     ? await prisma.user.findUnique({
         select: { username: true },
@@ -118,11 +118,11 @@ export function Document({ children }: { children: React.ReactNode }) {
 
 function App() {
   const data = useLoaderData<typeof loader>();
-  const username = data.user?.username;
+  const user = useOptionalUser();
 
   return (
     <Document>
-      <TopNav username={username} />
+      <TopNav user={user} />
       <div className="fixed flex w-full h-full">
         <Outlet />
       </div>
