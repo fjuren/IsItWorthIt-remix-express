@@ -1,4 +1,4 @@
-import { Link } from '@remix-run/react';
+import { Form, Link } from '@remix-run/react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/UI/Avatar';
 import {
@@ -9,28 +9,57 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/UI/DropdownMenu';
+import { Button } from './Button';
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 
 function ProfileDesktopMenu({ username }: { username: string }) {
   const firstLetter = username.charAt(0).toUpperCase();
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Avatar>
-          <AvatarImage
-          // src=""
-          />
-          <AvatarFallback>{firstLetter}</AvatarFallback>
-        </Avatar>
-        {/* {username} */}
+      <DropdownMenuTrigger className="flex w-20 justify-between">
+        <div>
+          <Avatar>
+            <AvatarImage
+            // src=""
+            />
+            <AvatarFallback>{firstLetter}</AvatarFallback>
+          </Avatar>
+        </div>
+        <div className="self-center">{username}</div>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Settings</DropdownMenuItem>
-        <Link to="/">
-          <DropdownMenuItem>Logout</DropdownMenuItem>
-        </Link>
+        <DropdownMenuItem>
+          <a
+            href={`/users/${username}`}
+            className="bg-none text-current border-none h-auto w-full justify-start p-0 font-inherit cursor-pointer outline-inherit"
+          >
+            Profile
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <a
+            href={`/users/${username}/settings`}
+            className="bg-none text-current border-none h-auto w-full justify-start p-0 font-inherit cursor-pointer outline-inherit"
+          >
+            Settings
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Form method="POST" action="/logout" className="p-0 w-full">
+            <AuthenticityTokenInput />
+            <Button
+              type="submit"
+              variant="ghost"
+              className="bg-none text-current border-none h-auto w-full justify-start p-0 font-inherit cursor-pointer outline-inherit"
+              name="intent"
+              value="logout"
+            >
+              Logout
+            </Button>
+          </Form>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

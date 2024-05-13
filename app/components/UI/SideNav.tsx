@@ -32,15 +32,31 @@ export function SideNav() {
         </button>
         <nav>
           <ul className="flex-col ">
-            <li>
-              <Link to="/">Games</Link>
-            </li>
-            <li>
-              <Link to="/">Placeholder</Link>
-            </li>
-            <li>
-              <Link to="/">Placeholder</Link>
-            </li>
+            {open ? (
+              <>
+                <li>
+                  <Link to="/">Games</Link>
+                </li>
+                <li>
+                  <Link to="/">Placeholder</Link>
+                </li>
+                <li>
+                  <Link to="/">Placeholder</Link>
+                </li>{' '}
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to="/">G</Link>
+                </li>
+                <li>
+                  <Link to="/">P</Link>
+                </li>
+                <li>
+                  <Link to="/">P</Link>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
       </div>
