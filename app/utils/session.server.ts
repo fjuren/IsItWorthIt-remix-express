@@ -3,7 +3,6 @@ import { createCookieSessionStorage } from '@remix-run/node';
 export const authSessionStorage = createCookieSessionStorage({
   cookie: {
     name: 'iiwi_auth_session',
-    // expires: new Date(Date.now() + 60_000),
     httpOnly: true,
     path: '/',
     sameSite: 'lax',
@@ -11,3 +10,9 @@ export const authSessionStorage = createCookieSessionStorage({
     secure: process.env.NODE_ENV === 'production',
   },
 });
+
+// Create session expiration variable
+const thirtyDaysInMilliseconds = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+export const SESSION_EXPIRY_TIME = new Date(
+  Date.now() + thirtyDaysInMilliseconds
+);

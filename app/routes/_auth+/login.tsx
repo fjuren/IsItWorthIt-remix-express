@@ -14,13 +14,17 @@ import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
+import { CheckboxConform } from '~/components/UI/Checkbox';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { bcrypt } from '~/utils/auth.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
-import { authSessionStorage } from '~/utils/session.server';
+import {
+  SESSION_EXPIRY_TIME,
+  authSessionStorage,
+} from '~/utils/session.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -49,6 +53,7 @@ const LoginSchema = z.object({
     .max(passwordMaxLength, {
       message: 'Must be 100 or fewer characters long',
     }),
+  rememberMe: z.boolean().optional(),
 });
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -110,8 +115,8 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   }
-
-  const { user } = await submission.value;
+  console.log(submission.value);
+  const { rememberMe, user } = await submission.value;
 
   // if user exists and the submission is successful
   if (submission.status === 'success') {
@@ -120,7 +125,8 @@ export async function action({ request }: ActionFunctionArgs) {
     const cookieAuthSession = await authSessionStorage.getSession(cookie);
     cookieAuthSession.set('authSession', user.id);
     const setAuthCookieHeader = await authSessionStorage.commitSession(
-      cookieAuthSession
+      cookieAuthSession,
+      { expires: rememberMe ? SESSION_EXPIRY_TIME : undefined }
     );
     return redirect('/', {
       headers: {
@@ -175,6 +181,16 @@ export default function LoginRoute() {
                 <FormOrFieldErrorsList
                   data={fields.password.errors}
                   errorID={fields.password.id}
+                />
+              </div>
+            </div>
+            <div className="flex">
+              <CheckboxConform meta={fields.rememberMe} />
+              <Label htmlFor={fields.rememberMe.id}>Remember me</Label>
+              <div>
+                <FormOrFieldErrorsList
+                  data={fields.rememberMe.errors}
+                  errorID={fields.rememberMe.id}
                 />
               </div>
             </div>
