@@ -12,6 +12,7 @@ import {
   Scripts,
   ScrollRestoration,
   json,
+  redirect,
   useLoaderData,
 } from '@remix-run/react';
 import faviconAssetUrl from './assets/favicon.ico';
@@ -65,6 +66,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
         },
       })
     : null;
+
+  // This is to handle weird cases, eg. if the user is deleted somehow but their cookie session still exists, we should log them out/destroy their auth session
+  if (userId && !user) {
+    return redirect('/', {
+      headers: {
+        'set-cookie': await authSessionStorage.destroySession(
+          authCookieSession
+        ),
+      },
+    });
+  }
 
   return json(
     {

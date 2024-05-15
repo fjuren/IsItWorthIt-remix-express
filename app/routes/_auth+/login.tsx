@@ -22,8 +22,8 @@ import { prisma } from '~/utils/db.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
 import {
-  SESSION_EXPIRY_TIME,
   authSessionStorage,
+  getCookieSessionExpirationDate,
 } from '~/utils/session.server';
 
 export const meta: MetaFunction = () => {
@@ -115,7 +115,6 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   }
-  console.log(submission.value);
   const { rememberMe, user } = await submission.value;
 
   // if user exists and the submission is successful
@@ -126,7 +125,7 @@ export async function action({ request }: ActionFunctionArgs) {
     cookieAuthSession.set('authSession', user.id);
     const setAuthCookieHeader = await authSessionStorage.commitSession(
       cookieAuthSession,
-      { expires: rememberMe ? SESSION_EXPIRY_TIME : undefined }
+      { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
     );
     return redirect('/', {
       headers: {
