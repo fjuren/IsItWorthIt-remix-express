@@ -65,7 +65,7 @@ function ProfileDesktopMenu({ username }: { username: string }) {
   );
 }
 
-export function TopNav({ user }: { user: any }) {
+export function TopNav({ loggedInUser }: { loggedInUser: any }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -76,9 +76,9 @@ export function TopNav({ user }: { user: any }) {
             <li className="grow px-3">
               <Link to="/">Home (logo)</Link>
             </li>
-            {user ? (
+            {loggedInUser ? (
               <li className="flex-none px-3">
-                <ProfileDesktopMenu username={user.username} />
+                <ProfileDesktopMenu username={loggedInUser.username} />
                 {/* <Link to="/">{username}</Link> */}
               </li>
             ) : (
@@ -98,9 +98,9 @@ export function TopNav({ user }: { user: any }) {
             <button className="grow px-3" onClick={() => setOpen(!open)}>
               Hamburger menu
             </button>
-            {user ? (
+            {loggedInUser ? (
               <li className="flex-none px-3">
-                <ProfileDesktopMenu username={user.username} />
+                <ProfileDesktopMenu username={loggedInUser.username} />
               </li>
             ) : (
               <>

@@ -13,8 +13,8 @@ import {
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
-import { requireUserId } from '~/utils/auth.server';
-import { FormOrFieldErrorsList } from '~/utils/misc';
+import { requireUser, requireUserId } from '~/utils/auth.server';
+import { FormOrFieldErrorsList, invariantResponse } from '~/utils/misc';
 import { Theme, getTheme, setTheme } from '~/utils/theme.server';
 
 export const meta: MetaFunction = () => {
@@ -24,15 +24,25 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  await requireUserId(request); // protected route
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  await requireUserId(request); // protects route (must be authenticated)
+  const user = await requireUser(request); // protects route (must be authorized)
+  invariantResponse(user.username === params.user, 'Forbidden', {
+    status: 403,
+  });
+
   return json({
     headers: getTheme(request),
   });
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-  // const userId = await requireUserId(request); //TODO use this userId when needed for user data
+export async function action({ request, params }: ActionFunctionArgs) {
+  await requireUserId(request); // protects route (must be authenticated)
+  const user = await requireUser(request); // protects route (must be authorized)
+  invariantResponse(user.username === params.user, 'Forbidden', {
+    status: 403,
+  });
+
   const formData = await request.formData();
   const submission = parseWithZod(formData, { schema: themeSchema });
   if (submission.status !== 'success') {

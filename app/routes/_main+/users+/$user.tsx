@@ -1,12 +1,13 @@
 // import type { MetaFunction } from '@remix-run/node';
 
 import { LoaderFunctionArgs, MetaFunction, json } from '@remix-run/node';
-import { Link, useLoaderData } from '@remix-run/react';
+import { useLoaderData } from '@remix-run/react';
 // import { db } from 'app/utils/db.server'; // local db
 import { prisma } from '~/utils/db.server';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { invariantResponse } from '~/utils/misc';
 import { requireUserId } from '~/utils/auth.server';
+import { useOptionalUser } from '~/utils/user';
 
 export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
   const displayName = data?.user.firstname ?? params.user;
@@ -16,8 +17,8 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
   ];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const userId = await requireUserId(request); // protected route
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  await requireUserId(request); // protects route (must be authenticated)
   const user = await prisma.user.findUnique({
     select: {
       id: true,
@@ -28,7 +29,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       createdAt: true,
       image: { select: { blob: true, altText: true } },
     },
-    where: { id: userId },
+    where: { username: params.user },
   });
 
   // throw new Error('Component error');
@@ -38,14 +39,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function UsernameRoute() {
   const data = useLoaderData<typeof loader>();
+  const loggedInUser = useOptionalUser();
+  const isLoggedInUser = loggedInUser?.id === data.user.id;
   return (
     <div>
       <div>
         <div>Profile</div>
-        <Link to="settings">
+        {/* <Link to="settings">
           Settings (add this to profile dropdown or open slide-out menu. Design
           tbd)
-        </Link>
+        </Link> */}
       </div>
       <div>
         <div>
@@ -65,7 +68,7 @@ export default function UsernameRoute() {
       </div>
       <div>
         <div>Username: {data.user.username}</div>
-        <div>Email: {data.user.email}</div>
+        {isLoggedInUser ? <div>Email: {data.user.email}</div> : null}
       </div>
     </div>
   );

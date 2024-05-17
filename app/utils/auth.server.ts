@@ -36,13 +36,32 @@ export async function redirectIfAuthenticated(request: Request) {
   return null;
 }
 
-// Returns the authenticated users userId. If no userId is found, redirect the user to the login page (ie. Gives userId if available, otherwise protect the route from unauthenticated users)
+// Ensures authentication. Returns the authenticated users userId. If no userId is found, redirect the user to the login page (ie. Gives userId if available, otherwise protect the route from unauthenticated users)
 export async function requireUserId(request: Request) {
   const userId = await getUserId(request);
   if (!userId) {
     throw redirect('/login');
   }
   return userId;
+}
+
+// Ensure authorization. If the userId doesn't match the intended user, redirects the user to the homepage. (ie. Protects the routes from unauthorized users)
+export async function requireUser(request: Request) {
+  const userId = await requireUserId(request);
+  const user = await prisma.user.findUnique({
+    select: {
+      id: true,
+      username: true,
+    },
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw await logout(request);
+  }
+  return user;
 }
 
 // TODO REFACTOR- add login utility here

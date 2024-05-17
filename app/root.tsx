@@ -62,7 +62,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const user = userId
     ? await prisma.user.findUnique({
-        select: { username: true },
+        select: { id: true, username: true },
         where: {
           id: userId,
         },
@@ -132,11 +132,12 @@ export function Document({ children }: { children: React.ReactNode }) {
 
 function App() {
   const data = useLoaderData<typeof loader>();
-  const user = useOptionalUser();
+  const loggedInUser = useOptionalUser();
+  // const isLoggedInUser = loggedInUser?.id === data.user?.id; // TODO show/hide UI components when they're ready
 
   return (
     <Document>
-      <TopNav user={user} />
+      <TopNav loggedInUser={loggedInUser} />
       <div className="fixed flex w-full h-full">
         <Outlet />
       </div>
