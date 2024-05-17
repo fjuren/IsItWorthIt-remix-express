@@ -13,6 +13,7 @@ import {
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
+import { requireUserId } from '~/utils/auth.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
 import { Theme, getTheme, setTheme } from '~/utils/theme.server';
 
@@ -24,12 +25,14 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  await requireUserId(request); // protected route
   return json({
     headers: getTheme(request),
   });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  // const userId = await requireUserId(request); //TODO use this userId when needed for user data
   const formData = await request.formData();
   const submission = parseWithZod(formData, { schema: themeSchema });
   if (submission.status !== 'success') {

@@ -6,6 +6,7 @@ import { Link, useLoaderData } from '@remix-run/react';
 import { prisma } from '~/utils/db.server';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { invariantResponse } from '~/utils/misc';
+import { requireUserId } from '~/utils/auth.server';
 
 export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
   const displayName = data?.user.firstname ?? params.user;
@@ -15,8 +16,8 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
   ];
 };
 
-export async function loader({ params }: LoaderFunctionArgs) {
-  console.log(params);
+export async function loader({ request }: LoaderFunctionArgs) {
+  const userId = await requireUserId(request); // protected route
   const user = await prisma.user.findUnique({
     select: {
       id: true,
@@ -27,7 +28,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
       createdAt: true,
       image: { select: { blob: true, altText: true } },
     },
-    where: { username: params.user },
+    where: { id: userId },
   });
 
   // throw new Error('Component error');

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
-// @ts-expect-error no real solution found. Running this file using "npx tsx db seed" runs the seed successfully regardless of this error
+// @ts-expect-error no real solution found. Running this file using "npx prisma db seed" runs the seed successfully regardless of this error
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();

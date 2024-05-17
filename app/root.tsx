@@ -34,6 +34,7 @@ import { useEffect } from 'react';
 import { authSessionStorage } from './utils/session.server';
 import { prisma } from './utils/db.server';
 import { useOptionalUser } from './utils/user';
+import { getUserId } from './utils/auth.server';
 
 export const links: LinksFunction = () => {
   return [
@@ -57,7 +58,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const toastCookieSession = await toastSessionStorage.getSession(cookie);
   const toast = toastCookieSession.get('registrationMessage');
   const authCookieSession = await authSessionStorage.getSession(cookie);
-  const userId = authCookieSession.get('authSession');
+  const userId = await getUserId(request);
+
   const user = userId
     ? await prisma.user.findUnique({
         select: { username: true },
@@ -68,7 +70,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     : null;
 
   // This is to handle weird cases, eg. if the user is deleted somehow but their cookie session still exists, we should log them out/destroy their auth session
-  if (userId && !user) {
+  if ((await userId) && !user) {
     return redirect('/', {
       headers: {
         'set-cookie': await authSessionStorage.destroySession(

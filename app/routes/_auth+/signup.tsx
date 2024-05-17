@@ -9,6 +9,7 @@ import {
   type ActionFunctionArgs,
   json,
   redirect,
+  LoaderFunctionArgs,
 } from '@remix-run/node';
 import { Form, Link, useActionData } from '@remix-run/react';
 // import { useEffect, useState } from 'react';
@@ -27,7 +28,7 @@ import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { checkCSRF } from '~/utils/csrf.server';
 import { toastSessionStorage } from '~/utils/toast.server';
 import { prisma } from '~/utils/db.server';
-import { bcrypt } from '~/utils/auth.server';
+import { bcrypt, redirectIfAuthenticated } from '~/utils/auth.server';
 import {
   authSessionStorage,
   getCookieSessionExpirationDate,
@@ -100,7 +101,13 @@ const signupSchema = z
     }
   });
 
+export async function loader({ request }: LoaderFunctionArgs) {
+  return await redirectIfAuthenticated(request);
+}
+
 export async function action({ request }: ActionFunctionArgs) {
+  await redirectIfAuthenticated(request); // using this to prevent already authed user from submitting a signup request
+
   const formData = await request.formData();
   await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
@@ -320,9 +327,11 @@ export default function SignupRoute() {
                 />
               </div>
             </div>
-            <div className="flex">
+            <div className="flex py-2">
               <CheckboxConform meta={fields.rememberMe} />
-              <Label htmlFor={fields.rememberMe.id}>Remember me</Label>
+              <Label className="ml-2 self-end" htmlFor={fields.rememberMe.id}>
+                Remember me
+              </Label>
               <div>
                 <FormOrFieldErrorsList
                   data={fields.rememberMe.errors}
