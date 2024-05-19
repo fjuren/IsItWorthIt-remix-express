@@ -7,7 +7,7 @@ import { prisma } from './db.server';
 
 export { bcrypt };
 
-// Checks there's a user ID and a user that exists. If so return the user's ID
+// Checks there's a user ID from authenticated cookie and that a user that exists. If so return the user's ID. Log them out otherwise
 export async function getUserId(request: Request) {
   const cookie = request.headers.get('cookie');
   const authCookieSession = await authSessionStorage.getSession(cookie);
@@ -36,11 +36,33 @@ export async function redirectIfAuthenticated(request: Request) {
   return null;
 }
 
-// Ensures authentication. Returns the authenticated users userId. If no userId is found, redirect the user to the login page (ie. Gives userId if available, otherwise protect the route from unauthenticated users)
-export async function requireUserId(request: Request) {
+// Ensures authentication and offers support for redirects (useful for sending a user to an authenticated page and offers a redirect once logged in - better UX implementation).
+// Returns the authenticated users userId. If no userId is found, checks whether the user is being redirected. (ie. Gives userId if available, otherwise protect the route from unauthenticated users and offers redirect functionality)
+export async function requireUserId(
+  request: Request,
+  { redirectTo }: { redirectTo?: string | null } = {}
+) {
   const userId = await getUserId(request);
+  const requestUrl = new URL(request.url);
   if (!userId) {
-    throw redirect('/login');
+    // explicitly set redirectTo to null if explicitly given (ie. can prevent redirect altogether with giving null)
+    if (redirectTo === null) {
+      redirectTo = null;
+    } else {
+      // if redirectTo not explicitely given, use the current URL's path and query string as the default redirectTo value. Otherwise use whatever is given in redirectTo
+      // note that this checks for both null and undefined (ie nothing explicetly given)
+      if (redirectTo == null) {
+        redirectTo = `${requestUrl.pathname}${requestUrl.search}`;
+      }
+    }
+    // if the redirectTo is available, use URLSearchParams to create a search query using params set by latest defined redirectTo.
+    const loginParams = redirectTo ? new URLSearchParams({ redirectTo }) : null;
+    // if there's an explicit redirect, this will first have the user login; and the url will include the login path + redirect (ie. search params)
+    // When taken to login page, URL will show redirectTo parameters already. This is NOT part of the login loader!!
+    const loginRedirect = ['/login', loginParams?.toString()]
+      .filter(Boolean)
+      .join('?');
+    throw redirect(loginRedirect);
   }
   return userId;
 }

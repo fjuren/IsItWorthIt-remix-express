@@ -17,8 +17,9 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
   ];
 };
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
-  await requireUserId(request); // protects route (must be authenticated)
+export async function loader({ request }: LoaderFunctionArgs) {
+  // await requireUserId(request); // protects route (must be authenticated)
+  const userId = await requireUserId(request); // protects route (must be authenticated)
   const user = await prisma.user.findUnique({
     select: {
       id: true,
@@ -29,7 +30,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       createdAt: true,
       image: { select: { blob: true, altText: true } },
     },
-    where: { username: params.user },
+    // where: { username: params.user },
+    where: { id: userId },
   });
 
   // throw new Error('Component error');

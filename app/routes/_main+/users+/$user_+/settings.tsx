@@ -13,7 +13,7 @@ import {
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
-import { requireUser, requireUserId } from '~/utils/auth.server';
+import { requireUser } from '~/utils/auth.server';
 import { FormOrFieldErrorsList, invariantResponse } from '~/utils/misc';
 import { Theme, getTheme, setTheme } from '~/utils/theme.server';
 
@@ -25,8 +25,7 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  await requireUserId(request); // protects route (must be authenticated)
-  const user = await requireUser(request); // protects route (must be authorized)
+  const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
   invariantResponse(user.username === params.user, 'Forbidden', {
     status: 403,
   });
@@ -37,8 +36,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  await requireUserId(request); // protects route (must be authenticated)
-  const user = await requireUser(request); // protects route (must be authorized)
+  const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
   invariantResponse(user.username === params.user, 'Forbidden', {
     status: 403,
   });

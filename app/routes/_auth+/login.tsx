@@ -7,7 +7,8 @@ import {
   json,
   redirect,
 } from '@remix-run/node';
-import { Form, Link, useActionData } from '@remix-run/react';
+import { safeRedirect } from 'remix-utils/safe-redirect';
+import { Form, Link, useActionData, useSearchParams } from '@remix-run/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
 import { z } from 'zod';
@@ -55,6 +56,7 @@ const LoginSchema = z.object({
       message: 'Must be 100 or fewer characters long',
     }),
   rememberMe: z.boolean().optional(),
+  redirectTo: z.string().optional(),
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -121,7 +123,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   }
-  const { rememberMe, user } = await submission.value;
+  const { rememberMe, user, redirectTo } = await submission.value;
 
   // if user exists and the submission is successful
   if (submission.status === 'success') {
@@ -133,7 +135,8 @@ export async function action({ request }: ActionFunctionArgs) {
       cookieAuthSession,
       { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
     );
-    return redirect('/', {
+    // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
+    return redirect(safeRedirect(redirectTo), {
       headers: {
         'set-cookie': setAuthCookieHeader,
       },
@@ -145,8 +148,12 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function LoginRoute() {
   const lastResult = useActionData<typeof action>();
+  // relevant for redirect; get the redirect from search params (if null, it should be ignored)
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo');
   const [form, fields] = useForm({
     id: 'login',
+    defaultValue: { redirectTo: redirectTo },
     constraint: getZodConstraint(LoginSchema),
     lastResult: lastResult?.result,
     onValidate({ formData }) {
@@ -188,6 +195,11 @@ export default function LoginRoute() {
                   errorID={fields.password.id}
                 />
               </div>
+            </div>
+            <div>
+              <Input
+                {...getInputProps(fields.redirectTo, { type: 'hidden' })}
+              />
             </div>
             <div className="flex py-2">
               <CheckboxConform meta={fields.rememberMe} />
