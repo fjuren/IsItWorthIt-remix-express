@@ -16,13 +16,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions Permission[]
+  users       User[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  action      String // create, read, update or delete
+  entity      String // eg user or comment //TODO add others
+  access      String // own or all //TODO add others
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles Role[]
+
+  @@unique([action, entity, access]) // the combination of these are unique
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   username  String   @unique
   firstname String?
   lastname  String?
-  // role?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -33,6 +57,7 @@ model User {
   gameFavourites GamePost[]       @relation("FavoritedGamesByUser")
 
   image UserImage?
+  roles Role[]
 }
 
 model Password {

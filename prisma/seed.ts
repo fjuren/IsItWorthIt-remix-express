@@ -62,8 +62,10 @@ function createUser() {
     },
     // comments: {},
     likedComments: {},
+
     // gameRatings: {},
     // gameFavourites: {},
+    // roles: [{}]
     // image: {},
   };
 }
@@ -109,6 +111,16 @@ async function seed() {
       // gameRatings: {},
       gameFavourites: {
         connect: [gamePost1],
+      },
+      roles: {
+        connect: [
+          {
+            name: 'user',
+          },
+          {
+            name: 'admin',
+          },
+        ],
       },
       image: {},
     },
@@ -164,6 +176,16 @@ async function seed() {
       // gameRatings: {},
       gameFavourites: {
         connect: [gamePost1, gamePost2],
+      },
+      roles: {
+        connect: [
+          {
+            name: 'user',
+          },
+          {
+            name: 'admin',
+          },
+        ],
       },
       image: {},
     },
@@ -267,6 +289,11 @@ async function seed() {
         },
         gameFavourites: {
           connect: [listOfGamePosts[getRandArrayIndex(listOfGamePosts)]],
+        },
+        roles: {
+          connect: {
+            name: 'user',
+          },
         },
         image: {
           create: {

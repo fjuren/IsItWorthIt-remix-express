@@ -163,6 +163,11 @@ export async function action({ request }: ActionFunctionArgs) {
             username: val.username.toLowerCase().trim(),
             firstname: val.firstName,
             lastname: val.lastName,
+            roles: {
+              connect: {
+                name: 'user',
+              },
+            },
             password: {
               create: {
                 hash: bcrypt.hashSync(val.password, 10),
