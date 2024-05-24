@@ -34,6 +34,7 @@ import {
   getCookieSessionExpirationDate,
 } from '~/utils/session.server';
 import { CheckboxConform } from '~/components/UI/Checkbox';
+import { sendEmail } from '~/utils/email.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -102,6 +103,13 @@ const signupSchema = z
   });
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const response = await sendEmail({
+    to: 'realemail@gmail.com',
+    subject: 'Hello World',
+    text: 'This is the plain text version',
+    html: '<p>This is the HTML version</p>',
+  });
+  console.log(response);
   return await redirectIfAuthenticated(request);
 }
 

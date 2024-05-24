@@ -4,15 +4,21 @@
  * For more information, see https://remix.run/file-conventions/entry.server
  */
 
-import { PassThrough } from "node:stream";
+import { PassThrough } from 'node:stream';
 
-import type { AppLoadContext, EntryContext } from "@remix-run/node";
-import { createReadableStreamFromReadable } from "@remix-run/node";
-import { RemixServer } from "@remix-run/react";
-import { isbot } from "isbot";
-import { renderToPipeableStream } from "react-dom/server";
+import type { AppLoadContext, EntryContext } from '@remix-run/node';
+import { createReadableStreamFromReadable } from '@remix-run/node';
+import { RemixServer } from '@remix-run/react';
+import { isbot } from 'isbot';
+import { renderToPipeableStream } from 'react-dom/server';
+import { mockServer } from './mocks/node';
 
 const ABORT_DELAY = 5_000;
+
+// sets up a mock server (using MSW) to handle mock requests in development
+if (process.env.NODE_ENV === 'development' && process.env.Mocks === 'true') {
+  mockServer.listen({ onUnhandledRequest: 'warn' });
+}
 
 export default function handleRequest(
   request: Request,
@@ -24,7 +30,7 @@ export default function handleRequest(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   loadContext: AppLoadContext
 ) {
-  return isbot(request.headers.get("user-agent") || "")
+  return isbot(request.headers.get('user-agent') || '')
     ? handleBotRequest(
         request,
         responseStatusCode,
@@ -59,7 +65,7 @@ function handleBotRequest(
           const body = new PassThrough();
           const stream = createReadableStreamFromReadable(body);
 
-          responseHeaders.set("Content-Type", "text/html");
+          responseHeaders.set('Content-Type', 'text/html');
 
           resolve(
             new Response(stream, {
@@ -109,7 +115,7 @@ function handleBrowserRequest(
           const body = new PassThrough();
           const stream = createReadableStreamFromReadable(body);
 
-          responseHeaders.set("Content-Type", "text/html");
+          responseHeaders.set('Content-Type', 'text/html');
 
           resolve(
             new Response(stream, {
