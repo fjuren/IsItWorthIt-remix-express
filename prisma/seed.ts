@@ -54,8 +54,8 @@ function createUser() {
   });
   return {
     username: randUsername,
-    firstname: randFirstname,
-    lastname: randLastname,
+    name: randFirstname,
+    displayName: '',
     email: `${randUsername}@domain.com`,
     password: {
       create: createPassword(randUsername), // pw is same as the username for easy testing
@@ -99,8 +99,8 @@ async function seed() {
       id: '1234abcd',
       email: 'testuser1@gmail.com',
       username: 'testUser1',
-      firstname: 'Test',
-      lastname: 'User1',
+      name: 'Test',
+      displayName: 'User1',
       password: {
         create: {
           hash: bcrypt.hashSync('testuser1', 10),
@@ -164,8 +164,8 @@ async function seed() {
       id: '6543fedc',
       email: 'schwarzenegger_weight_lifter@gmail.com',
       username: 'arnie',
-      firstname: 'Arnold',
-      lastname: 'Schwarzenegger',
+      name: 'Arnold',
+      displayName: 'Schwarzenegger',
       password: {
         create: {
           hash: bcrypt.hashSync('pizzashop', 10),

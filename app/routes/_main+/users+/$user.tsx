@@ -10,7 +10,7 @@ import { requireUserId } from '~/utils/auth.server';
 import { useOptionalUser } from '~/utils/user';
 
 export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
-  const displayName = data?.user.firstname ?? params.user;
+  const displayName = data?.user.username ?? params.user;
   return [
     { title: `${displayName}'s profile` },
     { name: 'description', content: `${displayName}'s profile page` },
@@ -25,8 +25,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       id: true,
       username: true,
       email: true,
-      firstname: true,
-      lastname: true,
+      name: true,
+      displayName: true,
       createdAt: true,
       image: { select: { blob: true, altText: true } },
     },
@@ -57,10 +57,10 @@ export default function UsernameRoute() {
           <img src={data.user.image?.blob} alt="" />
         </div>
         <div>
-          <h2>{data.user.firstname}</h2>
+          <h2>Name: {data.user.name}</h2>
         </div>
         <div>
-          <h2>{data.user.lastname}</h2>
+          <h2>Display name: {data.user.displayName}</h2>
         </div>
         <div>
           <p>

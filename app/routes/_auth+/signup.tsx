@@ -54,13 +54,13 @@ const emailMaxLength: number = 100;
 
 const signupSchema = z
   .object({
-    firstName: z
+    name: z
       .string()
       .max(nameMaxLength, {
         message: 'Must be 100 or fewer characters long',
       })
       .optional(),
-    lastName: z
+    displayName: z
       .string()
       .max(nameMaxLength, {
         message: 'Must be 100 or fewer characters long',
@@ -169,8 +169,8 @@ export async function action({ request }: ActionFunctionArgs) {
           data: {
             email: val.email.toLowerCase(),
             username: val.username.toLowerCase().trim(),
-            firstname: val.firstName,
-            lastname: val.lastName,
+            name: val.name,
+            displayName: val.displayName,
             roles: {
               connect: {
                 name: 'user',
@@ -264,30 +264,32 @@ export default function SignupRoute() {
             <HoneypotInputs />
             <AuthenticityTokenInput />
             <div>
-              <Label htmlFor={fields.firstName.id}>First name (Optional)</Label>
+              <Label htmlFor={fields.name.id}>Full name (Optional)</Label>
               <Input
                 // id="firstName"
                 // name="firstName"
                 // type="string"
                 // aria-invalid={firstNameHasError}
                 // aria-describedby={firstNameErrorID}
-                {...getInputProps(fields.firstName, { type: 'text' })}
+                {...getInputProps(fields.name, { type: 'text' })}
                 autoFocus
               />
               <div>
                 <FormOrFieldErrorsList
-                  data={fields.firstName.errors}
-                  errorID={fields.firstName.id}
+                  data={fields.name.errors}
+                  errorID={fields.name.id}
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor={fields.lastName.id}>Last name (Optional)</Label>
-              <Input {...getInputProps(fields.lastName, { type: 'text' })} />
+              <Label htmlFor={fields.displayName.id}>
+                Display name (Optional)
+              </Label>
+              <Input {...getInputProps(fields.displayName, { type: 'text' })} />
               <div>
                 <FormOrFieldErrorsList
-                  data={fields.firstName.errors}
-                  errorID={fields.lastName.errorId}
+                  data={fields.displayName.errors}
+                  errorID={fields.displayName.errorId}
                 />
               </div>
             </div>
