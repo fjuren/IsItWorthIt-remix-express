@@ -35,6 +35,7 @@ import {
 } from '~/utils/session.server';
 import { CheckboxConform } from '~/components/UI/Checkbox';
 import { sendEmail } from '~/utils/email.server';
+import { verficationSessionStorage } from '~/utils/verification.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -46,7 +47,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-const nameMaxLength: number = 100;
+// const nameMaxLength: number = 100;
 const usernameMaxLength: number = 20;
 const minLength: number = 3;
 const passwordMaxLength: number = 100;
@@ -54,18 +55,18 @@ const emailMaxLength: number = 100;
 
 const signupSchema = z
   .object({
-    name: z
-      .string()
-      .max(nameMaxLength, {
-        message: 'Must be 100 or fewer characters long',
-      })
-      .optional(),
-    displayName: z
-      .string()
-      .max(nameMaxLength, {
-        message: 'Must be 100 or fewer characters long',
-      })
-      .optional(),
+    // name: z
+    //   .string()
+    //   .max(nameMaxLength, {
+    //     message: 'Must be 100 or fewer characters long',
+    //   })
+    //   .optional(),
+    // displayName: z
+    //   .string()
+    //   .max(nameMaxLength, {
+    //     message: 'Must be 100 or fewer characters long',
+    //   })
+    //   .optional(),
     username: z
       .string({ required_error: 'Please enter your username' })
       .min(minLength, { message: 'Username is too short' })
@@ -103,13 +104,6 @@ const signupSchema = z
   });
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const response = await sendEmail({
-    to: 'realemail@gmail.com',
-    subject: 'Hello World',
-    text: 'This is the plain text version',
-    html: '<p>This is the HTML version</p>',
-  });
-  console.log(response);
   return await redirectIfAuthenticated(request);
 }
 
@@ -121,70 +115,70 @@ export async function action({ request }: ActionFunctionArgs) {
   checkHoneypot(formData);
 
   const submission = await parseWithZod(formData, {
-    schema: signupSchema
-      .superRefine(async (val, ctx) => {
-        // get the user using email if it exists
-        const existingEmail = await prisma.user.findUnique({
-          select: {
-            id: true,
-          },
-          where: {
-            email: val.email,
-          },
+    schema: signupSchema.superRefine(async (val, ctx) => {
+      // get the user using email if it exists
+      const existingEmail = await prisma.user.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          email: val.email,
+        },
+      });
+      // throw validation error if the email already exists
+      if (existingEmail) {
+        ctx.addIssue({
+          path: ['email'],
+          code: 'custom',
+          message: 'Email already exists',
+          fatal: true,
         });
-        // throw validation error if the email already exists
-        if (existingEmail) {
-          ctx.addIssue({
-            path: ['email'],
-            code: 'custom',
-            message: 'Email already exists',
-            fatal: true,
-          });
-          return z.NEVER;
-        }
-        //  get the user using username if it exists
-        const existingUsername = await prisma.user.findUnique({
-          select: {
-            id: true,
-          },
-          where: {
-            username: val.username,
-          },
+        return z.NEVER;
+      }
+      //  get the user using username if it exists
+      const existingUsername = await prisma.user.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          username: val.username,
+        },
+      });
+      // throw validation error if the username already exists
+      if (existingUsername) {
+        ctx.addIssue({
+          path: ['username'],
+          code: 'custom',
+          message: 'Username already exists',
+          fatal: true,
         });
-        // throw validation error if the username already exists
-        if (existingUsername) {
-          ctx.addIssue({
-            path: ['username'],
-            code: 'custom',
-            message: 'Username already exists',
-            fatal: true,
-          });
-          return z.NEVER;
-        }
-      })
-      .transform(async (val) => {
-        // create user if username checks out and hash the submitted password
-        const user = await prisma.user.create({
-          select: { id: true },
-          data: {
-            email: val.email.toLowerCase(),
-            username: val.username.toLowerCase().trim(),
-            name: val.name,
-            displayName: val.displayName,
-            roles: {
-              connect: {
-                name: 'user',
-              },
-            },
-            password: {
-              create: {
-                hash: bcrypt.hashSync(val.password, 10),
-              },
-            },
-          },
-        });
-        return { ...val, user };
-      }),
+        return z.NEVER;
+      }
+      return val;
+    }),
+    // .transform(async (val) => {
+    //   // create user if username checks out and hash the submitted password
+    //   const user = await prisma.user.create({
+    //     select: { id: true },
+    //     data: {
+    //       email: val.email.toLowerCase(),
+    //       username: val.username.toLowerCase().trim(),
+    //       // name: val.name,
+    //       // displayName: val.displayName,
+    //       roles: {
+    //         connect: {
+    //           name: 'user',
+    //         },
+    //       },
+    //       password: {
+    //         create: {
+    //           hash: bcrypt.hashSync(val.password, 10),
+    //         },
+    //       },
+    //     },
+    //   });
+    //   return { ...val, user };
+    // }),
     async: true,
   });
   delete submission.payload.password;
@@ -201,35 +195,61 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   }
-  const { rememberMe, user } = await submission.value;
+  // const { rememberMe, user } = await submission.value;
+  const { username, email, password, rememberMe } = await submission.value;
+  const hashPassword = bcrypt.hashSync(password, 10);
 
   if (submission.status === 'success') {
-    // show toaster success message using cookieSession
-    const cookie = request.headers.get('cookie');
-    const cookieSession = await toastSessionStorage.getSession(cookie);
-    // replace 'set' with 'flash'. flash method automatically unsets value after the next 'get' for 'authMessage'
-    cookieSession.flash('registrationMessage', {
-      type: 'success',
-      title: 'Signed in',
-      description: 'You are signed in',
+    // // show toaster success message using cookieSession
+    // const cookie = request.headers.get('cookie');
+    // const cookieSession = await toastSessionStorage.getSession(cookie);
+    // // replace 'set' with 'flash'. flash method automatically unsets value after the next 'get' for 'authMessage'
+    // cookieSession.flash('registrationMessage', {
+    //   type: 'success',
+    //   title: 'Signed in',
+    //   description: 'You are signed in',
+    // });
+    // const setToastCookieHeader = await toastSessionStorage.commitSession(
+    //   cookieSession
+    // );
+
+    // // set cookie session for authentication
+    // const cookieAuthSession = await authSessionStorage.getSession(cookie);
+    // cookieAuthSession.set('authSession', user.id);
+    // const setAuthCookieHeader = await authSessionStorage.commitSession(
+    //   cookieAuthSession,
+    //   { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
+    // );
+
+    // return redirect('/', {
+    //   headers: combineHeaders(
+    //     { 'set-cookie': setToastCookieHeader },
+    //     { 'set-cookie': setAuthCookieHeader }
+    //   ),
+    // });
+
+    // verification session cookie for onboarding
+    const verifyCookieSession = await verficationSessionStorage.getSession(
+      request.headers.get('cookie')
+    );
+    verifyCookieSession.set('verifySession', {
+      username,
+      email,
+      hashPassword,
+      rememberMe,
     });
-    const setToastCookieHeader = await toastSessionStorage.commitSession(
-      cookieSession
-    );
+    const setVerifyCookieSession =
+      await verficationSessionStorage.commitSession(verifyCookieSession);
 
-    // set cookie session for authentication
-    const cookieAuthSession = await authSessionStorage.getSession(cookie);
-    cookieAuthSession.set('authSession', user.id);
-    const setAuthCookieHeader = await authSessionStorage.commitSession(
-      cookieAuthSession,
-      { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
-    );
-
-    return redirect('/', {
-      headers: combineHeaders(
-        { 'set-cookie': setToastCookieHeader },
-        { 'set-cookie': setAuthCookieHeader }
-      ),
+    const response = await sendEmail({
+      to: email,
+      subject: 'Confirm email',
+      text: 'Please confirm your email address',
+      html: '<p>Please confirm your email address</p>',
+    });
+    console.log(response);
+    return redirect('/verify', {
+      headers: { 'set-cookie': setVerifyCookieSession },
     });
   } else {
     throw new Response('Not found', { status: 500 });
@@ -263,7 +283,7 @@ export default function SignupRoute() {
           <Form method="post" {...getFormProps(form)}>
             <HoneypotInputs />
             <AuthenticityTokenInput />
-            <div>
+            {/* <div>
               <Label htmlFor={fields.name.id}>Full name (Optional)</Label>
               <Input
                 // id="firstName"
@@ -292,6 +312,16 @@ export default function SignupRoute() {
                   errorID={fields.displayName.errorId}
                 />
               </div>
+            </div> */}
+            <div>
+              <Label htmlFor={fields.email.id}>Email</Label>
+              <Input {...getInputProps(fields.email, { type: 'email' })} />
+              <div>
+                <FormOrFieldErrorsList
+                  data={fields.email.errors}
+                  errorID={fields.email.errorId}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor={fields.username.id}>Username</Label>
@@ -303,16 +333,6 @@ export default function SignupRoute() {
                 <FormOrFieldErrorsList
                   data={fields.username.errors}
                   errorID={fields.username.errorId}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor={fields.email.id}>Email</Label>
-              <Input {...getInputProps(fields.email, { type: 'email' })} />
-              <div>
-                <FormOrFieldErrorsList
-                  data={fields.email.errors}
-                  errorID={fields.email.errorId}
                 />
               </div>
             </div>
