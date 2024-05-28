@@ -67,6 +67,23 @@ model Password {
   userId String @unique
 }
 
+// used during authentication. The verification code is NOT stored here, only its parameters
+model AuthVerificationCode {
+  id        String    @id @default(cuid())
+  type      String // type of verification; ie email or phone
+  target    String // the thing we are verifying; ie actual email address or phone number
+  secret    String // secret key for generating one-time-password (OTP)
+  digits    Int // # of digits in OTP
+  algorithm String // algo to generate OTP
+  charSet   String // Characters used to generate OTP
+  period    Int // # of seconds the OTP is valid for
+  expiresAt DateTime? // when the OTP expires
+
+  createdAt DateTime @default(now())
+
+  @@unique([type, target]) // removes something like having two different verifications for a single email
+}
+
 model Comment {
   id            String    @id @default(cuid())
   content       String

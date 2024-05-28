@@ -80,6 +80,7 @@ function createPassword(password: string) {
 
 async function seed() {
   await prisma.user.deleteMany();
+  await prisma.authVerificationCode.deleteMany();
   await prisma.gamePost.deleteMany();
 
   // Custom DATA
