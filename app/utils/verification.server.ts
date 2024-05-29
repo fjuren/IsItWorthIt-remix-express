@@ -1,6 +1,6 @@
 import { createCookieSessionStorage } from '@remix-run/node';
 
-const tenMinutesInMilliseconds = 10 * 60; // 10 minutes
+const tenMinutesInMilliseconds = 10 * 60; // 10 minutes (if you change this, make sure to change the OTP expiration code!!)
 export const verficationSessionStorage = createCookieSessionStorage({
   cookie: {
     name: 'iiwi_verify',

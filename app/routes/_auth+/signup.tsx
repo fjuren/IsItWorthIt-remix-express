@@ -36,6 +36,7 @@ import {
 import { CheckboxConform } from '~/components/UI/Checkbox';
 import { sendEmail } from '~/utils/email.server';
 import { verficationSessionStorage } from '~/utils/verification.server';
+import { generateTOTP } from '@epic-web/totp';
 
 export const meta: MetaFunction = () => {
   return [
@@ -241,16 +242,45 @@ export async function action({ request }: ActionFunctionArgs) {
     const setVerifyCookieSession =
       await verficationSessionStorage.commitSession(verifyCookieSession);
 
+    // Create the one time password. Docs: https://www.npmjs.com/package/@epic-web/totp
+    const verificationCodeConfig = generateTOTP({
+      algorithm: 'SHA256',
+      period: 10 * 60, // 10 mins (if you change this, make sure to changet the verifyCookieSession expiry!!)
+      digits: 8,
+    });
+
+    const verificationTempData = {
+      type: 'email',
+      target: email,
+      secret: verificationCodeConfig.secret,
+      digits: verificationCodeConfig.digits,
+      algorithm: verificationCodeConfig.algorithm,
+      charSet: verificationCodeConfig.charSet,
+      period: verificationCodeConfig.period,
+      expiresAt: new Date(Date.now() + verificationCodeConfig.period * 1000),
+    };
+
+    // Set the generatedCodeConfig params to the db (note: This will only be temporarily added)
+    await prisma.authVerificationCode.upsert({
+      where: {
+        type_target: { type: verificationTempData.type, target: email },
+      },
+      create: verificationTempData,
+      update: verificationTempData,
+    });
+
     const response = await sendEmail({
       to: email,
       subject: 'Confirm email',
       text: 'Please confirm your email address',
-      html: '<p>Please confirm your email address</p>',
+      html: `<p>Please confirm your email address by entering this code ${verificationCodeConfig.otp}. It expires in 15 minutes.</p>`,
     });
-    console.log(response);
-    return redirect('/verify', {
-      headers: { 'set-cookie': setVerifyCookieSession },
-    });
+
+    if (response.status === 'success') {
+      return redirect('/verify', {
+        headers: { 'set-cookie': setVerifyCookieSession },
+      });
+    }
   } else {
     throw new Response('Not found', { status: 500 });
   }

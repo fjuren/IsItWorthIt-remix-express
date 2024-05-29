@@ -16,6 +16,7 @@
   "dependencies": {
     "@conform-to/react": "^1.0.6",
     "@conform-to/zod": "^1.0.6",
+    "@epic-web/totp": "^1.1.2",
     "@mswjs/data": "^0.16.1",
     "@prisma/client": "^5.12.1",
     "@radix-ui/react-avatar": "^1.0.4",
