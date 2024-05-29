@@ -242,6 +242,14 @@ export async function action({ request }: ActionFunctionArgs) {
     const setVerifyCookieSession =
       await verficationSessionStorage.commitSession(verifyCookieSession);
 
+    // create the redirect URL with the appropriate search params
+    const originUrl = new URL(request.url).origin;
+    const verificationRedirect = new URL(originUrl + '/verify');
+    const type = 'email';
+    const target = email;
+    verificationRedirect.searchParams.set('type', type);
+    verificationRedirect.searchParams.set('target', target);
+
     // Create the one time password. Docs: https://www.npmjs.com/package/@epic-web/totp
     const verificationCodeConfig = generateTOTP({
       algorithm: 'SHA256',
@@ -277,7 +285,7 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     if (response.status === 'success') {
-      return redirect('/verify', {
+      return redirect(verificationRedirect.toString(), {
         headers: { 'set-cookie': setVerifyCookieSession },
       });
     }
