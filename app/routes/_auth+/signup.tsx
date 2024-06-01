@@ -20,19 +20,14 @@ import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { Label } from '~/components/UI/Label';
-import { FormOrFieldErrorsList, combineHeaders } from '~/utils/misc';
+import { FormOrFieldErrorsList } from '~/utils/misc';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { checkCSRF } from '~/utils/csrf.server';
-import { toastSessionStorage } from '~/utils/toast.server';
 import { prisma } from '~/utils/db.server';
 import { bcrypt, redirectIfAuthenticated } from '~/utils/auth.server';
-import {
-  authSessionStorage,
-  getCookieSessionExpirationDate,
-} from '~/utils/session.server';
 import { CheckboxConform } from '~/components/UI/Checkbox';
 import { sendEmail } from '~/utils/email.server';
 import { verficationSessionStorage } from '~/utils/verification.server';
@@ -281,7 +276,7 @@ export async function action({ request }: ActionFunctionArgs) {
       to: email,
       subject: 'Confirm email',
       text: 'Please confirm your email address',
-      html: `<p>Please confirm your email address by entering this code ${verificationCodeConfig.otp}. It expires in 15 minutes.</p>`,
+      html: `<p>Please confirm your email address by entering this code ${verificationCodeConfig.otp}. It expires in 10 minutes.</p>`,
     });
 
     if (response.status === 'success') {
@@ -321,36 +316,6 @@ export default function SignupRoute() {
           <Form method="post" {...getFormProps(form)}>
             <HoneypotInputs />
             <AuthenticityTokenInput />
-            {/* <div>
-              <Label htmlFor={fields.name.id}>Full name (Optional)</Label>
-              <Input
-                // id="firstName"
-                // name="firstName"
-                // type="string"
-                // aria-invalid={firstNameHasError}
-                // aria-describedby={firstNameErrorID}
-                {...getInputProps(fields.name, { type: 'text' })}
-                autoFocus
-              />
-              <div>
-                <FormOrFieldErrorsList
-                  data={fields.name.errors}
-                  errorID={fields.name.id}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor={fields.displayName.id}>
-                Display name (Optional)
-              </Label>
-              <Input {...getInputProps(fields.displayName, { type: 'text' })} />
-              <div>
-                <FormOrFieldErrorsList
-                  data={fields.displayName.errors}
-                  errorID={fields.displayName.errorId}
-                />
-              </div>
-            </div> */}
             <div>
               <Label htmlFor={fields.email.id}>Email</Label>
               <Input {...getInputProps(fields.email, { type: 'email' })} />
@@ -419,7 +384,9 @@ export default function SignupRoute() {
               />
             </div>
             <div>
-              <Button type="submit">Sign up</Button>
+              <Button type="submit" name="intent" value="signup">
+                Sign up
+              </Button>
             </div>
           </Form>
           <div>

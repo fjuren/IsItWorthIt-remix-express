@@ -67,7 +67,7 @@ model Password {
   userId String @unique
 }
 
-// used during authentication. The verification code is NOT stored here, only its parameters
+// used during authentication. The verification code is NOT stored here, only its config
 model AuthVerificationCode {
   id        String    @id @default(cuid())
   type      String // type of verification; ie email or phone
