@@ -44,12 +44,17 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+// search params
+export const codeSearchParams = 'code';
+export const typeSearchParams = 'type';
+export const targetSearchParams = 'target';
+
 const verifySchema = z.object({
-  code: z.string({
+  [codeSearchParams]: z.string({
     required_error: 'Please enter your code. It was sent to your email address',
   }),
-  target: z.string().email(),
-  type: z.string(),
+  [targetSearchParams]: z.string().email(),
+  [typeSearchParams]: z.string(),
 });
 
 async function requireOnboardEmail(request: Request) {
@@ -76,33 +81,21 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
+  return verifyRequest(request, formData);
+}
+
+// verifies incoming verification request, includes checking whether the entered verification code is valid using helper function 'isVerificationCodeValid'
+export async function verifyRequest(request: Request, formData: FormData) {
   const submission = await parseWithZod(formData, {
     schema: verifySchema.superRefine(async (data, ctx) => {
-      // code sent by the user
-      const enteredCode = data.code;
-      // get the code config from the db
-      const verifyCodeConfig = await prisma.authVerificationCode.findUnique({
-        select: {
-          secret: true,
-          period: true,
-          digits: true,
-          algorithm: true,
-          charSet: true,
-        },
-        where: {
-          type_target: {
-            type: data.type,
-            target: data.target,
-          },
-          OR: [
-            {
-              expiresAt: { gt: new Date() },
-            },
-            { expiresAt: null },
-          ],
-        },
+      // verify validity of code
+      const codeVerification = await isVerificationCodeValid({
+        type: data[typeSearchParams],
+        target: data[targetSearchParams],
+        enteredCode: data[codeSearchParams],
       });
-      if (!verifyCodeConfig) {
+      console.log('codeVerification: ', codeVerification);
+      if (!codeVerification) {
         ctx.addIssue({
           path: ['code'],
           code: 'custom',
@@ -111,26 +104,6 @@ export async function action({ request }: ActionFunctionArgs) {
         });
         return z.NEVER;
       }
-      // determine validity of entered code
-      const isValid = verifyTOTP({ otp: enteredCode, ...verifyCodeConfig });
-      if (!isValid) {
-        ctx.addIssue({
-          path: ['code'],
-          code: 'custom',
-          message: 'Invalid code',
-          fatal: true,
-        });
-        return z.NEVER;
-      }
-      // code is valid, delete config from db
-      await prisma.authVerificationCode.delete({
-        where: {
-          type_target: {
-            type: data.type,
-            target: data.target,
-          },
-        },
-      });
     }),
     async: true,
   });
@@ -140,6 +113,18 @@ export async function action({ request }: ActionFunctionArgs) {
       status: submission.status === 'error' ? 400 : 200,
     });
   }
+
+  const { value: submissionValue } = submission;
+
+  // code is valid, delete config from db
+  await prisma.authVerificationCode.delete({
+    where: {
+      type_target: {
+        type: submissionValue[typeSearchParams],
+        target: submissionValue[targetSearchParams],
+      },
+    },
+  });
 
   const verifySession = await verficationSessionStorage.getSession(
     request.headers.get('cookie')
@@ -197,19 +182,60 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 }
 
+// check validity of code
+export async function isVerificationCodeValid({
+  type,
+  target,
+  enteredCode,
+}: {
+  type: string;
+  target: string;
+  enteredCode: string;
+}) {
+  console.log('type, target, enteredCode: ', type, target, enteredCode);
+  const verifyCodeConfig = await prisma.authVerificationCode.findUnique({
+    select: {
+      secret: true,
+      period: true,
+      digits: true,
+      algorithm: true,
+      charSet: true,
+    },
+    where: {
+      type_target: {
+        type,
+        target,
+      },
+      OR: [
+        {
+          expiresAt: { gt: new Date() },
+        },
+        { expiresAt: null },
+      ],
+    },
+  });
+  console.log('verifyCodeConfig: ', verifyCodeConfig);
+  if (!verifyCodeConfig) return false;
+  // determine validity of entered code
+  const isValid = verifyTOTP({ otp: enteredCode, ...verifyCodeConfig });
+  console.log('isValid', isValid);
+  if (!isValid) return false;
+
+  // Code is valid
+  return true;
+}
+
 export default function VerifyRoute() {
   const data = useLoaderData<typeof loader>();
   const lastResult = useActionData<typeof action>();
   // // relevant for redirect; get the redirect from search params (if null, it should be ignored)
   const [searchParams] = useSearchParams();
-  const target = searchParams.get('target') ?? '';
-  const type = searchParams.get('type') ?? '';
   const [form, fields] = useForm({
     id: 'verify',
     defaultValue: {
-      code: '',
-      target: target,
-      type: type,
+      code: searchParams.get(codeSearchParams) ?? '',
+      target: searchParams.get(targetSearchParams) ?? '',
+      type: searchParams.get(typeSearchParams) ?? '',
     },
     constraint: getZodConstraint(verifySchema),
     lastResult: lastResult,
@@ -229,22 +255,30 @@ export default function VerifyRoute() {
             <HoneypotInputs />
             <AuthenticityTokenInput />
             <div>
-              <Label htmlFor={fields.code.id}>
+              <Label htmlFor={fields[codeSearchParams].id}>
                 Enter your verification code below
               </Label>
-              <Input {...getInputProps(fields.code, { type: 'text' })} />
+              <Input
+                {...getInputProps(fields[codeSearchParams], { type: 'text' })}
+              />
               <div>
                 <FormOrFieldErrorsList
-                  data={fields.code.errors}
-                  errorID={fields.code.errorId}
+                  data={fields[codeSearchParams].errors}
+                  errorID={fields[codeSearchParams].errorId}
                 />
               </div>
             </div>
             <div>
-              <Input {...getInputProps(fields.target, { type: 'hidden' })} />
+              <Input
+                {...getInputProps(fields[targetSearchParams], {
+                  type: 'hidden',
+                })}
+              />
             </div>
             <div>
-              <Input {...getInputProps(fields.type, { type: 'hidden' })} />
+              <Input
+                {...getInputProps(fields[typeSearchParams], { type: 'hidden' })}
+              />
             </div>
             <div>
               <Button type="submit" name="intent" value="verifyEmail">
