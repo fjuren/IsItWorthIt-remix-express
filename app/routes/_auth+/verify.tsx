@@ -126,6 +126,22 @@ export async function verifyRequest(request: Request, formData: FormData) {
     },
   });
 
+  // checks method of submission to handle different types (email verification, phone verification, etc)
+  if (submissionValue[typeSearchParams] === 'email') {
+    return verifiedEmailSignup({ submission, request });
+  }
+  if (submissionValue[typeSearchParams] === 'reset-password') {
+    return null;
+  }
+}
+
+async function verifiedEmailSignup({
+  submission,
+  request,
+}: {
+  submission: any;
+  request: Request;
+}) {
   const verifySession = await verficationSessionStorage.getSession(
     request.headers.get('cookie')
   );

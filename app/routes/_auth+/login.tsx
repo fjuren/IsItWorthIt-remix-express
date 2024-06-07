@@ -180,7 +180,7 @@ export default function LoginRoute() {
               <div>
                 <FormOrFieldErrorsList
                   data={fields.username.errors}
-                  errorID={fields.username.id}
+                  errorID={fields.username.errorId}
                 />
               </div>
             </div>
@@ -201,16 +201,23 @@ export default function LoginRoute() {
                 {...getInputProps(fields.redirectTo, { type: 'hidden' })}
               />
             </div>
-            <div className="flex py-2">
-              <CheckboxConform meta={fields.rememberMe} />
-              <Label className="ml-2 self-end" htmlFor={fields.rememberMe.id}>
-                Remember me
-              </Label>
+            <div className="flex py-2 justify-between items-center">
               <div>
-                <FormOrFieldErrorsList
-                  data={fields.rememberMe.errors}
-                  errorID={fields.rememberMe.id}
-                />
+                <CheckboxConform meta={fields.rememberMe} />
+                <Label className="ml-2 self-end" htmlFor={fields.rememberMe.id}>
+                  Remember me
+                </Label>
+                <div>
+                  <FormOrFieldErrorsList
+                    data={fields.rememberMe.errors}
+                    errorID={fields.rememberMe.id}
+                  />
+                </div>
+              </div>
+              <div>
+                <Button variant="link" asChild>
+                  <Link to="/forgot-password">Forgot password</Link>
+                </Button>
               </div>
             </div>
             <div>
