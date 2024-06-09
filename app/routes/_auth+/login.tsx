@@ -175,7 +175,7 @@ export default function LoginRoute() {
               <Label htmlFor={fields.username.id}>Username</Label>
               <Input
                 {...getInputProps(fields.username, { type: 'text' })}
-                autoFocus
+                // autoFocus
               />
               <div>
                 <FormOrFieldErrorsList

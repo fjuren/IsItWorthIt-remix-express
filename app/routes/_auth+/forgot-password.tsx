@@ -1,6 +1,11 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node';
+import {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  json,
+  redirect,
+} from '@remix-run/node';
 import { Form, Link, useActionData } from '@remix-run/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
@@ -12,9 +17,15 @@ import { Label } from '~/components/UI/Label';
 import { redirectIfAuthenticated } from '~/utils/auth.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
+import { sendEmail } from '~/utils/email.server';
 import { EmailSchema, UsernameSchema } from '~/utils/fieldValidation';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
+import {
+  createOtp,
+  verficationSessionStorage,
+  verificationRedirect,
+} from '~/utils/verification.server';
 
 const ForgotPWSchema = z.object({
   usernameOrEmail: z.union([UsernameSchema, EmailSchema]),
@@ -33,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const submission = await parseWithZod(formData, {
     schema: ForgotPWSchema.superRefine(async (val, ctx) => {
       // check if username or email exists
-      const userEmail = await prisma.user.findFirst({
+      const user = await prisma.user.findFirst({
         select: { email: true },
         where: {
           OR: [
@@ -42,7 +53,7 @@ export async function action({ request }: ActionFunctionArgs) {
           ],
         },
       });
-      if (!userEmail) {
+      if (!user) {
         ctx.addIssue({
           path: ['usernameOrEmail'],
           code: 'custom',
@@ -51,7 +62,6 @@ export async function action({ request }: ActionFunctionArgs) {
         });
         return z.NEVER;
       }
-      console.log('YES! User found: ', userEmail);
     }),
     async: true,
   });
@@ -64,8 +74,55 @@ export async function action({ request }: ActionFunctionArgs) {
     );
   }
 
-  // if either username or email exist, and submission is successful, send email with code and redirect user to code verification page
+  if (submission.status === 'success') {
+    const { usernameOrEmail } = submission.value;
+    const user = await prisma.user.findFirstOrThrow({
+      select: { email: true },
+      where: {
+        OR: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+      },
+    });
+    // add email to session cookie
+    const verifyCookieSession = await verficationSessionStorage.getSession(
+      request.headers.get('cookie')
+    );
+    verifyCookieSession.set('verifySession', { email: user.email });
+    const setVerifyCookieSession =
+      await verficationSessionStorage.commitSession(verifyCookieSession);
 
+    const redirectToVerify = verificationRedirect({
+      request,
+      path: '/verify',
+      type: 'email',
+      target: user.email,
+    });
+
+    // if either username or email exist, and submission is successful, send email with code and redirect user to code verification page
+
+    // get otp
+    const getOtp = createOtp({ target: user.email, type: 'email' });
+    // store (upsert) otp
+    // await storeInDB({
+    //   otpData: getOtp.otpToDB,
+    //   type: 'email',
+    //   target: user.email,
+    // });
+
+    const response = await sendEmail({
+      to: user.email,
+      subject: 'Confirm email',
+      text: 'Please confirm your email address',
+      html: `<p>Please confirm your email address by entering this code ${getOtp.otp}. It expires in 10 minutes.</p>`,
+    });
+
+    if (response.status === 'success') {
+      return redirect(redirectToVerify.toString(), {
+        headers: { 'set-cookie': setVerifyCookieSession },
+      });
+    } else {
+      throw new Response('Not found', { status: 500 });
+    }
+  }
   return;
 }
 

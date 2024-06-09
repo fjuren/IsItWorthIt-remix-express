@@ -30,8 +30,12 @@ import { prisma } from '~/utils/db.server';
 import { bcrypt, redirectIfAuthenticated } from '~/utils/auth.server';
 import { CheckboxConform } from '~/components/UI/Checkbox';
 import { sendEmail } from '~/utils/email.server';
-import { verficationSessionStorage } from '~/utils/verification.server';
-import { generateTOTP } from '@epic-web/totp';
+import {
+  createOtp,
+  storeInDB,
+  verficationSessionStorage,
+  verificationRedirect,
+} from '~/utils/verification.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -237,50 +241,27 @@ export async function action({ request }: ActionFunctionArgs) {
     const setVerifyCookieSession =
       await verficationSessionStorage.commitSession(verifyCookieSession);
 
-    // create the redirect URL with the appropriate search params
-    const originUrl = new URL(request.url).origin;
-    const verificationRedirect = new URL(originUrl + '/verify');
-    const type = 'email';
-    const target = email;
-    verificationRedirect.searchParams.set('type', type);
-    verificationRedirect.searchParams.set('target', target);
-
-    // Create the one time password. Docs: https://www.npmjs.com/package/@epic-web/totp
-    const verificationCodeConfig = generateTOTP({
-      algorithm: 'SHA256',
-      period: 10 * 60, // 10 mins (if you change this, make sure to changet the verifyCookieSession expiry!!)
-      digits: 8,
-    });
-
-    const verificationTempData = {
+    const redirectToVerify = verificationRedirect({
+      request,
+      path: '/verify',
       type: 'email',
       target: email,
-      secret: verificationCodeConfig.secret,
-      digits: verificationCodeConfig.digits,
-      algorithm: verificationCodeConfig.algorithm,
-      charSet: verificationCodeConfig.charSet,
-      period: verificationCodeConfig.period,
-      expiresAt: new Date(Date.now() + verificationCodeConfig.period * 1000),
-    };
-
-    // Set the generatedCodeConfig params to the db (note: This will only be temporarily added)
-    await prisma.authVerificationCode.upsert({
-      where: {
-        type_target: { type: verificationTempData.type, target: email },
-      },
-      create: verificationTempData,
-      update: verificationTempData,
     });
+
+    // get otp
+    const getOtp = createOtp({ target: email, type: 'email' });
+    // store (upsert) otp
+    await storeInDB({ otpData: getOtp.otpToDB, type: 'email', target: email });
 
     const response = await sendEmail({
       to: email,
       subject: 'Confirm email',
       text: 'Please confirm your email address',
-      html: `<p>Please confirm your email address by entering this code ${verificationCodeConfig.otp}. It expires in 10 minutes.</p>`,
+      html: `<p>Please confirm your email address by entering this code ${getOtp.otp}. It expires in 10 minutes.</p>`,
     });
 
     if (response.status === 'success') {
-      return redirect(verificationRedirect.toString(), {
+      return redirect(redirectToVerify.toString(), {
         headers: { 'set-cookie': setVerifyCookieSession },
       });
     }
