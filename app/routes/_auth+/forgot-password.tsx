@@ -22,9 +22,8 @@ import { EmailSchema, UsernameSchema } from '~/utils/fieldValidation';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
 import {
-  createOtp,
+  prepVerificationCode,
   verficationSessionStorage,
-  verificationRedirect,
 } from '~/utils/verification.server';
 
 const ForgotPWSchema = z.object({
@@ -90,33 +89,20 @@ export async function action({ request }: ActionFunctionArgs) {
     const setVerifyCookieSession =
       await verficationSessionStorage.commitSession(verifyCookieSession);
 
-    const redirectToVerify = verificationRedirect({
+    const { otp, redirectTo } = await prepVerificationCode({
       request,
-      path: '/verify',
-      type: 'email',
-      target: user.email,
+      type: 'reset-password',
+      target: usernameOrEmail,
     });
-
-    // if either username or email exist, and submission is successful, send email with code and redirect user to code verification page
-
-    // get otp
-    const getOtp = createOtp({ target: user.email, type: 'email' });
-    // store (upsert) otp
-    // await storeInDB({
-    //   otpData: getOtp.otpToDB,
-    //   type: 'email',
-    //   target: user.email,
-    // });
 
     const response = await sendEmail({
       to: user.email,
       subject: 'Confirm email',
       text: 'Please confirm your email address',
-      html: `<p>Please confirm your email address by entering this code ${getOtp.otp}. It expires in 10 minutes.</p>`,
+      html: `<p>Please confirm your email address by entering this code ${otp}. It expires in 10 minutes.</p>`,
     });
-
     if (response.status === 'success') {
-      return redirect(redirectToVerify.toString(), {
+      return redirect(redirectTo, {
         headers: { 'set-cookie': setVerifyCookieSession },
       });
     } else {

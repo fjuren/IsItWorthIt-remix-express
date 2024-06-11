@@ -8,12 +8,7 @@ import {
   json,
   redirect,
 } from '@remix-run/node';
-import {
-  Form,
-  useActionData,
-  useLoaderData,
-  useSearchParams,
-} from '@remix-run/react';
+import { Form, useActionData, useSearchParams } from '@remix-run/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { HoneypotInputs } from 'remix-utils/honeypot/react';
 import { z } from 'zod';
@@ -33,6 +28,7 @@ import {
 } from '~/utils/session.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
+import { verifiedResetPassword } from './reset-password';
 
 export const meta: MetaFunction = () => {
   return [
@@ -53,11 +49,12 @@ const verifySchema = z.object({
   [codeSearchParams]: z.string({
     required_error: 'Please enter your code. It was sent to your email address',
   }),
-  [targetSearchParams]: z.string().email(),
+  [targetSearchParams]: z.string(),
   [typeSearchParams]: z.string(),
 });
 
-async function requireOnboardEmail(request: Request) {
+// ensures the user is going through the email flow rather than skipping to this page
+export async function requireVerificationEmail(request: Request) {
   const verifySession = await verficationSessionStorage.getSession(
     request.headers.get('cookie')
   );
@@ -71,16 +68,19 @@ async function requireOnboardEmail(request: Request) {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await redirectIfAuthenticated(request);
-  const email = await requireOnboardEmail(request);
+  await requireVerificationEmail(request);
 
-  return json({ email });
+  return null;
+  // json({ email });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   await redirectIfAuthenticated(request);
+  await requireVerificationEmail(request);
   const formData = await request.formData();
   await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
+  console.log('ACTION');
   return verifyRequest(request, formData);
 }
 
@@ -94,7 +94,6 @@ export async function verifyRequest(request: Request, formData: FormData) {
         target: data[targetSearchParams],
         enteredCode: data[codeSearchParams],
       });
-      console.log('codeVerification: ', codeVerification);
       if (!codeVerification) {
         ctx.addIssue({
           path: ['code'],
@@ -125,13 +124,12 @@ export async function verifyRequest(request: Request, formData: FormData) {
       },
     },
   });
-
-  // checks method of submission to handle different types (email verification, phone verification, etc)
+  // checks method of submission to handle different verification types (email verification, phone verification, etc)
   if (submissionValue[typeSearchParams] === 'email') {
     return verifiedEmailSignup({ submission, request });
   }
   if (submissionValue[typeSearchParams] === 'reset-password') {
-    return null;
+    return verifiedResetPassword({ submission, request });
   }
 }
 
@@ -208,7 +206,6 @@ export async function isVerificationCodeValid({
   target: string;
   enteredCode: string;
 }) {
-  console.log('type, target, enteredCode: ', type, target, enteredCode);
   const verifyCodeConfig = await prisma.authVerificationCode.findUnique({
     select: {
       secret: true,
@@ -230,11 +227,9 @@ export async function isVerificationCodeValid({
       ],
     },
   });
-  console.log('verifyCodeConfig: ', verifyCodeConfig);
   if (!verifyCodeConfig) return false;
   // determine validity of entered code
   const isValid = verifyTOTP({ otp: enteredCode, ...verifyCodeConfig });
-  console.log('isValid', isValid);
   if (!isValid) return false;
 
   // Code is valid
@@ -242,7 +237,7 @@ export async function isVerificationCodeValid({
 }
 
 export default function VerifyRoute() {
-  const data = useLoaderData<typeof loader>();
+  // const data = useLoaderData<typeof loader>();
   const lastResult = useActionData<typeof action>();
   // // relevant for redirect; get the redirect from search params (if null, it should be ignored)
   const [searchParams] = useSearchParams();
@@ -264,7 +259,9 @@ export default function VerifyRoute() {
     <div className="flex w-fit m-auto py-10">
       <Card>
         <div>
-          <h1>Please check your {data.email} email</h1>
+          <h1>
+            Please check your email {searchParams.get(targetSearchParams)}
+          </h1>
         </div>
         <div className="w-80">
           <Form method="post" {...getFormProps(form)}>
@@ -297,7 +294,7 @@ export default function VerifyRoute() {
               />
             </div>
             <div>
-              <Button type="submit" name="intent" value="verifyEmail">
+              <Button type="submit" name="intent" value="verifyCode">
                 Verify email
               </Button>
             </div>

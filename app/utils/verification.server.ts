@@ -26,23 +26,54 @@ export const verficationSessionStorage = createCookieSessionStorage({
   },
 });
 
+// Handles all preparation for generating a OTP code, storing the code, and returning a redirect after the code is ready
+export async function prepVerificationCode({
+  request,
+  type,
+  target,
+  redirectTo: redirectToVerify = '', // default to empty string
+}: {
+  request: Request;
+  type: string;
+  target: string;
+  redirectTo?: string;
+}) {
+  // generate/get otp
+  const getOtp = createOtp({ target, type });
+  // store (upsert) otp to db
+  await storeInDB({ otpData: getOtp.otpToDB, type, target });
+  // create redirect link
+  const redirectUrl = verificationRedirect({
+    request,
+    type,
+    target,
+    redirectTo: redirectToVerify,
+  });
+  const redirectTo = redirectUrl.toString();
+  return { redirectTo, otp: getOtp.otp };
+}
+
 // create a redirect URL with the appropriate search params
 export function verificationRedirect({
   request,
-  path,
+  redirectTo,
   type,
   target,
 }: {
   request: Request;
-  path: string;
+  redirectTo: string;
   type: string;
   target: string;
 }) {
   const originUrl = new URL(request.url).origin;
-  const redirect = new URL(originUrl + path);
-  redirect.searchParams.set('type', type);
-  redirect.searchParams.set('target', target);
-  return redirect;
+  const redirectUrl = new URL(`${originUrl}/verify`);
+  redirectUrl.searchParams.set('type', type);
+  redirectUrl.searchParams.set('target', target);
+  // handles redirects that require signup first. Recall login redirect handling use case (eg. if client is sent to an authenticated route but first needed to log in and then be redirected)
+  if (redirectTo) {
+    redirectUrl.searchParams.set('redirect-to', redirectTo);
+  }
+  return redirectUrl;
 }
 
 // Create a one time password (otp) code for user verification. Docs: https://www.npmjs.com/package/@epic-web/totp

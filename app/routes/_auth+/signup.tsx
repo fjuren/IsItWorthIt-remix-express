@@ -11,7 +11,7 @@ import {
   redirect,
   LoaderFunctionArgs,
 } from '@remix-run/node';
-import { Form, Link, useActionData } from '@remix-run/react';
+import { Form, Link, useActionData, useSearchParams } from '@remix-run/react';
 // import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
@@ -31,10 +31,8 @@ import { bcrypt, redirectIfAuthenticated } from '~/utils/auth.server';
 import { CheckboxConform } from '~/components/UI/Checkbox';
 import { sendEmail } from '~/utils/email.server';
 import {
-  createOtp,
-  storeInDB,
+  prepVerificationCode,
   verficationSessionStorage,
-  verificationRedirect,
 } from '~/utils/verification.server';
 
 export const meta: MetaFunction = () => {
@@ -55,18 +53,6 @@ const emailMaxLength: number = 100;
 
 const signupSchema = z
   .object({
-    // name: z
-    //   .string()
-    //   .max(nameMaxLength, {
-    //     message: 'Must be 100 or fewer characters long',
-    //   })
-    //   .optional(),
-    // displayName: z
-    //   .string()
-    //   .max(nameMaxLength, {
-    //     message: 'Must be 100 or fewer characters long',
-    //   })
-    //   .optional(),
     username: z
       .string({ required_error: 'Please enter your username' })
       .min(minLength, { message: 'Username is too short' })
@@ -92,6 +78,7 @@ const signupSchema = z
         message: 'Must be 100 or fewer characters long',
       }),
     rememberMe: z.boolean().optional(),
+    redirectTo: z.string().optional(),
   })
   .superRefine((val, ctx) => {
     if (val.password !== val.confirmPassword) {
@@ -156,29 +143,6 @@ export async function action({ request }: ActionFunctionArgs) {
       }
       return val;
     }),
-    // .transform(async (val) => {
-    //   // create user if username checks out and hash the submitted password
-    //   const user = await prisma.user.create({
-    //     select: { id: true },
-    //     data: {
-    //       email: val.email.toLowerCase(),
-    //       username: val.username.toLowerCase().trim(),
-    //       // name: val.name,
-    //       // displayName: val.displayName,
-    //       roles: {
-    //         connect: {
-    //           name: 'user',
-    //         },
-    //       },
-    //       password: {
-    //         create: {
-    //           hash: bcrypt.hashSync(val.password, 10),
-    //         },
-    //       },
-    //     },
-    //   });
-    //   return { ...val, user };
-    // }),
     async: true,
   });
   delete submission.payload.password;
@@ -195,39 +159,16 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   }
-  // const { rememberMe, user } = await submission.value;
-  const { username, email, password, rememberMe } = await submission.value;
+  const {
+    username,
+    email,
+    password,
+    rememberMe,
+    redirectTo: postRedirectToVerify,
+  } = await submission.value;
   const hashPassword = bcrypt.hashSync(password, 10);
 
   if (submission.status === 'success') {
-    // // show toaster success message using cookieSession
-    // const cookie = request.headers.get('cookie');
-    // const cookieSession = await toastSessionStorage.getSession(cookie);
-    // // replace 'set' with 'flash'. flash method automatically unsets value after the next 'get' for 'authMessage'
-    // cookieSession.flash('registrationMessage', {
-    //   type: 'success',
-    //   title: 'Signed in',
-    //   description: 'You are signed in',
-    // });
-    // const setToastCookieHeader = await toastSessionStorage.commitSession(
-    //   cookieSession
-    // );
-
-    // // set cookie session for authentication
-    // const cookieAuthSession = await authSessionStorage.getSession(cookie);
-    // cookieAuthSession.set('authSession', user.id);
-    // const setAuthCookieHeader = await authSessionStorage.commitSession(
-    //   cookieAuthSession,
-    //   { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
-    // );
-
-    // return redirect('/', {
-    //   headers: combineHeaders(
-    //     { 'set-cookie': setToastCookieHeader },
-    //     { 'set-cookie': setAuthCookieHeader }
-    //   ),
-    // });
-
     // verification session cookie for onboarding
     const verifyCookieSession = await verficationSessionStorage.getSession(
       request.headers.get('cookie')
@@ -241,27 +182,21 @@ export async function action({ request }: ActionFunctionArgs) {
     const setVerifyCookieSession =
       await verficationSessionStorage.commitSession(verifyCookieSession);
 
-    const redirectToVerify = verificationRedirect({
+    const { redirectTo, otp } = await prepVerificationCode({
       request,
-      path: '/verify',
       type: 'email',
       target: email,
+      redirectTo: postRedirectToVerify,
     });
-
-    // get otp
-    const getOtp = createOtp({ target: email, type: 'email' });
-    // store (upsert) otp
-    await storeInDB({ otpData: getOtp.otpToDB, type: 'email', target: email });
 
     const response = await sendEmail({
       to: email,
       subject: 'Confirm email',
       text: 'Please confirm your email address',
-      html: `<p>Please confirm your email address by entering this code ${getOtp.otp}. It expires in 10 minutes.</p>`,
+      html: `<p>Please confirm your email address by entering this code ${otp}. It expires in 10 minutes.</p>`,
     });
-
     if (response.status === 'success') {
-      return redirect(redirectToVerify.toString(), {
+      return redirect(redirectTo, {
         headers: { 'set-cookie': setVerifyCookieSession },
       });
     }
@@ -272,10 +207,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function SignupRoute() {
   const lastResult = useActionData<typeof action>();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo');
   const [form, fields] = useForm({
     lastResult: lastResult?.result,
     // getZodConstraint configures the Zod fields with appropriate attributes
     constraint: getZodConstraint(signupSchema),
+    defaultValue: { redirectTo },
     // runs validation logic on the client (before it runs on the server, quicker validation for slow networks)
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: signupSchema });
@@ -357,6 +295,11 @@ export default function SignupRoute() {
                   errorID={fields.rememberMe.id}
                 />
               </div>
+            </div>
+            <div>
+              <Input
+                {...getInputProps(fields.redirectTo, { type: 'hidden' })}
+              />
             </div>
             <div>
               <FormOrFieldErrorsList

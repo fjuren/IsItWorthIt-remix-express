@@ -28,3 +28,9 @@ export const PasswordSchema = // TODO improve security requirement validation fo
     .max(passwordMaxLength, {
       message: 'Must be 100 or fewer characters long',
     });
+
+export const ConfirmSchema = z
+  .string({ required_error: 'Please confirm your password' })
+  .max(passwordMaxLength, {
+    message: 'Must be 100 or fewer characters long',
+  });
