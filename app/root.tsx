@@ -25,7 +25,7 @@ import { csrf } from './utils/csrf.server';
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react';
 import { TopNav } from './components/UI/TopNav';
 import { getTheme } from './utils/theme.server';
-import { useOptimisticUITheme } from './routes/_main+/users+/$user_+/settings';
+import { useOptimisticUITheme } from './routes/_main+/settings+/account';
 import { Toaster } from './components/UI/Toaster';
 import { toastSessionStorage } from './utils/toast.server';
 import { useToast } from './utils/Use-Toast';

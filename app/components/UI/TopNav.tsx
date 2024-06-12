@@ -40,7 +40,7 @@ function ProfileDesktopMenu({ username }: { username: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem>
           <a
-            href={`/users/${username}/settings`}
+            href={`/settings/account`}
             className="bg-none text-current border-none h-auto w-full justify-start p-0 font-inherit cursor-pointer outline-inherit"
           >
             Settings

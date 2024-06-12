@@ -14,7 +14,7 @@ import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { requireUser } from '~/utils/auth.server';
-import { FormOrFieldErrorsList, invariantResponse } from '~/utils/misc';
+import { FormOrFieldErrorsList } from '~/utils/misc';
 import { Theme, getTheme, setTheme } from '~/utils/theme.server';
 
 export const meta: MetaFunction = () => {
@@ -24,22 +24,17 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
-  const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
-  invariantResponse(user.username === params.user, 'Forbidden', {
-    status: 403,
-  });
+export async function loader({ request }: LoaderFunctionArgs) {
+  await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
 
   return json({
     headers: getTheme(request),
   });
 }
 
-export async function action({ request, params }: ActionFunctionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
-  invariantResponse(user.username === params.user, 'Forbidden', {
-    status: 403,
-  });
+  console.log(user);
 
   const formData = await request.formData();
   const submission = parseWithZod(formData, { schema: themeSchema });
@@ -65,6 +60,11 @@ export default function UserSettings() {
       <h1>Settings</h1>
       <div>
         <ThemeToggle userPreferences={theme} />
+      </div>
+      <div>
+        <Link to="/settings/profile" relative="path">
+          Profile
+        </Link>
       </div>
       <Link to=".." relative="path">
         back

@@ -27,7 +27,7 @@ export async function getUserId(request: Request) {
   return user.id;
 }
 
-// Redirects the user to the homepage if authenticated
+// Redirects the user to the homepage if authenticated (eg. redirect if authed user attempts to go to /signup route)
 export async function redirectIfAuthenticated(request: Request) {
   const userId = await getUserId(request);
   if (userId) {

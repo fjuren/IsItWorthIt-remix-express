@@ -8,7 +8,7 @@ export function useOptionalUser() {
   return data?.user ? data.user : null;
 }
 
-// used to ensure a logged in user is present. A logged in user is always required for where we place this utility function
+// used to ensure a logged in user is present (doesn't care who is logged in). A logged in user is always required for where we place this utility function
 export function useUser() {
   const userMightExists = useOptionalUser();
   if (userMightExists) {
