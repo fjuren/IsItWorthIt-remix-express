@@ -21,8 +21,7 @@ import { ConfirmSchema, PasswordSchema } from '~/utils/fieldValidation';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
 import { verficationSessionStorage } from '~/utils/verification.server';
-
-const verifySessionKey = 'verifySession';
+import { verifySessionKey } from './verify';
 
 const ResetPWSchema = z
   .object({
@@ -59,7 +58,6 @@ export async function requireResetPasswordUserData(request: Request) {
     request.headers.get('cookie')
   );
   const sessionData = verifySession.get(verifySessionKey);
-  console.log('sessionData', sessionData);
   if (
     !sessionData ||
     typeof sessionData.username !== 'string' ||

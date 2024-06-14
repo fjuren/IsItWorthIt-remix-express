@@ -81,13 +81,6 @@ export async function action({ request }: ActionFunctionArgs) {
         OR: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
       },
     });
-    // add email to session cookie
-    const verifyCookieSession = await verficationSessionStorage.getSession(
-      request.headers.get('cookie')
-    );
-    verifyCookieSession.set('verifySession', { email: user.email });
-    const setVerifyCookieSession =
-      await verficationSessionStorage.commitSession(verifyCookieSession);
 
     const { otp, redirectTo } = await prepVerificationCode({
       request,
@@ -102,6 +95,14 @@ export async function action({ request }: ActionFunctionArgs) {
       html: `<p>Please confirm your email address by entering this code ${otp}. It expires in 10 minutes.</p>`,
     });
     if (response.status === 'success') {
+      // add email to session cookie
+      const verifyCookieSession = await verficationSessionStorage.getSession(
+        request.headers.get('cookie')
+      );
+      verifyCookieSession.set('verifySession', { email: user.email });
+      const setVerifyCookieSession =
+        await verficationSessionStorage.commitSession(verifyCookieSession);
+
       return redirect(redirectTo, {
         headers: { 'set-cookie': setVerifyCookieSession },
       });

@@ -16,7 +16,6 @@ import { Button } from '~/components/UI/Button';
 import { Card } from '~/components/UI/Card';
 import { Input } from '~/components/UI/Input';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
-import { redirectIfAuthenticated } from '~/utils/auth.server';
 import { FormOrFieldErrorsList, combineHeaders } from '~/utils/misc';
 import { verficationSessionStorage } from '~/utils/verification.server';
 import { prisma } from '~/utils/db.server';
@@ -29,6 +28,7 @@ import {
 import { checkCSRF } from '~/utils/csrf.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { verifiedResetPassword } from './reset-password';
+import { verifiedChangeEmail } from './change-email';
 
 export const meta: MetaFunction = () => {
   return [
@@ -39,6 +39,9 @@ export const meta: MetaFunction = () => {
     },
   ];
 };
+
+// cookie key variable
+export const verifySessionKey = 'verifySession';
 
 // search params
 export const codeSearchParams = 'code';
@@ -58,7 +61,7 @@ export async function requireVerificationEmail(request: Request) {
   const verifySession = await verficationSessionStorage.getSession(
     request.headers.get('cookie')
   );
-  const sessionData = verifySession.get('verifySession');
+  const sessionData = verifySession.get(verifySessionKey);
   if (!sessionData || typeof sessionData.email !== 'string') {
     throw redirect('/signup');
   }
@@ -67,7 +70,6 @@ export async function requireVerificationEmail(request: Request) {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await redirectIfAuthenticated(request);
   await requireVerificationEmail(request);
 
   return null;
@@ -75,7 +77,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await redirectIfAuthenticated(request);
   await requireVerificationEmail(request);
   const formData = await request.formData();
   await checkCSRF(formData, request.headers);
@@ -131,6 +132,9 @@ export async function verifyRequest(request: Request, formData: FormData) {
   if (submissionValue[typeSearchParams] === 'reset-password') {
     return verifiedResetPassword({ submission, request });
   }
+  if (submissionValue[typeSearchParams] === 'change-email') {
+    return verifiedChangeEmail({ submission, request });
+  }
 }
 
 async function verifiedEmailSignup({
@@ -144,7 +148,7 @@ async function verifiedEmailSignup({
     request.headers.get('cookie')
   );
   const { email, username, hashPassword, rememberMe } =
-    verifySession.get('verifySession');
+    verifySession.get(verifySessionKey);
 
   if (submission.status === 'success') {
     // create the new user record in the db

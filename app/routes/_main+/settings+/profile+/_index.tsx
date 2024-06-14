@@ -76,7 +76,7 @@ export default function UsernameRoute() {
           <div>
             {' '}
             <div> Email: {data.user.email}</div>{' '}
-            <Link to={`/settings/profile/change-email`}>Change your email</Link>{' '}
+            <Link to={`/change-email`}>Change your email</Link>{' '}
           </div>
         ) : null}
       </div>
