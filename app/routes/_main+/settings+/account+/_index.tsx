@@ -2,8 +2,14 @@
 
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node';
 import {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  json,
+  redirect,
+} from '@remix-run/node';
+import {
+  Form,
   Link,
   MetaFunction,
   useFetcher,
@@ -13,9 +19,15 @@ import {
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
+import {
+  twoFAVerificationEnabled,
+  twoFAVerifyVerificationType,
+} from '~/routes/_auth+/two-factor.verify';
 import { requireUser } from '~/utils/auth.server';
+import { prisma } from '~/utils/db.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
 import { Theme, getTheme, setTheme } from '~/utils/theme.server';
+import { prepVerificationCode } from '~/utils/verification.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -25,18 +37,48 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
+  const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
+
+  // check if 2FA is enabled
+  const twoFAEnabled = await prisma.authVerificationCode.findUnique({
+    where: {
+      type_target: {
+        type: twoFAVerificationEnabled,
+        target: user.id,
+      },
+    },
+    select: { id: true },
+  });
 
   return json({
+    isTwoFAEnabled: Boolean(twoFAEnabled),
     headers: getTheme(request),
   });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
-  console.log(user);
 
   const formData = await request.formData();
+  // button intent with switch statements will handle forms with multiple buttons
+  const intent = formData.get('intent');
+  switch (intent) {
+    case 'enable-2fa':
+      {
+        await prepVerificationCode({
+          request,
+          type: twoFAVerifyVerificationType,
+          target: user.id,
+        });
+      }
+
+      return redirect('/two-factor/verify');
+    case 'disable-2fa':
+      return redirect('/two-factor/disable');
+    // default:
+    //   return redirect('/settings/account');
+  }
+
   const submission = parseWithZod(formData, { schema: themeSchema });
   if (submission.status !== 'success') {
     return json({ status: 'error', submission: submission.reply() });
@@ -52,24 +94,50 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function UserSettings() {
-  // const data = useLoaderData<typeof loader>(); // commented out because useOptimisticUITheme handles the loader data, to help with optimistic UI on slower networks
+  const data = useLoaderData<typeof loader>(); // commented out because useOptimisticUITheme handles the loader data, to help with optimistic UI on slower networks
   const theme = useOptimisticUITheme();
-
   return (
-    <div>
-      <h1>Settings</h1>
+    <>
+      <Form method="post">
+        <div>
+          <h1>Settings</h1>
+          <div>
+            <Link to="/settings/profile" relative="path">
+              Profile
+            </Link>
+          </div>
+          <div>
+            Two-factor authentication (2FA) is an extra layer of security for
+            your account. If this is enabled, you will be required to use your
+            username, password and a temporary code using an authenticator app
+            (eg. 1Password) to access your account.
+          </div>
+          <div>
+            {data.isTwoFAEnabled ? (
+              <>
+                <p className="text-green-700 font-bold">
+                  You have 2FA enabled!
+                </p>
+                <Button name="intent" value="disable-2fa" type="submit">
+                  Disable 2FA
+                </Button>
+              </>
+            ) : (
+              <Button name="intent" value="enable-2fa" type="submit">
+                Enable 2FA
+              </Button>
+            )}
+          </div>
+          <Link to=".." relative="path">
+            back
+          </Link>
+        </div>
+      </Form>
+      {/* TODO plan how to handle theming UX/UI */}
       <div>
         <ThemeToggle userPreferences={theme} />
       </div>
-      <div>
-        <Link to="/settings/profile" relative="path">
-          Profile
-        </Link>
-      </div>
-      <Link to=".." relative="path">
-        back
-      </Link>
-    </div>
+    </>
   );
 }
 
