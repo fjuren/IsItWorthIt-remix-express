@@ -34,6 +34,7 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
+import { verifySessionKey } from './verify';
 
 export const meta: MetaFunction = () => {
   return [
@@ -173,7 +174,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const verifyCookieSession = await verficationSessionStorage.getSession(
       request.headers.get('cookie')
     );
-    verifyCookieSession.set('verifySession', {
+    verifyCookieSession.set(verifySessionKey, {
       username,
       email,
       hashPassword,

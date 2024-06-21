@@ -29,6 +29,8 @@ import { checkCSRF } from '~/utils/csrf.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { verifiedResetPassword } from './reset-password';
 import { verifiedChangeEmail } from './change-email';
+import { twoFAVerificationEnabled } from './two-factor.verify';
+import { safeRedirect } from 'remix-utils/safe-redirect';
 
 export const meta: MetaFunction = () => {
   return [
@@ -41,7 +43,8 @@ export const meta: MetaFunction = () => {
 };
 
 // cookie key variable
-export const verifySessionKey = 'verifySession';
+export const verifySessionKey = 'verified-session-key';
+export const unverifiedSessionKey = 'unverified-session-key';
 
 // search params
 export const codeSearchParams = 'code';
@@ -54,10 +57,11 @@ const verifySchema = z.object({
   }),
   [targetSearchParams]: z.string(),
   [typeSearchParams]: z.string(),
+  redirectTo: z.string().optional(),
 });
 
-// ensures the user is going through the email flow rather than skipping to this page
-export async function requireVerificationEmail(request: Request) {
+// ensures the user is going through the proper verification flow (sign up flow, change email flow, change password flow) rather than skipping to this page
+export async function requireVerificationFlow(request: Request) {
   const verifySession = await verficationSessionStorage.getSession(
     request.headers.get('cookie')
   );
@@ -69,19 +73,43 @@ export async function requireVerificationEmail(request: Request) {
   return email;
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  await requireVerificationEmail(request);
+// ensure the user is going through the proper 2FA flow
+export async function require2FAUnverificationFlow(request: Request) {
+  const unverifiedSession = await verficationSessionStorage.getSession(
+    request.headers.get('cookie')
+  );
+  const unverifiedSessionData = await unverifiedSession.get(
+    unverifiedSessionKey
+  );
+  if (
+    !unverifiedSessionData ||
+    typeof unverifiedSessionData.userId !== 'string'
+  ) {
+    throw redirect('/signup');
+  }
+}
 
-  return null;
-  // json({ email });
+export async function loader({ request }: LoaderFunctionArgs) {
+  const typeParam = new URL(request.url).searchParams.get(typeSearchParams);
+  if (typeParam === twoFAVerificationEnabled) {
+    await require2FAUnverificationFlow(request);
+  } else {
+    await requireVerificationFlow(request);
+  }
+  return json({ typeParam });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireVerificationEmail(request);
+  const typeParam = new URL(request.url).searchParams.get(typeSearchParams);
+  if (typeParam === twoFAVerificationEnabled) {
+    await require2FAUnverificationFlow(request);
+  } else {
+    await requireVerificationFlow(request);
+  }
+
   const formData = await request.formData();
   await checkCSRF(formData, request.headers);
   checkHoneypot(formData);
-  console.log('ACTION');
   return verifyRequest(request, formData);
 }
 
@@ -116,25 +144,70 @@ export async function verifyRequest(request: Request, formData: FormData) {
 
   const { value: submissionValue } = submission;
 
-  // code is valid, delete config from db
-  await prisma.authVerificationCode.delete({
-    where: {
-      type_target: {
-        type: submissionValue[typeSearchParams],
-        target: submissionValue[targetSearchParams],
+  async function deleteAuthCode() {
+    await prisma.authVerificationCode.delete({
+      where: {
+        type_target: {
+          type: submissionValue[typeSearchParams],
+          target: submissionValue[targetSearchParams],
+        },
       },
-    },
-  });
+    });
+  }
+  // code is valid, delete config from db
   // checks method of submission to handle different verification types (email verification, phone verification, etc)
   if (submissionValue[typeSearchParams] === 'email') {
+    await deleteAuthCode();
     return verifiedEmailSignup({ submission, request });
   }
   if (submissionValue[typeSearchParams] === 'reset-password') {
+    await deleteAuthCode();
     return verifiedResetPassword({ submission, request });
   }
   if (submissionValue[typeSearchParams] === 'change-email') {
+    await deleteAuthCode();
     return verifiedChangeEmail({ submission, request });
   }
+  if (submissionValue[typeSearchParams] === '2fa-enabled') {
+    return verifiedUnverified2FaCode({ submission, request });
+  }
+}
+
+async function verifiedUnverified2FaCode({
+  submission,
+  request,
+}: {
+  submission: any;
+  request: Request;
+}) {
+  const cookie = request.headers.get('cookie');
+  const verifySession = await verficationSessionStorage.getSession(cookie);
+  const { rememberMe, userId } = verifySession.get(unverifiedSessionKey);
+  const deleteVerifySessionHeader =
+    await verficationSessionStorage.destroySession(verifySession);
+
+  if (submission.status === 'success') {
+    const cookieAuthSession = await authSessionStorage.getSession(cookie);
+    cookieAuthSession.set('authSession', userId);
+    const setCookieAuthHeader = await authSessionStorage.commitSession(
+      cookieAuthSession,
+      { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
+    );
+
+    const { redirectTo } = submission.value;
+
+    return redirect(safeRedirect(redirectTo), {
+      headers: combineHeaders(
+        {
+          'set-cookie': setCookieAuthHeader,
+        },
+        {
+          'set-cookie': deleteVerifySessionHeader,
+        }
+      ),
+    });
+  }
+  // TODO handle errors
 }
 
 async function verifiedEmailSignup({
@@ -251,6 +324,7 @@ export default function VerifyRoute() {
       code: searchParams.get(codeSearchParams) ?? '',
       target: searchParams.get(targetSearchParams) ?? '',
       type: searchParams.get(typeSearchParams) ?? '',
+      redirectTo: searchParams.get('redirectTo') ?? '',
     },
     constraint: getZodConstraint(verifySchema),
     lastResult: lastResult,
@@ -259,14 +333,44 @@ export default function VerifyRoute() {
     },
   });
 
+  const non2FaVerifications = (
+    <>
+      <h1>Please check your email {searchParams.get(targetSearchParams)}</h1>
+    </>
+  );
+
+  const pageHeading: Record<
+    'email' | 'reset-password' | 'change-email' | '2fa-enabled',
+    JSX.Element
+  > = {
+    email: non2FaVerifications,
+    'reset-password': non2FaVerifications,
+    'change-email': non2FaVerifications,
+    '2fa-enabled': (
+      <>
+        <h1>Please check your 2FA application</h1>
+      </>
+    ),
+  };
+
+  const typeForHeadingControl = searchParams.get(typeSearchParams) as
+    | 'email'
+    | 'reset-password'
+    | 'change-email'
+    | '2fa-enabled'
+    | null;
+
+  if (
+    typeForHeadingControl === null ||
+    !(typeForHeadingControl in pageHeading)
+  ) {
+    throw new Response('Not found', { status: 500 });
+  }
+
   return (
     <div className="flex w-fit m-auto py-10">
       <Card>
-        <div>
-          <h1>
-            Please check your email {searchParams.get(targetSearchParams)}
-          </h1>
-        </div>
+        <div>{pageHeading[typeForHeadingControl]}</div>
         <div className="w-80">
           <Form method="post" {...getFormProps(form)}>
             <HoneypotInputs />
@@ -298,8 +402,13 @@ export default function VerifyRoute() {
               />
             </div>
             <div>
+              <Input
+                {...getInputProps(fields.redirectTo, { type: 'hidden' })}
+              />
+            </div>
+            <div>
               <Button type="submit" name="intent" value="verifyCode">
-                Verify email
+                Verify
               </Button>
             </div>
           </Form>

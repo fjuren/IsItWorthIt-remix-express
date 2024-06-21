@@ -27,6 +27,16 @@ import {
   authSessionStorage,
   getCookieSessionExpirationDate,
 } from '~/utils/session.server';
+import { twoFAVerificationEnabled } from './two-factor.verify';
+import {
+  verficationSessionStorage,
+  verificationRedirect,
+} from '~/utils/verification.server';
+import { unverifiedSessionKey } from './verify';
+
+const usernameMaxLength: number = 20;
+const minLength: number = 3;
+const passwordMaxLength: number = 100;
 
 export const meta: MetaFunction = () => {
   return [
@@ -37,10 +47,6 @@ export const meta: MetaFunction = () => {
     },
   ];
 };
-
-const usernameMaxLength: number = 20;
-const minLength: number = 3;
-const passwordMaxLength: number = 100;
 
 const LoginSchema = z.object({
   username: z
@@ -104,7 +110,10 @@ export async function action({ request }: ActionFunctionArgs) {
         return z.NEVER;
       }
 
-      return { ...val, user: { id: userAndPassword.id } };
+      return {
+        ...val,
+        user: { id: userAndPassword.id },
+      };
     }),
     async: true,
   });
@@ -125,22 +134,61 @@ export async function action({ request }: ActionFunctionArgs) {
   }
   const { rememberMe, user, redirectTo } = await submission.value;
 
+  // Get the user 2FA setting preference
+  const twoFAEnabled = await prisma.authVerificationCode.findUnique({
+    select: {
+      id: true,
+    },
+    where: {
+      type_target: {
+        type: twoFAVerificationEnabled,
+        target: user.id,
+      },
+    },
+  });
+  // give true if it's enabled
+  const hasTwoFAEnabled = Boolean(twoFAEnabled);
+  // const verificationCodeId = twoFAEnabled ? twoFAEnabled.id : null;
+
   // if user exists and the submission is successful
   if (submission.status === 'success') {
-    // login cook set
-    const cookie = request.headers.get('cookie');
-    const cookieAuthSession = await authSessionStorage.getSession(cookie);
-    cookieAuthSession.set('authSession', user.id);
-    const setAuthCookieHeader = await authSessionStorage.commitSession(
-      cookieAuthSession,
-      { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
-    );
-    // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
-    return redirect(safeRedirect(redirectTo), {
-      headers: {
-        'set-cookie': setAuthCookieHeader,
-      },
-    });
+    // check if they have 2fa enabled
+    if (hasTwoFAEnabled) {
+      // redirect to the 2FA page and set up a verify cookie session if the user has set up their 2FA
+      const unverifiedCookieSession =
+        await verficationSessionStorage.getSession();
+      unverifiedCookieSession.set(unverifiedSessionKey, { userId: user.id });
+      unverifiedCookieSession.set('remember-me', rememberMe);
+
+      const setUnverifiedSessionCookieHeader =
+        await verficationSessionStorage.commitSession(unverifiedCookieSession);
+
+      const redirectUrl = verificationRedirect({
+        request,
+        redirectTo,
+        type: twoFAVerificationEnabled,
+        target: user.id,
+      });
+
+      return redirect(redirectUrl.toString(), {
+        headers: { 'set-cookie': setUnverifiedSessionCookieHeader },
+      });
+    } else {
+      const cookie = request.headers.get('cookie');
+      // Continue with regular login without 2FA redirect
+      const cookieAuthSession = await authSessionStorage.getSession(cookie);
+      cookieAuthSession.set('authSession', user.id);
+      const setAuthCookieHeader = await authSessionStorage.commitSession(
+        cookieAuthSession,
+        { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
+      );
+      // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
+      return redirect(safeRedirect(redirectTo), {
+        headers: {
+          'set-cookie': setAuthCookieHeader,
+        },
+      });
+    }
   } else {
     throw new Response('Not found', { status: 500 });
   }

@@ -25,6 +25,7 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
+import { verifySessionKey } from './verify';
 
 const ForgotPWSchema = z.object({
   usernameOrEmail: z.union([UsernameSchema, EmailSchema]),
@@ -99,7 +100,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const verifyCookieSession = await verficationSessionStorage.getSession(
         request.headers.get('cookie')
       );
-      verifyCookieSession.set('verifySession', { email: user.email });
+      verifyCookieSession.set(verifySessionKey, { email: user.email });
       const setVerifyCookieSession =
         await verficationSessionStorage.commitSession(verifyCookieSession);
 

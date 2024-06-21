@@ -71,7 +71,7 @@ export function verificationRedirect({
   redirectUrl.searchParams.set('target', target);
   // handles redirects that require signup first. Recall login redirect handling use case (eg. if client is sent to an authenticated route but first needed to log in and then be redirected)
   if (redirectTo) {
-    redirectUrl.searchParams.set('redirect-to', redirectTo);
+    redirectUrl.searchParams.set('redirectTo', redirectTo);
   }
   return redirectUrl;
 }
