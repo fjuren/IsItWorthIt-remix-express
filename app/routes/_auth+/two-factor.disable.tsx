@@ -14,6 +14,11 @@ import { requireUser } from '~/utils/auth.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
 import { twoFAVerificationEnabled } from './two-factor.verify';
+import { shouldRevalidate2Fa, unverifiedSessionKey } from './verify';
+import {
+  verficationSessionStorage,
+  verificationRedirect,
+} from '~/utils/verification.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -24,7 +29,7 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
-
+  await shouldRevalidate2Fa({ request, userId: user.id });
   return json({
     userId: user.id,
   });
@@ -40,15 +45,41 @@ export async function action({ request }: ActionFunctionArgs) {
     return redirect('/settings/account');
   }
 
-  await prisma.authVerificationCode.delete({
-    where: {
-      type_target: {
-        type: twoFAVerificationEnabled,
-        target: user.id,
-      },
-    },
+  const shouldReverify2FA = await shouldRevalidate2Fa({
+    request,
+    userId: user.id,
   });
+  if (shouldReverify2FA) {
+    const unverifiedCookieSession =
+      await verficationSessionStorage.getSession();
+    unverifiedCookieSession.set(unverifiedSessionKey, { userId: user.id });
+    const setUnverifiedSessionCookieHeader =
+      await verficationSessionStorage.commitSession(unverifiedCookieSession);
 
+    const reqUrl = new URL(request.url);
+
+    const redirectUrl = verificationRedirect({
+      request,
+      redirectTo: reqUrl.pathname + reqUrl.search,
+      type: twoFAVerificationEnabled,
+      target: user.id,
+    });
+
+    return redirect(redirectUrl.toString(), {
+      headers: {
+        'set-cookie': setUnverifiedSessionCookieHeader,
+      },
+    });
+  } else {
+    await prisma.authVerificationCode.delete({
+      where: {
+        type_target: {
+          type: twoFAVerificationEnabled,
+          target: user.id,
+        },
+      },
+    });
+  }
   return redirect('/settings/account');
 }
 

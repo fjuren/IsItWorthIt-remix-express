@@ -53,7 +53,7 @@ export async function prepVerificationCode({
   return { redirectTo, otp: getOtp.otp };
 }
 
-// create a redirect URL with the appropriate search params
+// create a redirect URL with the appropriate search params to handle code verification
 export function verificationRedirect({
   request,
   redirectTo,

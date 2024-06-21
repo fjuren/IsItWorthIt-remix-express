@@ -45,6 +45,7 @@ export const meta: MetaFunction = () => {
 // cookie key variable
 export const verifySessionKey = 'verified-session-key';
 export const unverifiedSessionKey = 'unverified-session-key';
+export const lastVerifiedTimeKey = 'last-verified-time';
 
 // search params
 export const codeSearchParams = 'code';
@@ -173,7 +174,7 @@ export async function verifyRequest(request: Request, formData: FormData) {
   }
 }
 
-async function verifiedUnverified2FaCode({
+export async function verifiedUnverified2FaCode({
   submission,
   request,
 }: {
@@ -187,27 +188,69 @@ async function verifiedUnverified2FaCode({
     await verficationSessionStorage.destroySession(verifySession);
 
   if (submission.status === 'success') {
+    // prepping the auth session cookie and add the time of verification
     const cookieAuthSession = await authSessionStorage.getSession(cookie);
-    cookieAuthSession.set('authSession', userId);
-    const setCookieAuthHeader = await authSessionStorage.commitSession(
-      cookieAuthSession,
-      { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
-    );
+    cookieAuthSession.set(lastVerifiedTimeKey, Date.now());
 
-    const { redirectTo } = submission.value;
+    // checking if the user is already in the code verification flow using the verification cookie. If so, continue with regular authentication. If re-verifiying (eg. during destructive actions like disabling 2FA), the user wouldn't have a verifySession with unverifiedSessionKey yet
+    if (userId) {
+      cookieAuthSession.set('authSession', userId);
+      const setCookieAuthHeader = await authSessionStorage.commitSession(
+        cookieAuthSession,
+        { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
+      );
 
-    return redirect(safeRedirect(redirectTo), {
-      headers: combineHeaders(
-        {
-          'set-cookie': setCookieAuthHeader,
-        },
-        {
-          'set-cookie': deleteVerifySessionHeader,
-        }
-      ),
-    });
+      const { redirectTo } = submission.value;
+
+      return redirect(safeRedirect(redirectTo), {
+        headers: combineHeaders(
+          {
+            'set-cookie': setCookieAuthHeader,
+          },
+          {
+            'set-cookie': deleteVerifySessionHeader,
+          }
+        ),
+      });
+    }
   }
   // TODO handle errors
+}
+
+// function to check if the user should reverify using a code. If within a 2 hour expiry window, the user won't need to reverify. Can use this where more 'destructive' actions taking place, like reseting password, emails, disabling 2FA etc.
+export async function shouldRevalidate2Fa({
+  request,
+  userId,
+}: {
+  request: Request;
+  userId: string;
+}) {
+  const twoFAEnabled = await prisma.authVerificationCode.findUnique({
+    where: {
+      type_target: { type: twoFAVerificationEnabled, target: userId },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const hasTwoFA = Boolean(twoFAEnabled);
+  if (!hasTwoFA) return false;
+
+  const cookieAuthSession = await authSessionStorage.getSession(
+    request.headers.get('cookie')
+  );
+  const lastVerified = cookieAuthSession.get(lastVerifiedTimeKey);
+  if (!lastVerified) return true;
+
+  const timeNow = new Date();
+  const expiryWindow = 1000 * 60 * 60 * 2; // 2hrs
+
+  if (timeNow.getTime() - new Date(lastVerified).getTime() > expiryWindow) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 async function verifiedEmailSignup({
