@@ -24,19 +24,17 @@ import { FormOrFieldErrorsList } from '~/utils/misc';
 import { getTOTPAuthUri } from '@epic-web/totp';
 // @ts-expect-error ignoring type error
 import * as QRCode from 'qrcode';
-import { isVerificationCodeValid } from './verify';
+import {
+  isVerificationCodeValid,
+  twoFAVerificationEnabledType,
+  twoFAVerifyVerificationType,
+} from './verify';
 import { toastSessionStorage } from '~/utils/toast.server';
+import { twoFaScema } from '~/utils/fieldValidation';
 
 const twoFactorSchema = z.object({
-  twoFactorCode: z
-    .string()
-    .min(8, { message: 'Two-factor code must be 8 characters long' })
-    .max(8, { message: 'Two-factor code must be 8 characters long' })
-    .optional(),
+  twoFactorCode: twoFaScema,
 });
-
-export const twoFAVerifyVerificationType = '2fa-verify';
-export const twoFAVerificationEnabled = '2fa-enabled';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   // recall requireUser ensure authentication and offers redirects
@@ -152,7 +150,7 @@ export async function action({ request }: ActionFunctionArgs) {
           },
         },
         data: {
-          type: twoFAVerificationEnabled,
+          type: twoFAVerificationEnabledType,
           expiresAt: null, // removes expiration date so it's now always enabled
         },
       });

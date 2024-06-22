@@ -13,8 +13,11 @@ import { GeneralErrorBoundary } from '~/components/error-boundary';
 import { requireUser } from '~/utils/auth.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
-import { twoFAVerificationEnabled } from './two-factor.verify';
-import { shouldRevalidate2Fa, unverifiedSessionKey } from './verify';
+import {
+  shouldRevalidate2Fa,
+  twoFAVerificationEnabledType,
+  unverifiedSessionKey,
+} from './verify';
 import {
   verficationSessionStorage,
   verificationRedirect,
@@ -61,7 +64,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const redirectUrl = verificationRedirect({
       request,
       redirectTo: reqUrl.pathname + reqUrl.search,
-      type: twoFAVerificationEnabled,
+      type: twoFAVerificationEnabledType,
       target: user.id,
     });
 
@@ -74,7 +77,7 @@ export async function action({ request }: ActionFunctionArgs) {
     await prisma.authVerificationCode.delete({
       where: {
         type_target: {
-          type: twoFAVerificationEnabled,
+          type: twoFAVerificationEnabledType,
           target: user.id,
         },
       },

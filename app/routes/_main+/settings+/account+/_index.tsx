@@ -20,9 +20,9 @@ import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import {
-  twoFAVerificationEnabled,
+  twoFAVerificationEnabledType,
   twoFAVerifyVerificationType,
-} from '~/routes/_auth+/two-factor.verify';
+} from '~/routes/_auth+/verify';
 import { requireUser } from '~/utils/auth.server';
 import { prisma } from '~/utils/db.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
@@ -43,7 +43,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const twoFAEnabled = await prisma.authVerificationCode.findUnique({
     where: {
       type_target: {
-        type: twoFAVerificationEnabled,
+        type: twoFAVerificationEnabledType,
         target: user.id,
       },
     },

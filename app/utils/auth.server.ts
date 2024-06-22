@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { redirect } from '@remix-run/node';
 import { authSessionStorage } from './session.server';
 import { prisma } from './db.server';
+import { authSessionKey } from '~/routes/_auth+/verify';
 
 export { bcrypt };
 
@@ -11,7 +12,7 @@ export { bcrypt };
 export async function getUserId(request: Request) {
   const cookie = request.headers.get('cookie');
   const authCookieSession = await authSessionStorage.getSession(cookie);
-  const userId = authCookieSession.get('authSession');
+  const userId = authCookieSession.get(authSessionKey);
 
   if (!userId) return null;
   const user = await prisma.user.findUnique({

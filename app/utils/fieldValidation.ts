@@ -34,3 +34,9 @@ export const ConfirmSchema = z
   .max(passwordMaxLength, {
     message: 'Must be 100 or fewer characters long',
   });
+
+export const twoFaScema = z
+  .string()
+  .min(8, { message: 'Two-factor code must be 8 characters long' })
+  .max(8, { message: 'Two-factor code must be 8 characters long' })
+  .optional();

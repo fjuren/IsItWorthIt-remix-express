@@ -1,7 +1,7 @@
 import { createCookie } from '@remix-run/node';
 import { CSRF, CSRFError } from 'remix-utils/csrf/server';
 
-const cookie = createCookie('csrf', {
+const cookie = createCookie('iiwi_csrf', {
   path: '/',
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',

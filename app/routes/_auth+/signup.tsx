@@ -34,7 +34,13 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
-import { verifySessionKey } from './verify';
+import { emailType, verifySessionKey } from './verify';
+import {
+  ConfirmSchema,
+  EmailSchema,
+  PasswordSchema,
+  UsernameSchema,
+} from '~/utils/fieldValidation';
 
 export const meta: MetaFunction = () => {
   return [
@@ -46,38 +52,12 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-// const nameMaxLength: number = 100;
-const usernameMaxLength: number = 20;
-const minLength: number = 3;
-const passwordMaxLength: number = 100;
-const emailMaxLength: number = 100;
-
 const signupSchema = z
   .object({
-    username: z
-      .string({ required_error: 'Please enter your username' })
-      .min(minLength, { message: 'Username is too short' })
-      .max(usernameMaxLength, {
-        message: 'Must be 20 or fewer characters long',
-      }),
-    email: z
-      .string({ required_error: 'Please enter your email address' })
-      .min(minLength, { message: 'Email is too short' })
-      .max(emailMaxLength, { message: 'Email is too long' })
-      .email({
-        message: 'Please enter a valid email address',
-      }),
-    password: z // TODO improve security requirement validation for passwords
-      .string({ required_error: 'Please enter your password' })
-      .min(minLength, { message: 'Password is too short' })
-      .max(passwordMaxLength, {
-        message: 'Must be 100 or fewer characters long',
-      }),
-    confirmPassword: z
-      .string({ required_error: 'Please confirm your password' })
-      .max(passwordMaxLength, {
-        message: 'Must be 100 or fewer characters long',
-      }),
+    username: UsernameSchema,
+    email: EmailSchema,
+    password: PasswordSchema,
+    confirmPassword: ConfirmSchema,
     rememberMe: z.boolean().optional(),
     redirectTo: z.string().optional(),
   })
@@ -92,11 +72,11 @@ const signupSchema = z
   });
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  return await redirectIfAuthenticated(request);
+  return await redirectIfAuthenticated(request); // using this to prevent already authed user from submitting a signup request
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await redirectIfAuthenticated(request); // using this to prevent already authed user from submitting a signup request
+  await redirectIfAuthenticated(request);
 
   const formData = await request.formData();
   await checkCSRF(formData, request.headers);
@@ -185,7 +165,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const { redirectTo, otp } = await prepVerificationCode({
       request,
-      type: 'email',
+      type: emailType,
       target: email,
       redirectTo: postRedirectToVerify,
     });

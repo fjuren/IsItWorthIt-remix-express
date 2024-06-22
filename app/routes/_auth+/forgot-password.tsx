@@ -25,7 +25,7 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
-import { verifySessionKey } from './verify';
+import { resetPasswordType, verifySessionKey } from './verify';
 
 const ForgotPWSchema = z.object({
   usernameOrEmail: z.union([UsernameSchema, EmailSchema]),
@@ -85,7 +85,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const { otp, redirectTo } = await prepVerificationCode({
       request,
-      type: 'reset-password',
+      type: resetPasswordType,
       target: usernameOrEmail,
     });
 

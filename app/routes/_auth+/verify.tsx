@@ -29,7 +29,6 @@ import { checkCSRF } from '~/utils/csrf.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { verifiedResetPassword } from './reset-password';
 import { verifiedChangeEmail } from './change-email';
-import { twoFAVerificationEnabled } from './two-factor.verify';
 import { safeRedirect } from 'remix-utils/safe-redirect';
 
 export const meta: MetaFunction = () => {
@@ -43,9 +42,18 @@ export const meta: MetaFunction = () => {
 };
 
 // cookie key variable
+export const authSessionKey = 'auth-Session';
 export const verifySessionKey = 'verified-session-key';
 export const unverifiedSessionKey = 'unverified-session-key';
 export const lastVerifiedTimeKey = 'last-verified-time';
+export const rememberMeKey = ' remember-me';
+
+// verification type key
+export const twoFAVerifyVerificationType = '2fa-verify';
+export const twoFAVerificationEnabledType = '2fa-enabled';
+export const emailType = 'email';
+export const resetPasswordType = 'reset-password';
+export const changeEmailType = 'change-email';
 
 // search params
 export const codeSearchParams = 'code';
@@ -92,7 +100,7 @@ export async function require2FAUnverificationFlow(request: Request) {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const typeParam = new URL(request.url).searchParams.get(typeSearchParams);
-  if (typeParam === twoFAVerificationEnabled) {
+  if (typeParam === twoFAVerificationEnabledType) {
     await require2FAUnverificationFlow(request);
   } else {
     await requireVerificationFlow(request);
@@ -102,7 +110,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const typeParam = new URL(request.url).searchParams.get(typeSearchParams);
-  if (typeParam === twoFAVerificationEnabled) {
+  if (typeParam === twoFAVerificationEnabledType) {
     await require2FAUnverificationFlow(request);
   } else {
     await requireVerificationFlow(request);
@@ -157,19 +165,19 @@ export async function verifyRequest(request: Request, formData: FormData) {
   }
   // code is valid, delete config from db
   // checks method of submission to handle different verification types (email verification, phone verification, etc)
-  if (submissionValue[typeSearchParams] === 'email') {
+  if (submissionValue[typeSearchParams] === emailType) {
     await deleteAuthCode();
     return verifiedEmailSignup({ submission, request });
   }
-  if (submissionValue[typeSearchParams] === 'reset-password') {
+  if (submissionValue[typeSearchParams] === resetPasswordType) {
     await deleteAuthCode();
     return verifiedResetPassword({ submission, request });
   }
-  if (submissionValue[typeSearchParams] === 'change-email') {
+  if (submissionValue[typeSearchParams] === changeEmailType) {
     await deleteAuthCode();
     return verifiedChangeEmail({ submission, request });
   }
-  if (submissionValue[typeSearchParams] === '2fa-enabled') {
+  if (submissionValue[typeSearchParams] === twoFAVerifyVerificationType) {
     return verifiedUnverified2FaCode({ submission, request });
   }
 }
@@ -194,7 +202,7 @@ export async function verifiedUnverified2FaCode({
 
     // checking if the user is already in the code verification flow using the verification cookie. If so, continue with regular authentication. If re-verifiying (eg. during destructive actions like disabling 2FA), the user wouldn't have a verifySession with unverifiedSessionKey yet
     if (userId) {
-      cookieAuthSession.set('authSession', userId);
+      cookieAuthSession.set(authSessionKey, userId);
       const setCookieAuthHeader = await authSessionStorage.commitSession(
         cookieAuthSession,
         { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
@@ -227,7 +235,7 @@ export async function shouldRevalidate2Fa({
 }) {
   const twoFAEnabled = await prisma.authVerificationCode.findUnique({
     where: {
-      type_target: { type: twoFAVerificationEnabled, target: userId },
+      type_target: { type: twoFAVerificationEnabledType, target: userId },
     },
     select: {
       id: true,
@@ -301,7 +309,7 @@ async function verifiedEmailSignup({
 
     // set cookie session for authentication
     const cookieAuthSession = await authSessionStorage.getSession(cookie);
-    cookieAuthSession.set('authSession', user.id);
+    cookieAuthSession.set(authSessionKey, user.id);
     const setAuthCookieHeader = await authSessionStorage.commitSession(
       cookieAuthSession,
       { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }

@@ -27,16 +27,17 @@ import {
   authSessionStorage,
   getCookieSessionExpirationDate,
 } from '~/utils/session.server';
-import { twoFAVerificationEnabled } from './two-factor.verify';
 import {
   verficationSessionStorage,
   verificationRedirect,
 } from '~/utils/verification.server';
-import { unverifiedSessionKey } from './verify';
-
-const usernameMaxLength: number = 20;
-const minLength: number = 3;
-const passwordMaxLength: number = 100;
+import {
+  authSessionKey,
+  rememberMeKey,
+  twoFAVerificationEnabledType,
+  unverifiedSessionKey,
+} from './verify';
+import { PasswordSchema, UsernameSchema } from '~/utils/fieldValidation';
 
 export const meta: MetaFunction = () => {
   return [
@@ -49,18 +50,8 @@ export const meta: MetaFunction = () => {
 };
 
 const LoginSchema = z.object({
-  username: z
-    .string({ required_error: 'Please enter your username' })
-    .min(minLength, { message: 'Username is too short' })
-    .max(usernameMaxLength, {
-      message: 'Must be 20 or fewer characters long',
-    }),
-  password: z
-    .string({ required_error: 'Please enter your password' })
-    .min(minLength, { message: 'Password is too short' })
-    .max(passwordMaxLength, {
-      message: 'Must be 100 or fewer characters long',
-    }),
+  username: UsernameSchema,
+  password: PasswordSchema,
   rememberMe: z.boolean().optional(),
   redirectTo: z.string().optional(),
 });
@@ -141,7 +132,7 @@ export async function action({ request }: ActionFunctionArgs) {
     },
     where: {
       type_target: {
-        type: twoFAVerificationEnabled,
+        type: twoFAVerificationEnabledType,
         target: user.id,
       },
     },
@@ -158,7 +149,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const unverifiedCookieSession =
         await verficationSessionStorage.getSession();
       unverifiedCookieSession.set(unverifiedSessionKey, { userId: user.id });
-      unverifiedCookieSession.set('remember-me', rememberMe);
+      unverifiedCookieSession.set(rememberMeKey, rememberMe);
 
       const setUnverifiedSessionCookieHeader =
         await verficationSessionStorage.commitSession(unverifiedCookieSession);
@@ -166,7 +157,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const redirectUrl = verificationRedirect({
         request,
         redirectTo,
-        type: twoFAVerificationEnabled,
+        type: twoFAVerificationEnabledType,
         target: user.id,
       });
 
@@ -177,7 +168,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const cookie = request.headers.get('cookie');
       // Continue with regular login without 2FA redirect
       const cookieAuthSession = await authSessionStorage.getSession(cookie);
-      cookieAuthSession.set('authSession', user.id);
+      cookieAuthSession.set(authSessionKey, user.id);
       const setAuthCookieHeader = await authSessionStorage.commitSession(
         cookieAuthSession,
         { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }

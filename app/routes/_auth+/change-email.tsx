@@ -26,7 +26,7 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
-import { verifySessionKey } from './verify';
+import { changeEmailType, verifySessionKey } from './verify';
 
 const ChangeEmailSchema = z.object({
   email: EmailSchema,
@@ -82,7 +82,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const { otp, redirectTo } = await prepVerificationCode({
     request,
-    type: 'change-email',
+    type: changeEmailType,
     target: email,
   });
 
