@@ -149,7 +149,8 @@ export async function action({ request }: ActionFunctionArgs) {
       const unverifiedCookieSession =
         await verficationSessionStorage.getSession();
       unverifiedCookieSession.set(unverifiedSessionKey, { userId: user.id });
-      unverifiedCookieSession.set(rememberMeKey, rememberMe);
+      unverifiedCookieSession.set(rememberMeKey, { rememberMe: rememberMe });
+      console.log('REMEMBER ME FROM LOGIN: ', rememberMe);
 
       const setUnverifiedSessionCookieHeader =
         await verficationSessionStorage.commitSession(unverifiedCookieSession);

@@ -46,7 +46,7 @@ export const authSessionKey = 'auth-Session';
 export const verifySessionKey = 'verified-session-key';
 export const unverifiedSessionKey = 'unverified-session-key';
 export const lastVerifiedTimeKey = 'last-verified-time';
-export const rememberMeKey = ' remember-me';
+export const rememberMeKey = 'remember-me';
 
 // verification type key
 export const twoFAVerifyVerificationType = '2fa-verify';
@@ -90,6 +90,7 @@ export async function require2FAUnverificationFlow(request: Request) {
   const unverifiedSessionData = await unverifiedSession.get(
     unverifiedSessionKey
   );
+
   if (
     !unverifiedSessionData ||
     typeof unverifiedSessionData.userId !== 'string'
@@ -177,7 +178,7 @@ export async function verifyRequest(request: Request, formData: FormData) {
     await deleteAuthCode();
     return verifiedChangeEmail({ submission, request });
   }
-  if (submissionValue[typeSearchParams] === twoFAVerifyVerificationType) {
+  if (submissionValue[typeSearchParams] === twoFAVerificationEnabledType) {
     return verifiedUnverified2FaCode({ submission, request });
   }
 }
@@ -191,7 +192,11 @@ export async function verifiedUnverified2FaCode({
 }) {
   const cookie = request.headers.get('cookie');
   const verifySession = await verficationSessionStorage.getSession(cookie);
-  const { rememberMe, userId } = verifySession.get(unverifiedSessionKey);
+  const { userId } = verifySession.get(unverifiedSessionKey);
+  const rememberMe = verifySession.get(rememberMeKey)
+    ? verifySession.get(rememberMeKey)
+    : null; // TODO BUG: if a user has an expiry date to the authcookieSession, disabling 2FA resets to session (no remember me option)
+
   const deleteVerifySessionHeader =
     await verficationSessionStorage.destroySession(verifySession);
 
@@ -252,7 +257,7 @@ export async function shouldRevalidate2Fa({
   if (!lastVerified) return true;
 
   const timeNow = new Date();
-  const expiryWindow = 1000 * 60 * 60 * 2; // 2hrs
+  const expiryWindow = 1000 * 10; // 2hrs
 
   if (timeNow.getTime() - new Date(lastVerified).getTime() > expiryWindow) {
     return true;
