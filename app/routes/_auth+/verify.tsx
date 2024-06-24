@@ -195,7 +195,7 @@ export async function verifiedUnverified2FaCode({
   const { userId } = verifySession.get(unverifiedSessionKey);
   const rememberMe = verifySession.get(rememberMeKey)
     ? verifySession.get(rememberMeKey)
-    : null; // TODO BUG: if a user has an expiry date to the authcookieSession, disabling 2FA resets to session (no remember me option)
+    : null; // null if the client doesn't need to pass in their 'remember me' preference. Example flow is disabling 2FA, where a user doesn't select their 'remember me' preference. See session.server.ts for custom 'originalAuthSessionStorage' enhancement.
 
   const deleteVerifySessionHeader =
     await verficationSessionStorage.destroySession(verifySession);
