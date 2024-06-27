@@ -38,6 +38,7 @@ import {
   unverifiedSessionKey,
 } from './verify';
 import { PasswordSchema, UsernameSchema } from '~/utils/fieldValidation';
+import { oAuthConnectionForm } from '~/utils/oAuthConnections';
 
 export const meta: MetaFunction = () => {
   return [
@@ -271,7 +272,14 @@ export default function LoginRoute() {
                 Log in
               </Button>
             </div>
+            <br />
           </Form>
+          <div>
+            {oAuthConnectionForm({
+              type: 'Login',
+              oAuthServiceName: 'Discord',
+            })}
+          </div>
           <div>
             <Button variant="link" asChild>
               <Link to="/signup">Don&apos;t have an account? Sign up</Link>

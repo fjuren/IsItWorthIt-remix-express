@@ -257,7 +257,7 @@ export async function shouldRevalidate2Fa({
   if (!lastVerified) return true;
 
   const timeNow = new Date();
-  const expiryWindow = 1000 * 10; // 2hrs
+  const expiryWindow = 1000 * 60 * 60 * 2; // 2hrs
 
   if (timeNow.getTime() - new Date(lastVerified).getTime() > expiryWindow) {
     return true;
