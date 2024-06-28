@@ -66,6 +66,7 @@ function createUser() {
     // gameRatings: {},
     // gameFavourites: {},
     // roles: [{}]
+    oAuthConnections: {},
     // image: {},
   };
 }
@@ -123,6 +124,7 @@ async function seed() {
           },
         ],
       },
+      // oAuthConnections: {},
       image: {},
     },
   });
