@@ -71,3 +71,9 @@ export function combineHeaders(
   });
   return combined;
 }
+
+// simply capitalizes the first letter of a word
+export function capitalizeFirstLetter(word: string) {
+  if (word.length === 0) return word;
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}

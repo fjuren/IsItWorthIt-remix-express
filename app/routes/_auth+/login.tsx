@@ -277,7 +277,7 @@ export default function LoginRoute() {
           <div>
             {oAuthConnectionForm({
               type: 'Login',
-              oAuthServiceName: 'Discord',
+              oAuthConnectionName: 'Discord',
             })}
           </div>
           <div>
