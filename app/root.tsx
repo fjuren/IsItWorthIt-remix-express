@@ -27,7 +27,10 @@ import { TopNav } from './components/UI/TopNav';
 import { getTheme } from './utils/theme.server';
 import { useOptimisticUITheme } from './routes/_main+/settings+/account+/_index';
 import { Toaster } from './components/UI/Toaster';
-import { toastSessionStorage } from './utils/toast.server';
+import {
+  toastVerificationKey,
+  toastSessionStorage,
+} from './utils/toast.server';
 import { useToast } from './utils/Use-Toast';
 import { combineHeaders } from './utils/misc';
 import { useEffect } from 'react';
@@ -56,7 +59,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request);
   const cookie = request.headers.get('cookie');
   const toastCookieSession = await toastSessionStorage.getSession(cookie);
-  const toast = toastCookieSession.get('registrationMessage');
+  const toast = toastCookieSession.get(toastVerificationKey);
   const authCookieSession = await authSessionStorage.getSession(cookie);
   const userId = await getUserId(request);
 
@@ -157,15 +160,15 @@ export default function AppWithProviders() {
   );
 }
 
-// from docs; if the toast only renders once when making repeatable changes (ie. delete), it's because no id is set (BUG)
+// BUG from docs; if the toast only renders once when making repeatable changes (ie. delete), it's because no id is set (BUG)
 function RenderToast({ toastCookie }: { toastCookie: any }) {
   const { toast } = useToast();
   useEffect(() => {
     toast({
       type: 'foreground',
-      variant: toastCookie.type, // success
-      title: toastCookie.title,
-      description: toastCookie.description,
+      variant: toastCookie.toastVariant, // success
+      title: toastCookie.toastTitle,
+      description: toastCookie.toastDescription,
     });
   }, [toastCookie, toast]);
   return null;

@@ -20,7 +20,7 @@ import { FormOrFieldErrorsList, combineHeaders } from '~/utils/misc';
 import { verficationSessionStorage } from '~/utils/verification.server';
 import { prisma } from '~/utils/db.server';
 import { verifyTOTP } from '@epic-web/totp';
-import { toastSessionStorage } from '~/utils/toast.server';
+import { toastVerificationKey, generalToast } from '~/utils/toast.server';
 import {
   authSessionStorage,
   getCookieSessionExpirationDate,
@@ -299,20 +299,16 @@ async function verifiedEmailSignup({
       },
     });
 
-    // show toaster success message using cookieSession
-    const cookie = request.headers.get('cookie');
-    const cookieSession = await toastSessionStorage.getSession(cookie);
-    // replace 'set' with 'flash'. flash method automatically unsets value after the next 'get' for 'authMessage'
-    cookieSession.flash('registrationMessage', {
-      type: 'success',
-      title: 'Signed in',
-      description: 'You are signed in',
+    const setToastCookieHeader = await generalToast({
+      request,
+      key: toastVerificationKey,
+      toastVariant: 'success',
+      toastTitle: 'Signed in',
+      toastDescription: 'You are signed in',
     });
-    const setToastCookieHeader = await toastSessionStorage.commitSession(
-      cookieSession
-    );
 
     // set cookie session for authentication
+    const cookie = request.headers.get('cookie');
     const cookieAuthSession = await authSessionStorage.getSession(cookie);
     cookieAuthSession.set(authSessionKey, user.id);
     const setAuthCookieHeader = await authSessionStorage.commitSession(
