@@ -1,6 +1,6 @@
 import { createCookieSessionStorage } from '@remix-run/node';
 
-export const oAuthSessionStorage = createCookieSessionStorage({
+export const oAuthConnectionSessionStorage = createCookieSessionStorage({
   cookie: {
     name: 'iiwi_oAuth_session',
     httpOnly: true,

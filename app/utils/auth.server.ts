@@ -5,6 +5,9 @@ import { redirect } from '@remix-run/node';
 import { authSessionStorage } from './session.server';
 import { prisma } from './db.server';
 import { authSessionKey } from '~/routes/_auth+/verify';
+import { OAuthUser } from './oAuthConnections/oAuthConnection';
+import { DISCORD_OAUTH_NAME } from './oAuthConnections';
+import { discordAvatarToUrl } from './oAuthConnections/discord.server';
 
 export { bcrypt };
 
@@ -88,6 +91,51 @@ export async function requireUser(request: Request) {
 }
 
 // TODO REFACTOR- add login utility here
+
+// for oAuth onboarding; creates a new user and makes relates them to their oAuth connection
+export async function onboardWithOAuthConnection({
+  oAuthUser,
+}: {
+  oAuthUser: OAuthUser;
+}) {
+  const discordAvatarUrl = discordAvatarToUrl(
+    oAuthUser.oAuthConnectionProviderId,
+    oAuthUser.avatar
+  );
+  const newUser = await prisma.user.create({
+    data: {
+      email: oAuthUser.email,
+      username: oAuthUser.username,
+      image:
+        oAuthUser.oAuthConnectionProviderName === DISCORD_OAUTH_NAME
+          ? {
+              create: {
+                altText: 'Users profile image',
+                contentType: '.png',
+                blob: discordAvatarUrl,
+              },
+            }
+          : undefined,
+      roles: {
+        connect: {
+          name: 'user',
+        },
+      },
+      oAuthConnections: {
+        create: [
+          {
+            connectionName: oAuthUser.oAuthConnectionProviderName,
+            connectionId: oAuthUser.oAuthConnectionProviderId,
+          },
+        ],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  return newUser;
+}
 
 export async function logout(request: Request) {
   const cookie = request.headers.get('cookie');

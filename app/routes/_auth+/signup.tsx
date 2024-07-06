@@ -41,6 +41,7 @@ import {
   PasswordSchema,
   UsernameSchema,
 } from '~/utils/fieldValidation';
+import { oAuthConnectionForm } from '~/utils/oAuthConnections';
 
 export const meta: MetaFunction = () => {
   return [
@@ -294,6 +295,13 @@ export default function SignupRoute() {
               </Button>
             </div>
           </Form>
+          <br />
+          <div>
+            {oAuthConnectionForm({
+              type: 'Signup',
+              oAuthConnectionName: 'Discord',
+            })}
+          </div>
           <div>
             <Button variant="link" asChild>
               <Link to="/login">Already have an account? Log in</Link>

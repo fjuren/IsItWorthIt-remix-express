@@ -1,11 +1,13 @@
 import { Authenticator } from 'remix-auth';
-import { oAuthSessionStorage } from '../oAuthConnections.server';
+import { oAuthConnectionSessionStorage } from '../oAuthConnections.server';
 import { DiscordStrategy } from 'remix-auth-discord';
 import { DISCORD_OAUTH_NAME } from '../oAuthConnections';
 import { DiscordUser } from './oAuthConnection';
 
 // https://github.com/sergiodxa/remix-auth for docs
-export const auth = new Authenticator<DiscordUser>(oAuthSessionStorage);
+export const auth = new Authenticator<DiscordUser>(
+  oAuthConnectionSessionStorage
+);
 
 const discordStrategy = new DiscordStrategy(
   {
@@ -27,13 +29,15 @@ const discordStrategy = new DiscordStrategy(
 
     if (!email) {
       // TODO redirect to the login page and throw a toast message telling the user that they don't have an email account in their discord account
+      throw new Response('User has no email with oAuth connection');
     }
 
     console.log('PROFILE FROM AUTHSERVER: ', profile);
 
     return {
       id: profile.id,
-      displayName: profile.displayName,
+      userName: profile.__json.username,
+      // displayName: profile.displayName,
       avatar: profile.__json.avatar,
       email: profile.__json.email,
       // accessToken,
@@ -43,3 +47,7 @@ const discordStrategy = new DiscordStrategy(
 );
 
 auth.use(discordStrategy, DISCORD_OAUTH_NAME);
+
+export function discordAvatarToUrl(oAuthUserId: string, avatar?: string) {
+  return `https://cdn.discordapp.com/avatars/${oAuthUserId}/${avatar}.webp`;
+}

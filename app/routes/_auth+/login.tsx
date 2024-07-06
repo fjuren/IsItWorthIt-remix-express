@@ -126,6 +126,26 @@ export async function action({ request }: ActionFunctionArgs) {
   }
   const { rememberMe, user, redirectTo } = await submission.value;
 
+  return handleAuthSession({
+    request,
+    userId: user.id,
+    rememberMe,
+    redirectTo,
+  });
+}
+
+// this function handles authentication supports oAuth, 2FA and regular login flows
+export async function handleAuthSession({
+  request,
+  userId,
+  rememberMe,
+  redirectTo,
+}: {
+  request: Request;
+  userId: string;
+  rememberMe?: boolean;
+  redirectTo: string;
+}) {
   // Get the user 2FA setting preference
   const twoFAEnabled = await prisma.authVerificationCode.findUnique({
     select: {
@@ -134,54 +154,52 @@ export async function action({ request }: ActionFunctionArgs) {
     where: {
       type_target: {
         type: twoFAVerificationEnabledType,
-        target: user.id,
+        target: userId,
       },
     },
   });
   // give true if it's enabled
   const hasTwoFAEnabled = Boolean(twoFAEnabled);
   // const verificationCodeId = twoFAEnabled ? twoFAEnabled.id : null;
+  console.log('Two factor enabled? ', hasTwoFAEnabled);
+  // check if they have 2fa enabled
+  if (hasTwoFAEnabled) {
+    // redirect to the 2FA page and set up a verify cookie session if the user has set up their 2FA
+    const unverifiedCookieSession =
+      await verficationSessionStorage.getSession();
+    unverifiedCookieSession.set(unverifiedSessionKey, { userId: userId });
+    unverifiedCookieSession.set(rememberMeKey, { rememberMe: rememberMe });
+    console.log('REMEMBER ME FROM LOGIN: ', rememberMe);
 
-  // if user exists and the submission is successful
-  if (submission.status === 'success') {
-    // check if they have 2fa enabled
-    if (hasTwoFAEnabled) {
-      // redirect to the 2FA page and set up a verify cookie session if the user has set up their 2FA
-      const unverifiedCookieSession =
-        await verficationSessionStorage.getSession();
-      unverifiedCookieSession.set(unverifiedSessionKey, { userId: user.id });
-      unverifiedCookieSession.set(rememberMeKey, { rememberMe: rememberMe });
-      console.log('REMEMBER ME FROM LOGIN: ', rememberMe);
+    const setUnverifiedSessionCookieHeader =
+      await verficationSessionStorage.commitSession(unverifiedCookieSession);
 
-      const setUnverifiedSessionCookieHeader =
-        await verficationSessionStorage.commitSession(unverifiedCookieSession);
+    const redirectUrl = verificationRedirect({
+      request,
+      redirectTo,
+      type: twoFAVerificationEnabledType,
+      target: userId,
+    });
 
-      const redirectUrl = verificationRedirect({
-        request,
-        redirectTo,
-        type: twoFAVerificationEnabledType,
-        target: user.id,
-      });
-
-      return redirect(redirectUrl.toString(), {
-        headers: { 'set-cookie': setUnverifiedSessionCookieHeader },
-      });
-    } else {
-      const cookie = request.headers.get('cookie');
-      // Continue with regular login without 2FA redirect
-      const cookieAuthSession = await authSessionStorage.getSession(cookie);
-      cookieAuthSession.set(authSessionKey, user.id);
-      const setAuthCookieHeader = await authSessionStorage.commitSession(
-        cookieAuthSession,
-        { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
-      );
-      // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
-      return redirect(safeRedirect(redirectTo), {
-        headers: {
-          'set-cookie': setAuthCookieHeader,
-        },
-      });
-    }
+    return redirect(redirectUrl.toString(), {
+      headers: { 'set-cookie': setUnverifiedSessionCookieHeader },
+    });
+  } else if (!hasTwoFAEnabled) {
+    console.log('AUTHENTICATE USER WITH AUTHSESSIONSTORAGE');
+    const cookie = request.headers.get('cookie');
+    // Continue with regular login without 2FA redirect
+    const cookieAuthSession = await authSessionStorage.getSession(cookie);
+    cookieAuthSession.set(authSessionKey, userId);
+    const setAuthCookieHeader = await authSessionStorage.commitSession(
+      cookieAuthSession,
+      { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
+    );
+    // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
+    return redirect(safeRedirect(redirectTo), {
+      headers: {
+        'set-cookie': setAuthCookieHeader,
+      },
+    });
   } else {
     throw new Response('Not found', { status: 500 });
   }
@@ -272,8 +290,8 @@ export default function LoginRoute() {
                 Log in
               </Button>
             </div>
-            <br />
           </Form>
+          <br />
           <div>
             {oAuthConnectionForm({
               type: 'Login',
