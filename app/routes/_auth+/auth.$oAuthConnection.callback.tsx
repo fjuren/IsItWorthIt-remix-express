@@ -7,6 +7,7 @@ import { handleAuthSession } from './login';
 import { getUserId } from '~/utils/auth.server';
 import { verficationSessionStorage } from '~/utils/verification.server';
 import { verifySessionKey } from './verify';
+import { generalToast, toastVerificationKey } from '~/utils/toast.server';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const oAuthConnectionName = capitalizeFirstLetter(
@@ -14,8 +15,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   );
 
   // TODO add toast when modularized version is ready
-  // userProfile is the profile data from the oAuth connection provider
-  const userProfile = await auth
+  // oAuthUserProfile is the profile data from the oAuth connection provider
+  const oAuthUserProfile = await auth
     .authenticate(oAuthConnectionName, request, {
       throwOnError: true,
     })
@@ -23,17 +24,17 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       console.log('Issue with oAuth provider: ', err);
       throw await redirect('/login');
     });
-  console.log({ userProfile });
+  console.log({ oAuthUserProfile });
   console.log(`You are authed with ${oAuthConnectionName}`);
 
   const alreadyLoggedIn = await getUserId(request);
-  const oAuthEmailExists = userProfile.email ?? undefined;
+  const oAuthEmailExists = oAuthUserProfile.email ?? undefined;
 
   const existingConnection = await prisma.oAuthConnection.findUnique({
     where: {
       connectionId_connectionName: {
         connectionName: oAuthConnectionName,
-        connectionId: userProfile.id,
+        connectionId: oAuthUserProfile.id,
       },
     },
   });
@@ -43,17 +44,17 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       email: oAuthEmailExists,
     },
     select: {
-      email: true,
+      id: true,
     },
   });
 
-  // if oAuth is alredy created and the user is already logged in, just take them to the login page
+  // if oAuth is alredy created and the user is already logged in, just take them to the login page. User a toast message to say they're already logged in
   if (existingConnection && alreadyLoggedIn) {
     // TODO add toast message
     return redirect('/');
   }
 
-  // If an oAuth connection is already established in the db, have them log in
+  // If an oAuth connection is already established in the db, simply log them in
   if (existingConnection) {
     return handleAuthSession({
       request,
@@ -63,15 +64,39 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
   // if no existing connection, but user exists, connect them
-  else if (!existingConnection && userProfile.email === user?.email) {
+  else if (!existingConnection && user) {
     // update user with connection, then log them in
+    await prisma.oAuthConnection.create({
+      data: {
+        connectionName: oAuthConnectionName,
+        connectionId: oAuthUserProfile.id,
+        userId: user.id,
+      },
+    });
+    return handleAuthSession(
+      {
+        request,
+        userId: user.id,
+        redirectTo: '/',
+      },
+      {
+        headers: await generalToast({
+          //BUG toast doesn't display when successfully connecting an oAuth connection with an existing user
+          request,
+          key: toastVerificationKey,
+          toastVariant: 'success',
+          toastTitle: "You're in!",
+          toastDescription: `Your ${oAuthConnectionName} account has been successfully linked`,
+        }),
+      }
+    );
   }
 
-  // if there is no connection and previous checks are null, onboard/signup the user with a new connection
+  // if there is no connection and previous checks are null, this is a net new user. Onboard/signup the user with a new connection
   const verifyCookieSession = await verficationSessionStorage.getSession(
     request.headers.get('cookie')
   );
-  verifyCookieSession.set(verifySessionKey, { userProfile });
+  verifyCookieSession.set(verifySessionKey, { oAuthUserProfile });
   const setVerifyCookieSession = await verficationSessionStorage.commitSession(
     verifyCookieSession
   );

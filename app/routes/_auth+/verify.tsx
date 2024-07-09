@@ -316,11 +316,12 @@ async function verifiedEmailSignup({
       { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
     );
 
+    const headers = combineHeaders(setToastCookieHeader, {
+      'set-cookie': setAuthCookieHeader,
+    });
+    console.log('headers: ', headers);
     return redirect('/', {
-      headers: combineHeaders(
-        { 'set-cookie': setToastCookieHeader },
-        { 'set-cookie': setAuthCookieHeader }
-      ),
+      headers: headers,
     });
   }
 }

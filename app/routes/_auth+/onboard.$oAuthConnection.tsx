@@ -197,10 +197,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
     );
 
     return redirect('/', {
-      headers: combineHeaders(
-        { 'set-cookie': setToastCookieHeader },
-        { 'set-cookie': setAuthCookieHeader }
-      ),
+      headers: combineHeaders(setToastCookieHeader, {
+        'set-cookie': setAuthCookieHeader,
+      }),
     });
   } else {
     throw new Response('Not found', { status: 500 });

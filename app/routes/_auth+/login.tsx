@@ -22,7 +22,7 @@ import { bcrypt, redirectIfAuthenticated } from '~/utils/auth.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
 import { checkHoneypot } from '~/utils/honeypot.server';
-import { FormOrFieldErrorsList } from '~/utils/misc';
+import { FormOrFieldErrorsList, combineHeaders } from '~/utils/misc';
 import {
   authSessionStorage,
   getCookieSessionExpirationDate,
@@ -135,17 +135,20 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 // this function handles authentication supports oAuth, 2FA and regular login flows
-export async function handleAuthSession({
-  request,
-  userId,
-  rememberMe,
-  redirectTo,
-}: {
-  request: Request;
-  userId: string;
-  rememberMe?: boolean;
-  redirectTo: string;
-}) {
+export async function handleAuthSession(
+  {
+    request,
+    userId,
+    rememberMe,
+    redirectTo,
+  }: {
+    request: Request;
+    userId: string;
+    rememberMe?: boolean;
+    redirectTo: string;
+  },
+  responseInit?: ResponseInit
+) {
   // Get the user 2FA setting preference
   const twoFAEnabled = await prisma.authVerificationCode.findUnique({
     select: {
@@ -160,7 +163,6 @@ export async function handleAuthSession({
   });
   // give true if it's enabled
   const hasTwoFAEnabled = Boolean(twoFAEnabled);
-  // const verificationCodeId = twoFAEnabled ? twoFAEnabled.id : null;
   console.log('Two factor enabled? ', hasTwoFAEnabled);
   // check if they have 2fa enabled
   if (hasTwoFAEnabled) {
@@ -182,10 +184,11 @@ export async function handleAuthSession({
     });
 
     return redirect(redirectUrl.toString(), {
-      headers: { 'set-cookie': setUnverifiedSessionCookieHeader },
+      headers: combineHeaders(responseInit?.headers, {
+        'set-cookie': setUnverifiedSessionCookieHeader,
+      }),
     });
   } else if (!hasTwoFAEnabled) {
-    console.log('AUTHENTICATE USER WITH AUTHSESSIONSTORAGE');
     const cookie = request.headers.get('cookie');
     // Continue with regular login without 2FA redirect
     const cookieAuthSession = await authSessionStorage.getSession(cookie);
@@ -195,10 +198,13 @@ export async function handleAuthSession({
       { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
     );
     // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
+
+    const headers = combineHeaders(responseInit?.headers, {
+      'set-cookie': setAuthCookieHeader,
+    });
+    console.log('headers: ', headers);
     return redirect(safeRedirect(redirectTo), {
-      headers: {
-        'set-cookie': setAuthCookieHeader,
-      },
+      headers: headers,
     });
   } else {
     throw new Response('Not found', { status: 500 });
@@ -244,7 +250,7 @@ export default function LoginRoute() {
               </div>
             </div>
             <div>
-              <Label htmlFor={fields.password.id}>Pasword</Label>
+              <Label htmlFor={fields.password.id}>Password</Label>
               <Input
                 {...getInputProps(fields.password, { type: 'password' })}
               />

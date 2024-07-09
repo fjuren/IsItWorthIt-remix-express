@@ -43,8 +43,8 @@ export async function generalToast({
       toastTitle,
       toastDescription, // explains what happened
     });
-
-    return toastSessionStorage.commitSession(toastSession);
+    const toastCookie = await toastSessionStorage.commitSession(toastSession);
+    return new Headers({ 'set-cookie': toastCookie });
   } catch (error) {
     console.error('Error handling toast message:', error);
     throw new Error('Failed to handle toast message');

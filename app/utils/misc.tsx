@@ -72,6 +72,21 @@ export function combineHeaders(
   return combined;
 }
 
+// export function combineHeaders(
+//   ...headers: Array<ResponseInit['headers'] | null>
+// ) {
+//   const combined = new Headers();
+//   headers.forEach((header) => {
+//     if (header) {
+//       const entries = new Headers(header).entries();
+//       for (const [key, value] of entries) {
+//         combined.append(key, value);
+//       }
+//     }
+//   });
+//   return combined;
+// }
+
 // simply capitalizes the first letter of a word
 export function capitalizeFirstLetter(word: string) {
   if (word.length === 0) return word;
