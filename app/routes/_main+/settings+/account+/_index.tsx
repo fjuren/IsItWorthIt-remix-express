@@ -26,6 +26,11 @@ import {
 import { requireUser } from '~/utils/auth.server';
 import { prisma } from '~/utils/db.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
+import { DISCORD_OAUTH_NAME } from '~/utils/oAuthConnections';
+import {
+  supportedOauthConnections,
+  SupportedOAuthTypes,
+} from '~/utils/oAuthConnections/oAuthConnection';
 import { Theme, getTheme, setTheme } from '~/utils/theme.server';
 import { prepVerificationCode } from '~/utils/verification.server';
 
@@ -50,8 +55,51 @@ export async function loader({ request }: LoaderFunctionArgs) {
     select: { id: true },
   });
 
+  //// prep connection data for FE
+  const dateFormatter = new Intl.DateTimeFormat('default', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
+  // check if user has any existing oAuth connections
+  const existingRawConnections = await prisma.oAuthConnection.findMany({
+    where: {
+      userId: user.id,
+    },
+    select: {
+      id: true,
+      connectionId: true,
+      connectionName: true,
+      createdAt: true,
+    },
+  });
+
+  // verifies if supported oAuth connection has an existing connection. If so, updates supported connection with existing data
+  const updateConnectionsForUI = supportedOauthConnections.map((connection) => {
+    const existingConnection = existingRawConnections.find(
+      (existingRawConnection) => {
+        return (
+          existingRawConnection.connectionName === connection.connectionName
+        );
+      }
+    );
+    if (existingConnection) {
+      return {
+        ...connection,
+        id: existingConnection.id,
+        connectionId: existingConnection.connectionId,
+        createdAtFormatted: dateFormatter.format(
+          new Date(existingConnection.createdAt)
+        ),
+        hasConnection: true,
+      };
+    }
+    return connection;
+  });
+
   return json({
     isTwoFAEnabled: Boolean(twoFAEnabled),
+    connections: updateConnectionsForUI,
     headers: getTheme(request),
   });
 }
@@ -62,6 +110,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   // button intent with switch statements will handle forms with multiple buttons
   const intent = formData.get('intent');
+  const connectionId = formData.get('connectionId') as string;
   switch (intent) {
     case 'enable-2fa':
       {
@@ -75,6 +124,20 @@ export async function action({ request }: ActionFunctionArgs) {
       return redirect('/two-factor/verify');
     case 'disable-2fa':
       return redirect('/two-factor/disable');
+    case 'connect-discord':
+      // not using this conditional; using post method
+      break;
+    case 'disconnect-discord':
+      // TODO check if user has password before deleting. If no pw, they will lose access to their account
+      await prisma.oAuthConnection.delete({
+        where: {
+          connectionId_connectionName: {
+            connectionId: connectionId,
+            connectionName: DISCORD_OAUTH_NAME,
+          },
+        },
+      });
+    // return redirect('/auth/github');
     // default:
     //   return redirect('/settings/account');
   }
@@ -128,16 +191,89 @@ export default function UserSettings() {
               </Button>
             )}
           </div>
-          <Link to=".." relative="path">
-            back
-          </Link>
         </div>
       </Form>
-      {/* TODO plan how to handle theming UX/UI */}
+      <br />
+      {/* TODO plan how to handle theming, connection and general UI/UX on accounts page */}
+      <div>
+        Account logins
+        <div>
+          {data.connections.map((connection) => (
+            <li key={connection.id}>
+              {connection.hasConnection ? (
+                <DisconnectOAuthProvider
+                  connectionId={connection.connectionId}
+                  connectionName={connection.connectionName}
+                  createdAtFormatted={connection.createdAtFormatted}
+                />
+              ) : (
+                <ConnectOAuthProvider
+                  connectionName={connection.connectionName}
+                />
+              )}
+            </li>
+          ))}
+        </div>
+      </div>
+      <br />
       <div>
         <ThemeToggle userPreferences={theme} />
       </div>
     </>
+  );
+}
+// Connects user to their discord account
+function ConnectOAuthProvider({
+  connectionName,
+}: {
+  connectionName: SupportedOAuthTypes['connectionName'];
+}) {
+  return (
+    <Form method="POST" action={`../auth/${connectionName}`}>
+      <div>
+        <div>
+          <div>{connectionName}</div>
+          <div>Connect to your {connectionName} account for quicker login</div>
+          <div>
+            <Button name="intent" value="connect-discord" type="submit">
+              Connect
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Form>
+  );
+}
+
+function DisconnectOAuthProvider({
+  connectionId,
+  connectionName,
+  createdAtFormatted,
+}: {
+  connectionId: SupportedOAuthTypes['connectionId'];
+  connectionName: SupportedOAuthTypes['connectionName'];
+  createdAtFormatted: SupportedOAuthTypes['createdAtFormatted'];
+}) {
+  return (
+    <Form method="post">
+      <input name="connectionId" value={connectionId} type="hidden" />
+      <div>
+        <div>
+          <div>{connectionName}</div>
+          <div>Connected since {createdAtFormatted?.toString()}</div>
+          <div>
+            <Button
+              name="intent"
+              value="disconnect-discord"
+              type="submit"
+              variant={'destructive'}
+            >
+              Disconnect
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Form>
   );
 }
 
@@ -164,7 +300,7 @@ function ThemeToggle({ userPreferences }: { userPreferences?: Theme }) {
   };
 
   return (
-    <fetcher.Form method="post" {...getFormProps(form)}>
+    <fetcher.Form method="POST" {...getFormProps(form)}>
       <input type="hidden" name="theme" value={nextTheme} />
       <div className="flex gap-2">
         <Button name="intent" value="update-theme" type="submit">
