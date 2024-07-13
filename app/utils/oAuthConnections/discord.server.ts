@@ -31,9 +31,6 @@ const discordStrategy = new DiscordStrategy(
       // TODO redirect to the login page and throw a toast message telling the user that they don't have an email account in their discord account
       throw new Response('User has no email with oAuth connection');
     }
-
-    console.log('PROFILE FROM AUTHSERVER: ', profile);
-
     return {
       id: profile.id,
       userName: profile.__json.username,

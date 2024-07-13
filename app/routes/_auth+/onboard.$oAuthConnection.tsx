@@ -217,10 +217,12 @@ async function requireOAuthData({
     request.headers.get('cookie')
   );
 
-  const oAuthConnectionData = verifySession.get(verifySessionKey);
-  if (!oAuthConnectionData) {
+  // const oAuthConnectionData = verifySession.get(verifySessionKey);
+  const { oAuthUserProfile } = verifySession.get(verifySessionKey);
+  if (!oAuthUserProfile) {
     throw redirect('/signup');
   }
+  console.log('oAuthUserProfile: ', oAuthUserProfile);
   const result = z
     .object({
       email: z.string(),
@@ -230,11 +232,11 @@ async function requireOAuthData({
       avatar: z.string().optional(),
     })
     .safeParse({
-      email: oAuthConnectionData.userProfile.email,
-      username: oAuthConnectionData.userProfile.userName,
-      oAuthConnectionUserId: oAuthConnectionData.userProfile.id,
+      email: oAuthUserProfile.email,
+      username: oAuthUserProfile.userName,
+      oAuthConnectionUserId: oAuthUserProfile.id,
       oAuthConnectionName: params.oAuthConnection,
-      avatar: oAuthConnectionData.userProfile.avatar,
+      avatar: oAuthUserProfile.avatar,
     });
   if (result.success) {
     return result.data;

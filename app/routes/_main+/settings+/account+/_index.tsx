@@ -25,7 +25,7 @@ import {
 } from '~/routes/_auth+/verify';
 import { requireUser } from '~/utils/auth.server';
 import { prisma } from '~/utils/db.server';
-import { FormOrFieldErrorsList } from '~/utils/misc';
+import { FormOrFieldErrorsList, invariantResponse } from '~/utils/misc';
 import { DISCORD_OAUTH_NAME } from '~/utils/oAuthConnections';
 import {
   supportedOauthConnections,
@@ -111,6 +111,7 @@ export async function action({ request }: ActionFunctionArgs) {
   // button intent with switch statements will handle forms with multiple buttons
   const intent = formData.get('intent');
   const connectionId = formData.get('connectionId') as string;
+  const permissionToDisconnection = await userHasPw({ userId: user.id });
   switch (intent) {
     case 'enable-2fa':
       {
@@ -128,15 +129,20 @@ export async function action({ request }: ActionFunctionArgs) {
       // not using this conditional; using post method
       break;
     case 'disconnect-discord':
-      // TODO check if user has password before deleting. If no pw, they will lose access to their account
-      await prisma.oAuthConnection.delete({
-        where: {
-          connectionId_connectionName: {
-            connectionId: connectionId,
-            connectionName: DISCORD_OAUTH_NAME,
-          },
-        },
-      });
+      permissionToDisconnection
+        ? await prisma.oAuthConnection.delete({
+            where: {
+              connectionId_connectionName: {
+                connectionId: connectionId,
+                connectionName: DISCORD_OAUTH_NAME,
+              },
+            },
+          })
+        : invariantResponse(
+            //TODO change to popup modal when component is built
+            permissionToDisconnection,
+            'You need to create a password  for your account before removing'
+          );
     // return redirect('/auth/github');
     // default:
     //   return redirect('/settings/account');
@@ -275,6 +281,32 @@ function DisconnectOAuthProvider({
       </div>
     </Form>
   );
+}
+
+async function userHasPw({ userId }: { userId: string }) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      password: true,
+      _count: {
+        select: {
+          oAuthConnections: true,
+        },
+      },
+    },
+  });
+  if (user?.password) {
+    return true;
+  } else if (
+    user?._count.oAuthConnections &&
+    user._count.oAuthConnections > 1
+  ) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 const themeSchema = z.object({

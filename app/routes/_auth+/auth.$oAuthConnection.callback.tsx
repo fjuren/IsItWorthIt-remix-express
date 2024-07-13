@@ -25,7 +25,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       throw await redirect('/login');
     });
   console.log({ oAuthUserProfile });
-  console.log(`You are authed with ${oAuthConnectionName}`);
 
   const alreadyLoggedIn = await getUserId(request);
   const oAuthEmailExists = oAuthUserProfile.email ?? undefined;
