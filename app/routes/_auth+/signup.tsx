@@ -300,6 +300,7 @@ export default function SignupRoute() {
             {oAuthConnectionForm({
               type: 'Signup',
               oAuthConnectionName: 'Discord',
+              redirectTo: redirectTo,
             })}
           </div>
           <div>

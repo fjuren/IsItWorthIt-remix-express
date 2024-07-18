@@ -1,17 +1,25 @@
 // app/routes/auth.discord.callback.tsx
 import { redirect, type LoaderFunctionArgs } from '@remix-run/node';
 import { auth } from '~/utils/oAuthConnections/discord.server';
-import { capitalizeFirstLetter } from '~/utils/misc';
+import { capitalizeFirstLetter, combineHeaders } from '~/utils/misc';
 import { prisma } from '~/utils/db.server';
 import { handleAuthSession } from './login';
 import { getUserId } from '~/utils/auth.server';
 import { verficationSessionStorage } from '~/utils/verification.server';
 import { verifySessionKey } from './verify';
-import { generalToast, toastVerificationKey } from '~/utils/toast.server';
+import { oAuthRedirectSessionStorage } from '~/utils/oAuthConnections.server';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const oAuthConnectionName = capitalizeFirstLetter(
     params.oAuthConnection as string
+  );
+
+  const oAuthSession = await oAuthRedirectSessionStorage.getSession(
+    request.headers.get('cookie')
+  );
+  const redirectTo = oAuthSession.get(auth.sessionKey) ?? '/';
+  const destoryRedirectTo = await oAuthRedirectSessionStorage.destroySession(
+    oAuthSession
   );
 
   // TODO add toast when modularized version is ready
@@ -24,7 +32,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       console.log('Issue with oAuth provider: ', err);
       throw await redirect('/login');
     });
-  console.log({ oAuthUserProfile });
 
   const alreadyLoggedIn = await getUserId(request);
   const oAuthEmailExists = oAuthUserProfile.email ?? undefined;
@@ -50,43 +57,46 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   // if oAuth is alredy created and the user is already logged in, just take them to the login page. User a toast message to say they're already logged in
   if (existingConnection && alreadyLoggedIn) {
     // TODO add toast message
-    return redirect('/');
+    return redirect(redirectTo.toString(), {
+      headers: { 'set-cookie': destoryRedirectTo },
+    });
   }
 
   // If an oAuth connection is already established in the db, simply log them in
   if (existingConnection) {
-    return handleAuthSession({
-      request,
-      userId: existingConnection.userId,
-      rememberMe: true,
-      redirectTo: '/',
-    });
+    console.log('existingConnection');
+    return handleAuthSession(
+      {
+        request,
+        userId: existingConnection.userId,
+        rememberMe: true,
+        redirectTo: redirectTo.toString(),
+      },
+      {
+        headers: { 'set-cookie': destoryRedirectTo },
+      }
+    );
   }
   // if no existing connection, but user exists, connect them
   else if (!existingConnection && user) {
+    console.log('!existingConnection && user');
     // update user with connection, then log them in
-    await prisma.oAuthConnection.create({
-      data: {
-        connectionName: oAuthConnectionName,
-        connectionId: oAuthUserProfile.id,
-        userId: user.id,
-      },
-    });
+    // const userConnection = await prisma.oAuthConnection.create({
+    //   data: {
+    //     connectionName: oAuthConnectionName,
+    //     connectionId: oAuthUserProfile.id,
+    //     userId: user.id,
+    //   },
+    // });
     return handleAuthSession(
       {
         request,
         userId: user.id,
-        redirectTo: '/',
+        redirectTo: redirectTo.toString(),
+        oAuthConnectionName: 'userConnection.connectionName',
       },
       {
-        headers: await generalToast({
-          //BUG toast doesn't display when successfully connecting an oAuth connection with an existing user
-          request,
-          key: toastVerificationKey,
-          toastVariant: 'success',
-          toastTitle: "You're in!",
-          toastDescription: `Your ${oAuthConnectionName} account has been successfully linked`,
-        }),
+        headers: { 'set-cookie': destoryRedirectTo },
       }
     );
   }
@@ -100,7 +110,21 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     verifyCookieSession
   );
 
-  return redirect(`/onboard/${oAuthConnectionName}`, {
-    headers: { 'set-cookie': setVerifyCookieSession },
+  const cleanRedirectToForOnboard =
+    redirectTo === '/' ? null : new URLSearchParams({ redirectTo });
+  console.log(cleanRedirectToForOnboard);
+
+  const onboardRedirectTo = [
+    `/onboard/${oAuthConnectionName}`,
+    cleanRedirectToForOnboard,
+  ]
+    .filter(Boolean)
+    .join('?');
+
+  return redirect(onboardRedirectTo.toString(), {
+    headers: combineHeaders(
+      { 'set-cookie': setVerifyCookieSession },
+      { 'set-cookie': destoryRedirectTo }
+    ),
   });
 }

@@ -39,6 +39,7 @@ import {
 } from './verify';
 import { PasswordSchema, UsernameSchema } from '~/utils/fieldValidation';
 import { oAuthConnectionForm } from '~/utils/oAuthConnections';
+import { generalToast, toastVerificationKey } from '~/utils/toast.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -141,11 +142,13 @@ export async function handleAuthSession(
     userId,
     rememberMe,
     redirectTo,
+    oAuthConnectionName,
   }: {
     request: Request;
     userId: string;
     rememberMe?: boolean;
     redirectTo: string;
+    oAuthConnectionName?: string;
   },
   responseInit?: ResponseInit
 ) {
@@ -163,7 +166,6 @@ export async function handleAuthSession(
   });
   // give true if it's enabled
   const hasTwoFAEnabled = Boolean(twoFAEnabled);
-  console.log('Two factor enabled? ', hasTwoFAEnabled);
   // check if they have 2fa enabled
   if (hasTwoFAEnabled) {
     // redirect to the 2FA page and set up a verify cookie session if the user has set up their 2FA
@@ -171,7 +173,6 @@ export async function handleAuthSession(
       await verficationSessionStorage.getSession();
     unverifiedCookieSession.set(unverifiedSessionKey, { userId: userId });
     unverifiedCookieSession.set(rememberMeKey, { rememberMe: rememberMe });
-    console.log('REMEMBER ME FROM LOGIN: ', rememberMe);
 
     const setUnverifiedSessionCookieHeader =
       await verficationSessionStorage.commitSession(unverifiedCookieSession);
@@ -197,12 +198,24 @@ export async function handleAuthSession(
       cookieAuthSession,
       { expires: rememberMe ? getCookieSessionExpirationDate() : undefined }
     );
-    // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
-
-    const headers = combineHeaders(responseInit?.headers, {
-      'set-cookie': setAuthCookieHeader,
+    const setToastCookieHeader = await generalToast({
+      //BUG toast doesn't display when successfully connecting an oAuth connection with an existing user. Might have to do with the toast ID?
+      request,
+      key: toastVerificationKey,
+      toastVariant: 'success',
+      toastTitle: "You're in!",
+      toastDescription: `Your ${oAuthConnectionName} account has been successfully linked`,
     });
-    console.log('headers: ', headers);
+
+    const headers = combineHeaders(
+      responseInit?.headers,
+      setToastCookieHeader,
+      {
+        'set-cookie': setAuthCookieHeader,
+      }
+    );
+
+    // docs to safeRedirect; prevents malicious redirects :) (https://github.com/sergiodxa/remix-utils#safe-redirects)
     return redirect(safeRedirect(redirectTo), {
       headers: headers,
     });
@@ -302,6 +315,7 @@ export default function LoginRoute() {
             {oAuthConnectionForm({
               type: 'Login',
               oAuthConnectionName: 'Discord',
+              redirectTo: redirectTo,
             })}
           </div>
           <div>

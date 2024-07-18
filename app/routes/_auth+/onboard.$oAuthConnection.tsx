@@ -196,7 +196,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       }
     );
 
-    return redirect('/', {
+    return redirect(data.redirectTo ?? '/', {
       headers: combineHeaders(setToastCookieHeader, {
         'set-cookie': setAuthCookieHeader,
       }),
@@ -222,7 +222,6 @@ async function requireOAuthData({
   if (!oAuthUserProfile) {
     throw redirect('/signup');
   }
-  console.log('oAuthUserProfile: ', oAuthUserProfile);
   const result = z
     .object({
       email: z.string(),
@@ -267,7 +266,6 @@ export default function OnboardOAuthConnectionRoute() {
     },
   });
 
-  console.log(data.oAuthAvatar);
   return (
     <div className="flex w-fit m-auto py-10">
       <Card>

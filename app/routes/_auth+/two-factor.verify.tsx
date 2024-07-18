@@ -192,6 +192,8 @@ export async function action({ request }: ActionFunctionArgs) {
       title: '2FA enabled',
       description: 'Your account has 2FA applied!',
     });
+    // TODO add general toast
+    // BUG toast is just blank
     const setToastCookieHeader = await toastSessionStorage.commitSession(
       cookieSession
     );
