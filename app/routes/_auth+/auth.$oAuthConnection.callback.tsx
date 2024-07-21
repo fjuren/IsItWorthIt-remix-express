@@ -81,19 +81,19 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   else if (!existingConnection && user) {
     console.log('!existingConnection && user');
     // update user with connection, then log them in
-    // const userConnection = await prisma.oAuthConnection.create({
-    //   data: {
-    //     connectionName: oAuthConnectionName,
-    //     connectionId: oAuthUserProfile.id,
-    //     userId: user.id,
-    //   },
-    // });
+    const userConnection = await prisma.oAuthConnection.create({
+      data: {
+        connectionName: oAuthConnectionName,
+        connectionId: oAuthUserProfile.id,
+        userId: user.id,
+      },
+    });
     return handleAuthSession(
       {
         request,
         userId: user.id,
         redirectTo: redirectTo.toString(),
-        oAuthConnectionName: 'userConnection.connectionName',
+        oAuthConnectionName: userConnection.connectionName,
       },
       {
         headers: { 'set-cookie': destoryRedirectTo },
