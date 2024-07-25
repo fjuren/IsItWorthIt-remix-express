@@ -1,4 +1,4 @@
-import { setupServer } from 'msw/node';
-import { resendHandlers } from './resendHandlers';
+// import { setupServer } from 'msw/node';
+// import { resendHandlers } from './resendHandlers';
 
-export const mockServer = setupServer(...resendHandlers);
+// export const mockServer = setupServer(...resendHandlers);

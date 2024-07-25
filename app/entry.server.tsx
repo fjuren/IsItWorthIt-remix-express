@@ -11,13 +11,13 @@ import { createReadableStreamFromReadable } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
 import { renderToPipeableStream } from 'react-dom/server';
-import { mockServer } from './mocks/node';
+import { server } from 'tests/mocks/node';
 
 const ABORT_DELAY = 5_000;
 
 // sets up a mock server (using MSW) to handle mock requests in development
 if (process.env.NODE_ENV === 'development' && process.env.Mocks === 'true') {
-  mockServer.listen({ onUnhandledRequest: 'warn' });
+  server.listen({ onUnhandledRequest: 'warn' });
 }
 
 export default function handleRequest(
