@@ -22,15 +22,19 @@ const test = base.extend<{
       name: userData.name,
       password: userData.password,
     };
+
     await use(createUser);
-    await prisma.user.deleteMany({
-      where: { id: createUser.username },
+
+    const deletedUser = await prisma.user.delete({
+      select: { username: true },
+      where: { username: createUser.username },
     });
+    console.log(`User ${deletedUser.username} deleted successfully`);
   },
 });
 
-test('Signup flow', async ({ page, newUser }) => {
-  const newUserData = await newUser;
+test('Signup flow with OTP only', async ({ page, newUser }) => {
+  const newUserData = newUser;
   await page.goto('/signup');
 
   await page.getByRole('textbox', { name: 'Email' }).fill(newUserData.email);
