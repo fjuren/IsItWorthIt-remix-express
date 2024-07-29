@@ -204,7 +204,7 @@ export default function UserSettings() {
       <div>
         Account logins
         <div>
-          {data.connections.map((connection) => (
+          {/* {data.connections.map((connection) => (
             <li key={connection.id}>
               {connection.hasConnection ? (
                 <DisconnectOAuthProvider
@@ -218,7 +218,7 @@ export default function UserSettings() {
                 />
               )}
             </li>
-          ))}
+          ))} */}
         </div>
       </div>
       <br />

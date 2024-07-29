@@ -2,19 +2,20 @@
 import { test as base, expect } from '@playwright/test';
 import { newUserData } from 'tests/utils/db-utils';
 import { prisma } from '~/utils/db.server';
-import '../mocks/node';
-import { requireMockEmail } from 'tests/mocks/resendHandlers';
+// import '../mocks/node';
+// import { requireMockEmail } from 'tests/mocks/resendHandlers';
 import { extractOtp } from 'tests/utils/playwright-utils';
+import { requireMockEmail } from 'tests/mocks/resendHandlers';
 
-const test = base.extend<{
-  newUser: {
+export const test = base.extend<{
+  userData: {
     email: string;
     username: string;
     name: string | null;
     password: string;
   };
 }>({
-  newUser: async ({}, use) => {
+  userData: async ({}, use) => {
     const userData = newUserData();
     const createUser = {
       email: userData.email,
@@ -33,27 +34,29 @@ const test = base.extend<{
   },
 });
 
-test('Signup flow with OTP only', async ({ page, newUser }) => {
-  const newUserData = newUser;
+test('Signup flow with OTP only', async ({ page, userData }) => {
+  const onboardingUser = userData;
   await page.goto('/signup');
 
-  await page.getByRole('textbox', { name: 'Email' }).fill(newUserData.email);
+  await page.getByRole('textbox', { name: 'Email' }).fill(onboardingUser.email);
   await page
     .getByRole('textbox', { name: /username/i })
-    .fill(newUserData.username);
-  await page.getByLabel('Password', { exact: true }).fill(newUserData.password);
+    .fill(onboardingUser.username);
+  await page
+    .getByLabel('Password', { exact: true })
+    .fill(onboardingUser.password);
   await page
     .getByLabel(/confirm password/i, { exact: true })
-    .fill(newUserData.password);
+    .fill(onboardingUser.password);
   await page.getByRole('checkbox', { name: /remember me/i }).click();
   await page.getByRole('button', { name: /sign up/i }).click();
 
   await expect(
     page.getByText(/Enter your verification code below/i)
   ).toBeVisible();
-  const email = await requireMockEmail({ emailAddress: newUserData.email });
+  const email = await requireMockEmail({ emailAddress: onboardingUser.email });
   await expect(email.from).toBe('fakeemail@gmail.com');
-  await expect(email.to).toBe(newUserData.email);
+  await expect(email.to).toBe(onboardingUser.email);
   await expect(email.subject).toBe('Confirm email');
 
   // Extract OTP code from the HTML
