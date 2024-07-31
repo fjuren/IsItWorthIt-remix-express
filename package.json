@@ -8,6 +8,8 @@
   },
   "scripts": {
     "test": "vitest",
+    "test:ui": "vitest --ui --coverage",
+    "coverage": "vitest run --coverage",
     "build": "remix build",
     "dev": "remix dev --manual -c \"node --watch-path server.js --watch server.js\"",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
@@ -69,6 +71,8 @@
     "@types/set-cookie-parser": "^2.4.10",
     "@types/source-map-support": "^0.5.6",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@vitest/coverage-v8": "^2.0.4",
+    "@vitest/ui": "^2.0.4",
     "autoprefixer": "^10.4.17",
     "chokidar": "^3.5.3",
     "eslint": "^8.38.0",

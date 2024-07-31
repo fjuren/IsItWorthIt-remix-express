@@ -254,6 +254,7 @@ export async function shouldRevalidate2Fa({
     request.headers.get('cookie')
   );
   const lastVerified = cookieAuthSession.get(lastVerifiedTimeKey);
+  // returns true if there is no last verification time
   if (!lastVerified) return true;
 
   const timeNow = new Date();

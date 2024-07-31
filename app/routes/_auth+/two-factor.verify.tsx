@@ -246,7 +246,7 @@ export default function TwoFactorVerifyRoute() {
           </p>
         </div>
         <div>
-          <p>{data.otpUri}</p>
+          <p data-testid="directions">{data.otpUri}</p>
         </div>
         <br />
         <div>
