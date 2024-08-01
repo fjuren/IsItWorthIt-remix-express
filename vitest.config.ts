@@ -6,6 +6,8 @@ export default defineConfig({
       include: ['app/**/*.{ts,tsx}'],
       all: true,
     },
+    setupFiles: '/tests/setup/setupTestEnv',
+    restoreMocks: true, // recall for unit test cleanup
     include: ['**/app/utils/*.{test,spec}.?(c|m)[jt]s?(x)'],
     exclude: [
       '**/node_modules/**',
