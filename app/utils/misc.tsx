@@ -44,7 +44,7 @@ export function FormOrFieldErrorsList({
   data,
   errorID,
 }: {
-  data?: string[] | undefined;
+  data?: Array<string | undefined | null> | undefined | null;
   errorID?: string;
 }) {
   return (

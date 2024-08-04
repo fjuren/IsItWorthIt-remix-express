@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "vitest",
+    "playwright": "npx playwright test --ui",
     "test:ui": "vitest --ui --coverage",
     "coverage": "vitest run --coverage",
     "build": "remix build",
@@ -61,6 +62,8 @@
     "@mermaid-js/mermaid-cli": "^10.8.0",
     "@playwright/test": "^1.45.2",
     "@remix-run/dev": "^2.6.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.0.0",
     "@types/compression": "^1.7.2",
     "@types/express": "^4.17.17",
     "@types/fs-extra": "^11.0.4",
