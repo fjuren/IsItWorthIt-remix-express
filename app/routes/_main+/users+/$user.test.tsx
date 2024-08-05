@@ -3,7 +3,11 @@
  */
 
 import { faker } from '@faker-js/faker';
-import { test } from 'vitest';
+import { expect, test } from 'vitest';
+import { createRemixStub } from '@remix-run/testing';
+import { render, screen, waitFor } from '@testing-library/react';
+import { default as UsernameRoute } from './$user';
+import { json } from '@remix-run/node';
 
 function createTestUser() {
   const user = {
@@ -18,6 +22,26 @@ function createTestUser() {
   return user;
 }
 
-test('visit /settings/user (profile page) as a visitor', async () => {
+test('visit /users/user (profile page) as a user visiting some other users profile page', async () => {
   const user = createTestUser();
+  const RemixStub = createRemixStub([
+    {
+      path: '/users/:user',
+      Component: UsernameRoute,
+      loader() {
+        return json({
+          user,
+        });
+      },
+    },
+  ]);
+  await render(<RemixStub initialEntries={[`/users/${user.username}`]} />);
+
+  screen.logTestingPlaygroundURL();
+  // checks some expected fields and text
+  await waitFor(() => screen.findByText('Profile'));
+  await screen.findByRole('heading', { name: `Name: ${user.name}` });
+  // check that data doesn't exist
+  expect(screen.queryByAltText(/email/i)).toBeNull();
+  expect(screen.queryByAltText(/change your email/i)).toBeNull();
 });
