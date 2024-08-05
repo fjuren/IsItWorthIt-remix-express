@@ -9,6 +9,8 @@ export default {
   // publicPath: "/build/",
   // serverBuildPath: "build/index.js",
   routes: async (defineRoutes) => {
-    return flatRoutes('routes', defineRoutes);
+    return flatRoutes('routes', defineRoutes, {
+      ignoredRouteFiles: ['**/*.test.{js,jsx,ts,tsx}'],
+    });
   },
 };
