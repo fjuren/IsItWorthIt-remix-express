@@ -1,3 +1,5 @@
+// import the test db setup for testing
+import './setupTestDB';
 import { vi, beforeEach, MockInstance, afterEach } from 'vitest';
 import { installGlobals } from '@remix-run/node';
 import { cleanup } from '@testing-library/react';

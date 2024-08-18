@@ -26,6 +26,7 @@ function createTestUser() {
 
 test('visit /users/user (profile page) as a user visiting some other users profile page', async () => {
   const user = createTestUser();
+
   const RemixStub = createRemixStub([
     {
       path: '/users/:user',
