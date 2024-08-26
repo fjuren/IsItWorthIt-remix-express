@@ -1,4 +1,4 @@
-import { Outlet } from '@remix-run/react';
+import { Outlet, useOutletContext } from '@remix-run/react';
 import { Document } from '~/root';
 import { SideNav } from '~/components/UI/SideNav';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
@@ -6,6 +6,7 @@ import { GeneralErrorBoundary } from '~/components/error-boundary';
 // Layout with SideNav
 
 export default function MainLayout() {
+  const theme = useOutletContext();
   // throw new Error('Component error');
   return (
     <>
@@ -15,7 +16,7 @@ export default function MainLayout() {
       </aside>
       {/* main content */}
       <main className="flex-1 overflow-auto md:w-full">
-        <Outlet />
+        <Outlet context={theme} />
       </main>
     </>
   );

@@ -142,7 +142,7 @@ function App() {
     <Document>
       <TopNav loggedInUser={loggedInUser} />
       <div className="fixed flex w-full h-full">
-        <Outlet />
+        <Outlet context={data.headers} />
       </div>
       {data.toast ? <RenderToast toastCookie={data.toast} /> : null}
     </Document>

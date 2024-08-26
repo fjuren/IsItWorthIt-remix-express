@@ -25,7 +25,7 @@ function ProfileDesktopMenu({ username }: { username: string }) {
             <AvatarFallback>{firstLetter}</AvatarFallback>
           </Avatar>
         </div>
-        <div className="self-center">{username}</div>
+        {/* <div className="self-center">{username}</div> */}
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>

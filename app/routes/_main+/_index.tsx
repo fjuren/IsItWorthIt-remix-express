@@ -1,5 +1,5 @@
 import { json, MetaFunction } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { useLoaderData, useOutletContext } from '@remix-run/react';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 
 import {
@@ -59,25 +59,35 @@ export async function loader() {
 
 export default function HomeRoute() {
   const listOfDeals = useLoaderData<typeof loader>();
+  const theme: string = useOutletContext();
   return (
     <>
-      <h1>Home</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3">
-        {listOfDeals.map((game: dealsList, index: number) => (
-          <Card key={index}>
-            <CardHeader>
-              <img src={game.thumb} alt="" />
-              <CardTitle>{game.title}</CardTitle>
-              <CardDescription>
-                Price: {game.normalPrice} Discount: {game.salePrice}{' '}
-                {game.savings}% off
-              </CardDescription>
-              <CardContent>{/* <p>Card Content</p> */}</CardContent>
-            </CardHeader>
-            <CardFooter></CardFooter>
-          </Card>
-          // {/* <pre className="flex flex-col ">{JSON.stringify(game)}</pre> */}
-        ))}
+      {/* <h1>Home</h1> */}
+      <div className="flex flex-wrap max-w-[46rem]">
+        <div className="flex flex-col gap-6">
+          {listOfDeals.map((game: dealsList, index: number) => (
+            <Card theme={theme} key={index} className="flex-grow">
+              {/* <a href={`${game.metacriticLink}`}> */}
+              <CardHeader>
+                <div className="flex justify-center">
+                  <img
+                    src={game.thumb}
+                    alt={`${game.title}'s thumbnail`}
+                    className="w-4/7 md:w-1/4"
+                  />
+                </div>
+                <CardTitle>{game.title}</CardTitle>
+                <CardDescription>
+                  Price: {game.normalPrice} Discount: {game.salePrice}{' '}
+                  {game.savings}% off
+                </CardDescription>
+                <CardContent>{/* <p>Card Content</p> */}</CardContent>
+              </CardHeader>
+              <CardFooter></CardFooter>
+              {/* </a> */}
+            </Card>
+          ))}
+        </div>
       </div>
     </>
   );
