@@ -67,6 +67,7 @@ function ProfileDesktopMenu({ username }: { username: string }) {
 
 export function TopNav({ loggedInUser }: { loggedInUser: any }) {
   const [open, setOpen] = useState(false);
+
   return (
     <>
       <header className="relative">
@@ -105,10 +106,20 @@ export function TopNav({ loggedInUser }: { loggedInUser: any }) {
             ) : (
               <>
                 <li className="flex-none px-3">
-                  <Link to="/signup">Sign up</Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => (open ? setOpen(false) : null)}
+                  >
+                    Sign up
+                  </Link>
                 </li>
                 <li className="flex-none px-3">
-                  <Link to="/login">Login</Link>
+                  <Link
+                    to="/login"
+                    onClick={() => (open ? setOpen(false) : null)}
+                  >
+                    Login
+                  </Link>
                 </li>
               </>
             )}
@@ -128,13 +139,19 @@ export function TopNav({ loggedInUser }: { loggedInUser: any }) {
         <nav>
           <ul className="flex-col ">
             <li>
-              <Link to="/">Games</Link>
+              <Link to="/" onClick={() => setOpen(!open)}>
+                Games
+              </Link>
             </li>
             <li>
-              <Link to="/">Placeholder</Link>
+              <Link to="/" onClick={() => setOpen(!open)}>
+                Placeholder
+              </Link>
             </li>
             <li>
-              <Link to="/">Placeholder</Link>
+              <Link to="/" onClick={() => setOpen(!open)}>
+                Placeholder
+              </Link>
             </li>
           </ul>
         </nav>
