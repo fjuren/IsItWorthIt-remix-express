@@ -1,5 +1,9 @@
 import { json, MetaFunction } from '@remix-run/node';
 import { useLoaderData, useOutletContext } from '@remix-run/react';
+import { BookmarkIcon } from 'lucide-react';
+import CommentIcon from '~/assets/svgs/CommentIcon';
+import DownvoteIcon from '~/assets/svgs/DownvoteIcon';
+import UpvoteIcon from '~/assets/svgs/UpvoteIcon';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 
 import {
@@ -57,6 +61,10 @@ export async function loader() {
   return json(await gamesList.json());
 }
 
+function formatPercentage(value: string) {
+  return Math.round(parseFloat(value)) + '%';
+}
+
 export default function HomeRoute() {
   const listOfDeals = useLoaderData<typeof loader>();
   const theme: string = useOutletContext();
@@ -66,8 +74,14 @@ export default function HomeRoute() {
       <div className="flex flex-wrap max-w-[46rem]">
         <div className="flex flex-col gap-6">
           {listOfDeals.map((game: dealsList, index: number) => (
-            <Card theme={theme} key={index} className="flex-grow">
-              {/* <a href={`${game.metacriticLink}`}> */}
+            <Card
+              // theme={theme}
+              key={index}
+              className={`flex-grow hover:cursor-pointer rounded-lg bg-card text-card-foreground shadow-sm flex flex-col w-full space-y-1.5 p-6 ${
+                theme == 'light' ? 'hover:bg-gray-100' : 'hover:bg-gray-900'
+              }`}
+              onClick={() => console.log('card')}
+            >
               <CardHeader>
                 <div className="flex justify-center">
                   <img
@@ -78,13 +92,56 @@ export default function HomeRoute() {
                 </div>
                 <CardTitle>{game.title}</CardTitle>
                 <CardDescription>
-                  Price: {game.normalPrice} Discount: {game.salePrice}{' '}
-                  {game.savings}% off
+                  Full price: ${game.normalPrice} Sale price: ${game.salePrice}{' '}
+                  Discount:{' '}
+                  <strong>{formatPercentage(game.savings)} off</strong>
                 </CardDescription>
                 <CardContent>{/* <p>Card Content</p> */}</CardContent>
               </CardHeader>
-              <CardFooter></CardFooter>
-              {/* </a> */}
+              <CardFooter>
+                <div className="flex flex-row">
+                  <div className="flex flex-row">
+                    <button
+                      type="button"
+                      aria-label="Upvote"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Upvote');
+                      }}
+                    >
+                      <UpvoteIcon />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Downvote"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Downvote');
+                      }}
+                    >
+                      <DownvoteIcon />
+                    </button>
+                  </div>
+                  <button
+                    aria-label="Comment"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Comment');
+                    }}
+                  >
+                    <CommentIcon />
+                  </button>
+                  <button
+                    aria-label="Bookmark"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('bookmark');
+                    }}
+                  >
+                    <BookmarkIcon />
+                  </button>
+                </div>
+              </CardFooter>
             </Card>
           ))}
         </div>
