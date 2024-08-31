@@ -1,4 +1,3 @@
-import { cssBundleHref } from '@remix-run/css-bundle';
 import type {
   // ActionFunctionArgs,
   LinksFunction,
@@ -6,7 +5,6 @@ import type {
 } from '@remix-run/node';
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -16,7 +14,7 @@ import {
   useLoaderData,
 } from '@remix-run/react';
 import faviconAssetUrl from './assets/favicon.ico';
-import tailwindFontsStylesheet from './styles/tailwind.css';
+import tailwindFontsStylesheet from './styles/tailwind.css?url';
 // import './styles/global.css';
 import { GeneralErrorBoundary } from './components/error-boundary';
 import { HoneypotProvider } from 'remix-utils/honeypot/react';
@@ -50,7 +48,6 @@ export const links: LinksFunction = () => {
       rel: 'stylesheet',
       href: tailwindFontsStylesheet,
     },
-    ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
   ];
 };
 
@@ -127,7 +124,6 @@ export function Document({ children }: { children: React.ReactNode }) {
         <Toaster />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );

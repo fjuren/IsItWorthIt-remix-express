@@ -87,9 +87,13 @@ module.exports = {
 
     // Node
     {
-      files: ['.eslintrc.cjs', 'server.js'],
+      files: ['.eslintrc.cjs', 'server.mjs'],
       env: {
         node: true,
+        es2021: true,
+      },
+      globals: {
+        process: 'readonly',
       },
     },
   ],
