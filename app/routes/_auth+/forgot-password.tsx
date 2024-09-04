@@ -25,7 +25,7 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
-import { resetPasswordType, verifySessionKey } from './verify';
+import { resetPasswordType, verifySessionKey } from '~/utils/constants';
 
 const ForgotPWSchema = z.object({
   usernameOrEmail: z.union([UsernameSchema, EmailSchema]),

@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+  codeSearchParams,
+  targetSearchParams,
+  typeSearchParams,
+} from './constants';
 
 // Variables
 const usernameMaxLength: number = 20;
@@ -40,3 +45,12 @@ export const twoFaScema = z
   .min(8, { message: 'Two-factor code must be 8 characters long' })
   .max(8, { message: 'Two-factor code must be 8 characters long' })
   .optional();
+
+export const verifySchema = z.object({
+  [codeSearchParams]: z.string({
+    required_error: 'Please enter your code. It was sent to your email address',
+  }),
+  [targetSearchParams]: z.string(),
+  [typeSearchParams]: z.string(),
+  redirectTo: z.string().optional(),
+});

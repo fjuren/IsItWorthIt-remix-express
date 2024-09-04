@@ -2,9 +2,9 @@
 import { test as base } from '@playwright/test';
 import { registerUser } from './db-utils';
 import { prisma } from '~/utils/db.server';
-import { authSessionKey } from '~/routes/_auth+/verify';
 import { authSessionStorage } from '~/utils/session.server';
 import * as setCookieParser from 'set-cookie-parser';
+import { authSessionKey } from '~/utils/constants';
 
 type User = {
   id: string;

@@ -5,7 +5,7 @@ import { generateTOTP } from '@epic-web/totp';
 // test code: 12036314
 
 // Paste your string here. It should start with "otpauth://totp/" and include a secret and other params
-const otpString = `otpauth://totp/localhost%3A3000:fjuren%40gmail.com?secret=NMIUYNBONRHS2C55&issuer=localhost%3A3000&algorithm=SHA256&digits=8&period=600`;
+const otpString = `otpauth://totp/localhost%3A3000:another%40gmail.com?secret=ZFCM76GLPMN4PRPI&issuer=localhost%3A3000&algorithm=SHA256&digits=8&period=600`;
 
 const otpUri = new URL(otpString);
 const { secret, algorithm, digits, period } = Object.fromEntries(

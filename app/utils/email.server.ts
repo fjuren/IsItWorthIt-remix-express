@@ -23,6 +23,7 @@ export async function sendEmail(options: {
     body: JSON.stringify(email),
   });
   const data = await response.json();
+  console.log('DATA?? ', data);
   if (!response.ok) {
     return { status: 'error', error: getErrorMessage(data) };
   }

@@ -26,7 +26,7 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
-import { changeEmailType, verifySessionKey } from './verify';
+import { changeEmailType, verifySessionKey } from '~/utils/constants';
 
 const ChangeEmailSchema = z.object({
   email: EmailSchema,
@@ -93,6 +93,7 @@ export async function action({ request }: ActionFunctionArgs) {
     html: `<p>Please confirm your email address by entering this code ${otp}. It expires in 10 minutes.</p>`,
   });
 
+  // console.log('resonse.status??? ', response.status);
   if (response.status === 'success') {
     const verifySession = await verficationSessionStorage.getSession(
       request.headers.get('cookie')
@@ -105,66 +106,6 @@ export async function action({ request }: ActionFunctionArgs) {
       headers: { 'set-cookie': committedVerifyCookieSession },
     });
   }
-}
-
-export async function verifiedChangeEmail({
-  submission,
-  request,
-}: {
-  submission: any;
-  request: Request;
-}) {
-  const verifySession = await verficationSessionStorage.getSession(
-    request.headers.get('cookie')
-  );
-  // email = new email that is being set
-  const { email, id } = verifySession.get(verifySessionKey);
-
-  if (!email) {
-    submission.error[''] = [
-      'To protect your email, enter the code using the same device that you used to reset your email. Your original code will expire in 10 minutes.',
-    ];
-    return json({ status: 'error', submission } as const, { status: 400 });
-  }
-
-  const oldEmailUser = await prisma.user.findUniqueOrThrow({
-    select: {
-      email: true, // old email
-    },
-    where: {
-      id: id,
-    },
-  });
-
-  const newEmailUser = await prisma.user.update({
-    where: {
-      id: id,
-    },
-    data: {
-      email: email, // new email
-    },
-  });
-
-  // intentionally not informing the user the email/username is incorrect in case someone is fishing for existing data
-  if (!newEmailUser) {
-    submission.error.code = ['Invalid code'];
-    throw new Error('Invalid code', submission);
-  }
-
-  await sendEmail({
-    to: oldEmailUser.email,
-    subject: 'IIWI Email Change Notice',
-    text: 'Your email has changed',
-    html: `<p>Hello beloved user, your account email address has changed, your old email ${oldEmailUser.email} is no longer valid. If you did not make this change, pleaes contact us immediately and share the following ID so we can help: ${id}</p>`,
-  });
-
-  return redirect('/settings/profile', {
-    headers: {
-      'set-cookie': await verficationSessionStorage.destroySession(
-        verifySession
-      ),
-    },
-  });
 }
 
 export default function ChangeEmailRoute() {

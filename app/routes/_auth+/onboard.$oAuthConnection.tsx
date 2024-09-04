@@ -40,7 +40,7 @@ import {
 } from '~/utils/auth.server';
 import { CheckboxConform } from '~/components/UI/Checkbox';
 import { verficationSessionStorage } from '~/utils/verification.server';
-import { authSessionKey, verifySessionKey } from './verify';
+import { authSessionKey, verifySessionKey } from '~/utils/constants';
 import { EmailSchema, UsernameSchema } from '~/utils/fieldValidation';
 import {
   DISCORD_OAUTH_NAME,

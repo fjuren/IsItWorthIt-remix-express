@@ -14,10 +14,10 @@ import { requireUser } from '~/utils/auth.server';
 import { checkCSRF } from '~/utils/csrf.server';
 import { prisma } from '~/utils/db.server';
 import {
-  shouldRevalidate2Fa,
   twoFAVerificationEnabledType,
   unverifiedSessionKey,
-} from './verify';
+} from '~/utils/constants';
+import { shouldRevalidate2Fa } from './verify.server';
 import {
   verficationSessionStorage,
   verificationRedirect,

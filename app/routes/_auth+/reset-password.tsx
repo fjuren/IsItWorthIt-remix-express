@@ -21,8 +21,7 @@ import { ConfirmSchema, PasswordSchema } from '~/utils/fieldValidation';
 import { checkHoneypot } from '~/utils/honeypot.server';
 import { FormOrFieldErrorsList } from '~/utils/misc';
 import { verficationSessionStorage } from '~/utils/verification.server';
-import { verifySessionKey } from './verify';
-
+import { verifySessionKey } from '~/utils/constants';
 const ResetPWSchema = z
   .object({
     password: PasswordSchema,

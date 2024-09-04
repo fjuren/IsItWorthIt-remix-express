@@ -19,7 +19,8 @@ const handlerDirName = path.dirname(fileURLToPath(import.meta.url));
 const handlerEmailFixturesDirPath = path.join(
   handlerDirName,
   '..',
-  'tests', // BUG need to indicate 'tests' below. handlerEmailFixturesDirPath in the resend handler seems to start in a different directory. 'resultingHandlerEmailFixturesDirPath' was created for when the email needs to be read from the file system
+  // 'tests', // BUG need to indicate 'tests' below. handlerEmailFixturesDirPath in the resend handler seems to start in a different directory. 'resultingHandlerEmailFixturesDirPath' was created for when the email needs to be read from the file system
+  // TODO BUG RESOLVED. Refactor by removing one of these and update code where referenced
   'fixtures',
   'email'
 );

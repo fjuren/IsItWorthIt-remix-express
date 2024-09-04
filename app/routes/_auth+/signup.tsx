@@ -34,7 +34,7 @@ import {
   prepVerificationCode,
   verficationSessionStorage,
 } from '~/utils/verification.server';
-import { emailType, verifySessionKey } from './verify';
+import { emailType, verifySessionKey } from '~/utils/constants';
 import {
   ConfirmSchema,
   EmailSchema,

@@ -24,11 +24,11 @@ import { FormOrFieldErrorsList } from '~/utils/misc';
 import { getTOTPAuthUri } from '@epic-web/totp';
 // @ts-expect-error ignoring type error
 import * as QRCode from 'qrcode';
+import { isVerificationCodeValid } from './verify.server';
 import {
-  isVerificationCodeValid,
   twoFAVerificationEnabledType,
   twoFAVerifyVerificationType,
-} from './verify';
+} from '~/utils/constants';
 import { toastSessionStorage } from '~/utils/toast.server';
 import { twoFaScema } from '~/utils/fieldValidation';
 

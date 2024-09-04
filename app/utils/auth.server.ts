@@ -4,10 +4,10 @@ import bcrypt from 'bcryptjs';
 import { redirect } from '@remix-run/node';
 import { authSessionStorage } from './session.server';
 import { prisma } from './db.server';
-import { authSessionKey } from '~/routes/_auth+/verify';
 import { OAuthUser } from './oAuthConnections/oAuthConnection';
 import { DISCORD_OAUTH_NAME } from './oAuthConnections';
 import { discordAvatarToUrl } from './oAuthConnections/discord.server';
+import { authSessionKey } from './constants';
 
 export { bcrypt };
 

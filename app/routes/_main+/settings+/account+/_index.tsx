@@ -19,11 +19,11 @@ import {
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
+import { requireUser } from '~/utils/auth.server';
 import {
   twoFAVerificationEnabledType,
   twoFAVerifyVerificationType,
-} from '~/routes/_auth+/verify';
-import { requireUser } from '~/utils/auth.server';
+} from '~/utils/constants';
 import { prisma } from '~/utils/db.server';
 import { FormOrFieldErrorsList, invariantResponse } from '~/utils/misc';
 import { DISCORD_OAUTH_NAME } from '~/utils/oAuthConnections';

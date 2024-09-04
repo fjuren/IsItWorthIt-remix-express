@@ -3,11 +3,11 @@ import { redirect, type LoaderFunctionArgs } from '@remix-run/node';
 import { auth } from '~/utils/oAuthConnections/discord.server';
 import { capitalizeFirstLetter, combineHeaders } from '~/utils/misc';
 import { prisma } from '~/utils/db.server';
-import { handleAuthSession } from './login';
+import { handleAuthSession } from './login.server';
 import { getUserId } from '~/utils/auth.server';
 import { verficationSessionStorage } from '~/utils/verification.server';
-import { verifySessionKey } from './verify';
 import { oAuthRedirectSessionStorage } from '~/utils/oAuthConnections.server';
+import { verifySessionKey } from '~/utils/constants';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const oAuthConnectionName = capitalizeFirstLetter(

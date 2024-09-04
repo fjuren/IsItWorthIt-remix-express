@@ -30,7 +30,7 @@ export default defineConfig({
       // serverBuildPath: "build/index.js",
       routes: async (defineRoutes) => {
         return flatRoutes('routes', defineRoutes, {
-          ignoredRouteFiles: ['**/*.test.{js,jsx,ts,tsx}'],
+          ignoredRouteFiles: ['**/*.test.{js,jsx,ts,tsx}', '**/*.server.*'],
         });
       },
     }),
