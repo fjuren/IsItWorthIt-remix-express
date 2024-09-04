@@ -2,7 +2,7 @@ import { verficationSessionStorage } from '~/utils/verification.server';
 import { prisma } from '~/utils/db.server';
 import { sendEmail } from '~/utils/email.server';
 import { json, redirect } from '@remix-run/node';
-import { verifiedResetPassword } from './reset-password';
+import { verifiedResetPassword } from './reset-password.server';
 import { safeRedirect } from 'remix-utils/safe-redirect';
 import { verifyTOTP } from '@epic-web/totp';
 import { toastVerificationKey, generalToast } from '~/utils/toast.server';

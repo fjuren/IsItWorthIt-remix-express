@@ -40,11 +40,26 @@ export const ConfirmSchema = z
     message: 'Must be 100 or fewer characters long',
   });
 
-export const twoFaScema = z
+export const twoFaSchema = z
   .string()
   .min(8, { message: 'Two-factor code must be 8 characters long' })
   .max(8, { message: 'Two-factor code must be 8 characters long' })
   .optional();
+
+export const ResetPWSchema = z
+  .object({
+    password: PasswordSchema,
+    confirmPassword: ConfirmSchema,
+  })
+  .superRefine((val, ctx) => {
+    if (val.password !== val.confirmPassword) {
+      ctx.addIssue({
+        path: ['confirmPassword'],
+        code: 'custom',
+        message: "Passwords don't match",
+      });
+    }
+  });
 
 export const verifySchema = z.object({
   [codeSearchParams]: z.string({

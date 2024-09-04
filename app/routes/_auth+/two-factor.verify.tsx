@@ -30,10 +30,10 @@ import {
   twoFAVerifyVerificationType,
 } from '~/utils/constants';
 import { toastSessionStorage } from '~/utils/toast.server';
-import { twoFaScema } from '~/utils/fieldValidation';
+import { twoFaSchema } from '~/utils/fieldValidation';
 
 const twoFactorSchema = z.object({
-  twoFactorCode: twoFaScema,
+  twoFactorCode: twoFaSchema,
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
