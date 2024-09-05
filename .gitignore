@@ -13,3 +13,5 @@ node_modules
 
 # testing
 /coverage
+# Local Netlify folder
+.netlify
