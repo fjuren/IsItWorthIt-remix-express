@@ -23,6 +23,12 @@ const viteDevServer =
 
 const app = express();
 
+// Enable compression
+app.use(compression());
+
+// Disable x-powered-by header for security
+app.disable('x-powered-by');
+
 // handle asset requests
 if (viteDevServer) {
   app.use(viteDevServer.middlewares);
@@ -47,8 +53,11 @@ app.all(
   })
 );
 
-const port = 3000;
-app.listen(port, () => console.log('http://localhost:' + port));
+const port = process.env.PORT || 3000;
+const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+app.listen(port, host, () => {
+  console.log(`Server listening on ${host === '0.0.0.0' ? 'all interfaces' : host}:${port}`);
+});
 
 // UNCOMMENT EVERYTHING BELOW HERE TO GO BACK TO ORIGINAL (leave other comment out stuff commented out)
 

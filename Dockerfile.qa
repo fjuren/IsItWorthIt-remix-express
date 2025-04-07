@@ -1,0 +1,47 @@
+FROM node:18-slim
+
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install ALL dependencies (including dev dependencies)
+RUN npm ci
+
+# Copy application code
+COPY . .
+
+# Create directory for SQLite database
+RUN mkdir -p /app/data && chmod -R 777 /app/data
+
+# Set environment variables
+ENV NODE_ENV production
+ENV PORT 8080
+ENV DATABASE_URL="file:/app/data/sqlite.db"
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Install tsx globally to avoid permission issues
+RUN npm install -g tsx
+
+# Build the app
+RUN npm run build
+
+# Run migrations and seed as root
+RUN npx prisma migrate deploy
+RUN npx prisma db seed
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 remix \
+    && chown -R remix:nodejs /app
+
+# Switch to non-root user
+USER remix
+
+# Start the server (migrations and seeding already done during build)
+CMD npm start

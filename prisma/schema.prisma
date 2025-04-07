@@ -1,11 +1,11 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// run npx prisma generate for ERD
-generator erd {
-  provider    = "prisma-erd-generator"
-  ignoreEnums = true
-}
+// Commented out for deployment
+// generator erd {
+//   provider    = "prisma-erd-generator"
+//   ignoreEnums = true
+// }
 
 generator client {
   provider = "prisma-client-js"

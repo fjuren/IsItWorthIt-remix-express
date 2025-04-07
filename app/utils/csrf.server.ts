@@ -6,8 +6,10 @@ const cookie = createCookie('iiwi_csrf', {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
-  // secrets: ['s3cr3t'],
-  secrets: process.env.SESSION_SECRET!.split(','),
+  // If SESSION_SECRET contains commas, split it, otherwise use as a single secret
+  secrets: process.env.SESSION_SECRET?.includes(',')
+    ? process.env.SESSION_SECRET.split(',')
+    : [process.env.SESSION_SECRET!],
 });
 
 export const csrf = new CSRF({

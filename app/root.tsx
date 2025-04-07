@@ -55,6 +55,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const honeyProps = honeypot.getInputProps();
   const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request);
   const cookie = request.headers.get('cookie');
+  console.log("request.headers", request.headers)
+  console.log("csrfToken", csrfToken)
+  console.log("csrfCookieHeader", csrfCookieHeader)
+  console.log("cookie", cookie)
   const toastCookieSession = await toastSessionStorage.getSession(cookie);
   const toast = toastCookieSession.get(toastVerificationKey);
   const authCookieSession = await authSessionStorage.getSession(cookie);

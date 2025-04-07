@@ -240,7 +240,7 @@ async function seed() {
     });
     listOfGamePosts.push(gamePostRecord);
   }
-  console.timeEnd(`Created ${totalGamePosts} users`);
+  console.timeEnd(`Created ${totalGamePosts} gamePosts`);
 
   const randSentence = faker.lorem.sentence();
   const randParagraph = faker.lorem.paragraph();
