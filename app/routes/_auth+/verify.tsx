@@ -77,7 +77,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   } else {
     await requireVerificationFlow(request);
   }
-  return json({ typeParam });
+  return { typeParam };
 }
 
 export async function action({ request }: ActionFunctionArgs) {

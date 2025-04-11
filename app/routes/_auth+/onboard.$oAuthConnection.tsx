@@ -7,7 +7,7 @@
 import {
   MetaFunction,
   type ActionFunctionArgs,
-  json,
+  data,
   LoaderFunctionArgs,
   redirect,
 } from '@remix-run/node';
@@ -87,13 +87,13 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     oAuthAvatar = discordAvatarToUrl(oAuthConnectionUserId, avatar);
   }
 
-  return json({
+  return {
     email,
     username,
     oAuthConnectionUserId,
     oAuthAvatar,
     oAuthConnectionName,
-  });
+  };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -163,7 +163,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   });
 
   if (submission.status !== 'success') {
-    return json(
+    return data(
       {
         result: submission.reply(),
       },

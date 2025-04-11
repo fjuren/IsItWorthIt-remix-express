@@ -3,7 +3,7 @@ import { parseWithZod } from '@conform-to/zod';
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  json,
+  data,
   redirect,
 } from '@remix-run/node';
 import { Form, Link, useActionData } from '@remix-run/react';
@@ -66,7 +66,7 @@ export async function action({ request }: ActionFunctionArgs) {
     async: true,
   });
   if (submission.status !== 'success') {
-    return json(
+    return data(
       { result: submission.reply() },
       {
         status: submission.status === 'error' ? 400 : 200,

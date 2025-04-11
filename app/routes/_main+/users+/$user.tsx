@@ -1,6 +1,6 @@
 // import type { MetaFunction } from '@remix-run/node';
 
-import { LoaderFunctionArgs, MetaFunction, json } from '@remix-run/node';
+import { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 // import { db } from 'app/utils/db.server'; // local db
 import { prisma } from '~/utils/db.server';
@@ -32,7 +32,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
   // throw new Error('Component error');
   invariantResponse(user, `User not found`, { status: 404 });
-  return json({ user });
+  return { user };
 }
 
 export default function UsernameRoute() {

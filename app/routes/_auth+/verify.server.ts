@@ -1,7 +1,7 @@
 import { verficationSessionStorage } from '~/utils/verification.server';
 import { prisma } from '~/utils/db.server';
 import { sendEmail } from '~/utils/email.server';
-import { json, redirect } from '@remix-run/node';
+import { data, redirect } from '@remix-run/node';
 import { verifiedResetPassword } from './reset-password.server';
 import { safeRedirect } from 'remix-utils/safe-redirect';
 import { verifyTOTP } from '@epic-web/totp';
@@ -113,7 +113,7 @@ export async function verifyRequest(request: Request, formData: FormData) {
   });
 
   if (submission.status !== 'success') {
-    return json(submission.reply(), {
+    return data(submission.reply(), {
       status: submission.status === 'error' ? 400 : 200,
     });
   }

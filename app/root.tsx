@@ -9,10 +9,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  json,
   redirect,
   useLoaderData,
 } from '@remix-run/react';
+import { data } from '@remix-run/node';
 import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css?url';
 // import './styles/global.css';
@@ -51,14 +51,17 @@ export const links: LinksFunction = () => {
   ];
 };
 
+export function headers({ loaderHeaders }: { loaderHeaders: Headers }) {
+  return {
+    'Cache-Control': loaderHeaders.get('Cache-Control') || '',
+    'Set-Cookie': loaderHeaders.get('Set-Cookie') || '',
+  };
+}
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const honeyProps = honeypot.getInputProps();
   const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request);
   const cookie = request.headers.get('cookie');
-  console.log("request.headers", request.headers)
-  console.log("csrfToken", csrfToken)
-  console.log("csrfCookieHeader", csrfCookieHeader)
-  console.log("cookie", cookie)
   const toastCookieSession = await toastSessionStorage.getSession(cookie);
   const toast = toastCookieSession.get(toastVerificationKey);
   const authCookieSession = await authSessionStorage.getSession(cookie);
@@ -74,7 +77,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     : null;
 
   // This is to handle weird cases, eg. if the user is deleted somehow but their cookie session still exists, we should log them out/destroy their auth session
-  if ((await userId) && !user) {
+  if (userId && !user) {
     return redirect('/', {
       headers: {
         'set-cookie': await authSessionStorage.destroySession(
@@ -84,7 +87,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     });
   }
 
-  return json(
+  return data(
     {
       honeyProps,
       csrfToken,

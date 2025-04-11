@@ -5,7 +5,7 @@ import { parseWithZod } from '@conform-to/zod';
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  json,
+  data,
   redirect,
 } from '@remix-run/node';
 import {
@@ -97,11 +97,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return connection;
   });
 
-  return json({
+  return {
     isTwoFAEnabled: Boolean(twoFAEnabled),
     connections: updateConnectionsForUI,
     headers: getTheme(request),
-  });
+  };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -150,7 +150,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const submission = parseWithZod(formData, { schema: themeSchema });
   if (submission.status !== 'success') {
-    return json({ status: 'error', submission: submission.reply() });
+    return data({ status: 'error', submission: submission.reply() });
   }
 
   const reponseInit = {
@@ -159,7 +159,7 @@ export async function action({ request }: ActionFunctionArgs) {
     },
   };
 
-  return json({ success: true, submission }, reponseInit);
+  return data({ success: true, submission }, reponseInit);
 }
 
 export default function UserSettings() {

@@ -4,7 +4,7 @@ import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
   MetaFunction,
-  json,
+  data,
 } from '@remix-run/node';
 import { Form, Link, useActionData, useSearchParams } from '@remix-run/react';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
@@ -103,7 +103,7 @@ export async function action({ request }: ActionFunctionArgs) {
   delete submission.payload.password;
 
   if (submission.status != 'success') {
-    return json(
+    return data(
       {
         result: submission.reply({
           hideFields: ['password'],

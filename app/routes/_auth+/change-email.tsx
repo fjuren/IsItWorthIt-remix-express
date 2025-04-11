@@ -35,10 +35,10 @@ const ChangeEmailSchema = z.object({
 export async function loader({ request }: LoaderFunctionArgs) {
   // recall requireUser ensure authentication and offers redirects
   const user = await requireUser(request);
-  return json({
+  return {
     // headers: getTheme(request),
     user,
-  });
+  };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -71,7 +71,7 @@ export async function action({ request }: ActionFunctionArgs) {
   });
 
   if (submission.status !== 'success') {
-    return json(
+    return data(
       {
         result: submission.reply(),
       },

@@ -7,7 +7,7 @@
 import {
   MetaFunction,
   type ActionFunctionArgs,
-  json,
+  data,
   redirect,
   LoaderFunctionArgs,
 } from '@remix-run/node';
@@ -130,7 +130,7 @@ export async function action({ request }: ActionFunctionArgs) {
   delete submission.payload.password;
 
   if (submission.status !== 'success') {
-    return json(
+    return data(
       {
         result: submission.reply({
           hideFields: ['password', 'confirmPassword'],

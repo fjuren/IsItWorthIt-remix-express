@@ -1,4 +1,4 @@
-import { json, MetaFunction } from '@remix-run/node';
+import { MetaFunction } from '@remix-run/node';
 import { useLoaderData, useOutletContext } from '@remix-run/react';
 import { BookmarkIcon } from 'lucide-react';
 import CommentIcon from '~/assets/svgs/CommentIcon';
@@ -58,7 +58,7 @@ export async function loader() {
     'https://www.cheapshark.com/api/1.0/deals?pageNumber=0',
     requestOptions
   );
-  return json(await gamesList.json());
+  return await gamesList.json();
 }
 
 function formatPercentage(value: string) {

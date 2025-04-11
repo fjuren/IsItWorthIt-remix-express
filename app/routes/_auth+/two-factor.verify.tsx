@@ -68,12 +68,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const qrCode = await QRCode.toDataURL(otpUri);
 
-  return json({
+  return {
     // headers: getTheme(request),
     user,
     qrCode,
     otpUri,
-  });
+  };
 }
 
 export async function action({ request }: ActionFunctionArgs) {

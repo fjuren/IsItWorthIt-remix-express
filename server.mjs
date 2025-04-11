@@ -3,31 +3,25 @@ import * as fs from 'node:fs';
 import * as url from 'node:url';
 
 import { createRequestHandler } from '@remix-run/express';
-import { installGlobals } from '@remix-run/node';
+// import { installGlobals } from '@remix-run/node';
 import compression from 'compression';
 import express from 'express';
 import morgan from 'morgan';
 import sourceMapSupport from 'source-map-support';
 import { rateLimit } from 'express-rate-limit';
 
-installGlobals();
+// installGlobals();  <- no longer needed since node v20 +
 
 const viteDevServer =
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === "production"
     ? undefined
-    : await import('vite').then((vite) =>
+    : await import("vite").then((vite) =>
         vite.createServer({
           server: { middlewareMode: true },
         })
       );
 
 const app = express();
-
-// Enable compression
-app.use(compression());
-
-// Disable x-powered-by header for security
-app.disable('x-powered-by');
 
 // handle asset requests
 if (viteDevServer) {
@@ -52,6 +46,12 @@ app.all(
       : await import('./build/server/index.js'),
   })
 );
+
+// Enable compression
+app.use(compression());
+
+// Disable x-powered-by header for security
+app.disable('x-powered-by');
 
 const port = process.env.PORT || 3000;
 const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';

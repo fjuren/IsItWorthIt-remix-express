@@ -33,9 +33,9 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireUser(request); // protects route; requireUser also check authentication with helper (must be authorized)
   await shouldRevalidate2Fa({ request, userId: user.id });
-  return json({
+  return {
     userId: user.id,
-  });
+  };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
