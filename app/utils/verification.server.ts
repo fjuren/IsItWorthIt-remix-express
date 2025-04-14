@@ -1,5 +1,5 @@
 import { generateTOTP } from '@epic-web/totp';
-import { createCookieSessionStorage } from '@remix-run/node';
+import { createCookieSessionStorage } from 'react-router';
 import { prisma } from './db.server';
 
 interface OtpDataObj {

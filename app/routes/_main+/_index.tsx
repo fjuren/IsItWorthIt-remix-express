@@ -1,5 +1,5 @@
-import { MetaFunction } from '@remix-run/node';
-import { useLoaderData, useOutletContext } from '@remix-run/react';
+import { MetaFunction } from 'react-router';
+import { useLoaderData, useOutletContext } from 'react-router-dom';
 import { BookmarkIcon } from 'lucide-react';
 import CommentIcon from '~/assets/svgs/CommentIcon';
 import DownvoteIcon from '~/assets/svgs/DownvoteIcon';

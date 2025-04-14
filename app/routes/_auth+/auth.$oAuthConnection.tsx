@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, redirect } from '@remix-run/node';
+import { ActionFunctionArgs, redirect } from 'react-router';
 import { oAuthRedirectSessionStorage } from '~/utils/oAuthConnections.server';
 import { auth } from '~/utils/oAuthConnections/discord.server';
 

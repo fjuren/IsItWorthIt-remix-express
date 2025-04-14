@@ -15,7 +15,7 @@ import {
 } from '~/utils/constants';
 import { prisma } from '~/utils/db.server';
 import { combineHeaders } from '~/utils/misc';
-import { redirect } from '@remix-run/react';
+import { redirect } from 'react-router';
 import { generalToast, toastVerificationKey } from '~/utils/toast.server';
 
 // this function handles authentication supports oAuth, 2FA and regular login flows

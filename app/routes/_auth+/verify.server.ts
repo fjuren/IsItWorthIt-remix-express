@@ -1,7 +1,7 @@
 import { verficationSessionStorage } from '~/utils/verification.server';
 import { prisma } from '~/utils/db.server';
 import { sendEmail } from '~/utils/email.server';
-import { data, redirect } from '@remix-run/node';
+import { data, redirect } from 'react-router';
 import { verifiedResetPassword } from './reset-password.server';
 import { safeRedirect } from 'remix-utils/safe-redirect';
 import { verifyTOTP } from '@epic-web/totp';

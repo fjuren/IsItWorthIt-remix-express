@@ -1,18 +1,16 @@
 import type {
-  // ActionFunctionArgs,
   LinksFunction,
   LoaderFunctionArgs,
-} from '@remix-run/node';
+} from 'react-router';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  redirect,
   useLoaderData,
-} from '@remix-run/react';
-import { data } from '@remix-run/node';
+} from 'react-router-dom';
+import { data, redirect } from 'react-router';
 import faviconAssetUrl from './assets/favicon.ico';
 import tailwindFontsStylesheet from './styles/tailwind.css?url';
 // import './styles/global.css';

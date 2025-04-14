@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 // import * as path from 'node:path';
 import * as url from 'node:url';
 
-import { createRequestHandler } from '@remix-run/express';
+import { createRequestHandler } from '@react-router/express';
 // import { installGlobals } from '@remix-run/node';
 import compression from 'compression';
 import express from 'express';
@@ -42,7 +42,7 @@ app.all(
   '*',
   createRequestHandler({
     build: viteDevServer
-      ? () => viteDevServer.ssrLoadModule('virtual:remix/server-build')
+      ? () => viteDevServer.ssrLoadModule('virtual:react-router/server-build')
       : await import('./build/server/index.js'),
   })
 );

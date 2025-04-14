@@ -1,5 +1,5 @@
 import { parseWithZod } from '@conform-to/zod';
-import { data, redirect } from '@remix-run/node';
+import { data, redirect } from 'react-router';
 import { z } from 'zod';
 import { bcrypt } from '~/utils/auth.server';
 import { verifySessionKey } from '~/utils/constants';

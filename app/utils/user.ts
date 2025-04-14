@@ -1,4 +1,4 @@
-import { useRouteLoaderData } from '@remix-run/react';
+import { useRouteLoaderData } from 'react-router-dom';
 import { loader as rootLoader } from '../root';
 
 // used to handle whether a logged in user is present. Using this for when being logged in optional (helps for show/hide UI components)

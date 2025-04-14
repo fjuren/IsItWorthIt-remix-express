@@ -15,3 +15,6 @@ node_modules
 /coverage
 # Local Netlify folder
 .netlify
+
+# React Router generated files
+.react-router/
