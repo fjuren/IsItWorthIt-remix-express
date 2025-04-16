@@ -1,13 +1,13 @@
-{
-  "include": [
+{  "include": [
     "remix.env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "app/components/UI/Card.js",
-    "server.mjs"
+    "server.mjs",
+    ".react-router/types/**/*"
   ],
   "compilerOptions": {
-    "types": ["@remix-run/node", "vite/client"],
+    "types": ["@react-router/node", "vite/client"],
     "module": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
@@ -20,6 +20,7 @@
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
+    "rootDirs": [".", "./.react-router/types"],
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {

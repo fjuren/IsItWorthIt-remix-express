@@ -1,4 +1,4 @@
-import { Outlet } from '@remix-run/react';
+import { Outlet } from 'react-router-dom';
 import { Document } from '~/root';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 

@@ -1,5 +1,5 @@
 // app/routes/auth.discord.callback.tsx
-import { redirect, type LoaderFunctionArgs } from '@remix-run/node';
+import { redirect, type LoaderFunctionArgs } from 'react-router';
 import { auth } from '~/utils/oAuthConnections/discord.server';
 import { capitalizeFirstLetter, combineHeaders } from '~/utils/misc';
 import { prisma } from '~/utils/db.server';

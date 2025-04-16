@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from '@remix-run/react';
+import { Link } from 'react-router-dom';
 
 export function SideNav() {
   const [open, setOpen] = useState(true);

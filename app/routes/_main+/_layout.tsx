@@ -1,4 +1,4 @@
-import { Outlet, useOutletContext } from '@remix-run/react';
+import { Outlet, useOutletContext } from 'react-router-dom';
 import { Document } from '~/root';
 import { SideNav } from '~/components/UI/SideNav';
 import { GeneralErrorBoundary } from '~/components/error-boundary';

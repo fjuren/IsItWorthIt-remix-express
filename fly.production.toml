@@ -7,6 +7,7 @@ app = 'isitworthit-remix-express-latest'
 primary_region = 'sea'
 
 [build]
+  dockerfile = 'Dockerfile.production'
 
 [http_service]
   internal_port = 3000

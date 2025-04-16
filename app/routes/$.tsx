@@ -1,6 +1,6 @@
 // splat route
 
-import { Link, useLocation } from '@remix-run/react';
+import { Link, useLocation } from 'react-router-dom';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 
 export async function loader() {

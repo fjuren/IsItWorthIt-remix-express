@@ -1,7 +1,7 @@
 // added to avoid sending bcrypt to the client (See remix docs https://remix.run/docs/en/main/discussion/server-vs-client)
 // @ts-expect-error check this error
 import bcrypt from 'bcryptjs';
-import { redirect } from '@remix-run/node';
+import { redirect } from 'react-router';
 import { authSessionStorage } from './session.server';
 import { prisma } from './db.server';
 import { OAuthUser } from './oAuthConnections/oAuthConnection';

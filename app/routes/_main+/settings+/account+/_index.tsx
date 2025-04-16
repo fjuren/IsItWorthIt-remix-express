@@ -7,7 +7,7 @@ import {
   LoaderFunctionArgs,
   data,
   redirect,
-} from '@remix-run/node';
+} from 'react-router';
 import {
   Form,
   Link,
@@ -15,7 +15,7 @@ import {
   useFetcher,
   useFetchers,
   useLoaderData,
-} from '@remix-run/react';
+} from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '~/components/UI/Button';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
