@@ -1,28 +1,25 @@
 import { MetaFunction } from 'react-router';
-import { useLoaderData, useOutletContext } from 'react-router-dom';
+import { useLoaderData, useOutletContext, Link } from 'react-router-dom';
 import { BookmarkIcon } from 'lucide-react';
 import CommentIcon from '~/assets/svgs/CommentIcon';
 import DownvoteIcon from '~/assets/svgs/DownvoteIcon';
 import UpvoteIcon from '~/assets/svgs/UpvoteIcon';
+import { Badge } from '~/components/UI/Badge';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/UI/Card';
-
-import {
   GameCard,
-  GameCardContent,
-  GameCardDescription,
-  GameCardFooter,
+  GameCardImage,
   GameCardHeader,
   GameCardTitle,
+  GameCardDescription,
+  GameCardSocial,
+  GameCardContent1,
+  GameCardContent2,
+  GameCardContent3,
+  GameCardContent4,
 } from '~/components/UI/GameCard';
+import { Button } from '~/components/UI/Button';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -57,6 +54,17 @@ interface dealsList {
   thumb: string;
 }
 
+interface storeList {
+  storeID: string;
+  storeName: string;
+  isActive: number;
+  images: {
+    banner: string;
+    logo: string;
+    icon: string
+  }
+}
+
 const requestOptions = {
   method: 'GET',
 };
@@ -64,41 +72,65 @@ const requestOptions = {
 export async function loader() {
   // throw new Response('Not found', { status: 500 });
   const gamesList = await fetch(
-    'https://www.cheapshark.com/api/1.0/deals?pageSize=1',
+    'https://www.cheapshark.com/api/1.0/deals?pageSize=30',
     requestOptions
-  );
-  return await gamesList.json();
+  )
+  const storeList = await fetch(
+    'https://www.cheapshark.com/api/1.0/stores',
+    requestOptions
+  )
+  const listOfDeals = await gamesList.json();
+  const listOfStores = await storeList.json();
+
+  return { listOfDeals, listOfStores };
 }
 
 function formatPercentage(value: string) {
-  return Math.round(parseFloat(value)) + '%';
+  return `${Math.round(parseFloat(value))}%`
 }
 
 export default function HomeRoute() {
-  const listOfDeals = useLoaderData<typeof loader>();
-  console.log(listOfDeals);
+  const {listOfDeals, listOfStores} = useLoaderData<typeof loader>();
+  console.log(listOfDeals)
   const theme: string = useOutletContext();
   return (
     <>
-      {/* <h1>Home</h1> */}
-      {/* <div className="flex flex-wrap max-w-[46rem]"> */}
-      {/* <div className="flex flex-col gap-6"> */}
-      <GameCard>
-        thumb
+    {listOfDeals.map((game: dealsList, index: number) =>
+      <GameCard key={index}>
+          <GameCardImage src={game.thumb} alt={`${game.title} image`}>
+          </GameCardImage>
         <GameCardHeader>
-          <GameCardTitle>GameCard Title title</GameCardTitle>
+          <GameCardTitle>{game.title}</GameCardTitle>
           <GameCardDescription>
-            GameCard Description storeID
+          <img className='' src={`https://www.cheapshark.com${listOfStores.find((o: storeList) => o.storeID === game.storeID)["images"]["icon"]}`} alt={`${listOfStores.find((o: storeList) => o.storeID === game.storeID)["storeName"]}'s logo`} />
+          <p>{listOfStores.find((o: storeList) => o.storeID === game.storeID)["storeName"]}</p>
           </GameCardDescription>
+          <GameCardSocial>
+            likes dislikes comments wishlists
+          </GameCardSocial>
         </GameCardHeader>
-        <GameCardContent>
-          <p>GameCard Content</p>
-          normalPrice salePrice savings dealRating
-        </GameCardContent>
-        <GameCardFooter>
-          <p>GameCard Footer</p>
-        </GameCardFooter>
+        <GameCardContent1>
+          <p className='line-through text-slate-500 text-xs'>${game.normalPrice}</p>
+           <p className='text-lg font-bold'>${game.salePrice} USD</p> 
+           <Badge>-{formatPercentage(game.savings)}</Badge>
+        </GameCardContent1>
+        <GameCardContent2>
+          <p>{game.steamRatingCount} votes</p>
+          <p>{game.steamRatingPercent}%</p>
+          <p>{game.steamRatingText} rating</p>
+        </GameCardContent2>
+        <GameCardContent3>
+          <p>Deal rating: {game.dealRating}</p>
+        </GameCardContent3>
+        <GameCardContent4>
+          <Button variant={'default'}  asChild>
+            <Link to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}>Store</Link>
+          </Button>
+          <Button variant={'outline'} onClick={() => {alert(`Detials page for ${game.title} not available yet. \nCome back again later!`)}}>
+            <Link to=''>Details</Link></Button>
+        </GameCardContent4>
       </GameCard>
+    )}
       {/* {listOfDeals.map((game: dealsList, index: number) => (
         <Card
           // theme={theme}
@@ -169,8 +201,6 @@ export default function HomeRoute() {
           </CardFooter>
         </Card>
       ))} */}
-      {/* </div> */}
-      {/* </div> */}
     </>
   );
 }
