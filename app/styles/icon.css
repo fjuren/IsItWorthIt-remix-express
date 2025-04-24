@@ -1,0 +1,18 @@
+/* from lucide docs: https://lucide.dev/guide/advanced/global-styling */
+/* Note: global styling fails using tailwind.css filer due to stroke: currentColor override */
+.lucide {
+    height: 1.25rem;
+    width: 1.25rem;
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+  }
+  /* transition-colors hover:text-primary */
+.group:hover .lucide {
+    color: hsl(var(--primary));
+    background-color: hsl(var(--primary) / 0.1);
+    cursor: pointer;
+  }
+
+.lucide:active {
+    fill: hsl(var(--primary));
+}

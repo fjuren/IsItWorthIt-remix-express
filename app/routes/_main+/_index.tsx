@@ -1,10 +1,7 @@
 import { MetaFunction } from 'react-router';
-import { useLoaderData, useOutletContext, Link } from 'react-router-dom';
-import { BookmarkIcon } from 'lucide-react';
-import CommentIcon from '~/assets/svgs/CommentIcon';
-import DownvoteIcon from '~/assets/svgs/DownvoteIcon';
-import UpvoteIcon from '~/assets/svgs/UpvoteIcon';
+import { useLoaderData, Link } from 'react-router-dom';
 import { Badge } from '~/components/UI/Badge';
+import { CommentButton } from '~/components/UI/Comments';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 
 import {
@@ -20,6 +17,9 @@ import {
   GameCardContent4,
 } from '~/components/UI/GameCard';
 import { Button } from '~/components/UI/Button';
+import { UpvoteButton } from '~/components/UI/Upvote';
+import { DownvoteButton } from '~/components/UI/Downvote';
+import { WishlistButton } from '~/components/UI/Wishlist';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -91,8 +91,7 @@ function formatPercentage(value: string) {
 
 export default function HomeRoute() {
   const {listOfDeals, listOfStores} = useLoaderData<typeof loader>();
-  console.log(listOfDeals)
-  const theme: string = useOutletContext();
+  // const theme: string = useOutletContext(); TODO determine if I still need theme
   return (
     <>
     {listOfDeals.map((game: dealsList, index: number) =>
@@ -106,7 +105,11 @@ export default function HomeRoute() {
           <p>{listOfStores.find((o: storeList) => o.storeID === game.storeID)["storeName"]}</p>
           </GameCardDescription>
           <GameCardSocial>
-            likes dislikes comments wishlists
+            <UpvoteButton />
+            0
+            <DownvoteButton />
+            <CommentButton />
+            <WishlistButton />
           </GameCardSocial>
         </GameCardHeader>
         <GameCardContent1>
