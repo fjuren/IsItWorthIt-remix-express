@@ -32,7 +32,8 @@
     --chart-5: 27 87% 67%;
   }
 
-  .dark,  :root[class~='dark'] {
+  .dark,
+  :root[class~='dark'] {
     --background: 20 14.3% 4.1%;
     --foreground: 60 9.1% 97.8%;
     --card: 20 14.3% 4.1%;
@@ -59,7 +60,6 @@
     --chart-5: 340 75% 55%;
   }
 }
-
 
 /* @layer base {
   :root {
@@ -130,7 +130,44 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Typography  */
+  h1 {
+    font-size: 2rem;
+    @apply font-bold tracking-tight mb-4;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    @apply font-semibold tracking-tight mb-3;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    @apply font-semibold mb-2;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+    @apply font-medium mb-2;
+  }
+
+  h5 {
+    font-size: 1rem;
+    @apply font-medium mb-1;
+  }
+
+  h6 {
+    font-size: 0.875rem;
+    @apply font-medium mb-1;
+  }
+
+  p {
+    font-size: small;
+    @apply tracking-tight leading-relaxed;
   }
 }

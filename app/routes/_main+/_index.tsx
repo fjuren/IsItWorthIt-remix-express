@@ -62,11 +62,11 @@ interface Store {
   images: {
     banner: string;
     logo: string;
-    icon: string
-  }
+    icon: string;
+  };
 }
 
-type StoreList  = Store[]
+type StoreList = Store[];
 
 const requestOptions = {
   method: 'GET',
@@ -77,11 +77,11 @@ export async function loader() {
   const gamesList = await fetch(
     'https://www.cheapshark.com/api/1.0/deals?pageSize=30',
     requestOptions
-  )
+  );
   const storeList = await fetch(
     'https://www.cheapshark.com/api/1.0/stores',
     requestOptions
-  )
+  );
   const listOfDeals: DealsList = await gamesList.json();
   const listOfStores: StoreList = await storeList.json();
 
@@ -89,52 +89,78 @@ export async function loader() {
 }
 
 function formatPercentage(value: string) {
-  return `${Math.round(parseFloat(value))}%`
+  return `${Math.round(parseFloat(value))}%`;
 }
 
 export default function HomeRoute() {
-  const {listOfDeals, listOfStores} = useLoaderData<typeof loader>();
+  const { listOfDeals, listOfStores } = useLoaderData<typeof loader>();
   // const theme: string = useOutletContext(); TODO determine if I still need theme
   return (
     <>
-    {listOfDeals.map((game: Deal, index: number) =>
-      <GameCard key={index} gameId={game.gameID}>
-          <GameCardImage src={game.thumb} alt={`${game.title} image`}>
-          </GameCardImage>
-        <GameCardHeader>
-          <GameCardTitle>{game.title}</GameCardTitle>
-          <GameCardDescription>
-          <img className='' src={`https://www.cheapshark.com${listOfStores.find((o: Store) => o.storeID === game.storeID)?.["images"]["icon"]}`} alt={`${listOfStores.find((o: Store) => o.storeID === game.storeID)?.["storeName"]}'s logo`} />
-          <p>{listOfStores.find((o: Store) => o.storeID === game.storeID)?.["storeName"]}</p>
-          </GameCardDescription>
+      <h1 className="font-bold text-center text-4xl">
+        Find games worth <br /> your while
+      </h1>
+      {listOfDeals.map((game: Deal, index: number) => (
+        <GameCard key={index} gameId={game.gameID}>
+          <GameCardImage
+            src={game.thumb}
+            alt={`${game.title} image`}
+          ></GameCardImage>
+          <GameCardHeader>
+            <GameCardTitle>{game.title}</GameCardTitle>
+            <GameCardDescription>
+              <img
+                className="h-4 w-4"
+                src={`https://www.cheapshark.com${
+                  listOfStores.find((o: Store) => o.storeID === game.storeID)?.[
+                    'images'
+                  ]['icon']
+                }`}
+                alt={`${
+                  listOfStores.find((o: Store) => o.storeID === game.storeID)?.[
+                    'storeName'
+                  ]
+                }'s logo`}
+              />
+              <p>
+                {
+                  listOfStores.find((o: Store) => o.storeID === game.storeID)?.[
+                    'storeName'
+                  ]
+                }
+              </p>
+            </GameCardDescription>
+          </GameCardHeader>
           <GameCardSocial>
             <UpvoteButton />
-            0
             <DownvoteButton />
             <CommentButton />
             <WishlistButton />
           </GameCardSocial>
-        </GameCardHeader>
-        <GameCardContent1>
-          <p className='line-through text-slate-500 text-xs'>${game.normalPrice}</p>
-           <p className='text-lg font-bold'>${game.salePrice} USD</p> 
-           <Badge>-{formatPercentage(game.savings)}</Badge>
-        </GameCardContent1>
-        <GameCardContent2>
-          <p>{game.steamRatingCount} votes</p>
-          <p>{game.steamRatingPercent}%</p>
-          <p>{game.steamRatingText} rating</p>
-        </GameCardContent2>
-        <GameCardContent3>
-          <p>Deal rating: {game.dealRating}</p>
-        </GameCardContent3>
-        <GameCardContent4>
-          <Button variant={'default'}  asChild>
-            <Link to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}>Store</Link>
-          </Button>
-        </GameCardContent4>
-      </GameCard>
-    )}
+          <GameCardContent1>
+            <p className="">${game.salePrice} USD</p>
+            <p className="line-through text-slate-500">${game.normalPrice}</p>
+            <Badge>-{formatPercentage(game.savings)}</Badge>
+          </GameCardContent1>
+          {/* <GameCardContent2>
+            <p>{game.steamRatingCount} votes</p>
+            <p>{game.steamRatingPercent}%</p>
+            <p>{game.steamRatingText} rating</p>
+          </GameCardContent2>
+          <GameCardContent3>
+            <p>Deal rating: {game.dealRating}</p>
+          </GameCardContent3>
+          <GameCardContent4>
+            <Button variant={'default'} asChild>
+              <Link
+                to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}
+              >
+                Store
+              </Link>
+            </Button>
+          </GameCardContent4> */}
+        </GameCard>
+      ))}
       {/* {listOfDeals.map((game: dealsList, index: number) => (
         <Card
           // theme={theme}

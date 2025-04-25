@@ -7,33 +7,48 @@ interface GameCardProps extends React.HTMLAttributes<HTMLAnchorElement> {
   gameId?: string;
 }
 
-const GameCard = React.forwardRef<
-HTMLAnchorElement,
-GameCardProps
->(({ className, gameId, ...props }, ref) => (
-  <Link
-  to={`/games/${gameId}`}
-  onClick={() => console.log('card')}
-  ref={ref}
-  className={cn(
-      'grid h-32 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4 hover:bg-secondary/40 transition-colors',
-      className
-    )}
-    {...props}
+const GameCard = React.forwardRef<HTMLAnchorElement, GameCardProps>(
+  ({ className, gameId, ...props }, ref) => (
+    <Link
+      to={`/games/${gameId}`}
+      onClick={() => console.log('card')}
+      ref={ref}
+      className={cn(
+        'grid h-36 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4 hover:bg-secondary/40 transition-colors overflow-visible',
+        className
+      )}
+      {...props}
     />
-));
+  )
+);
 GameCard.displayName = 'GameCard';
 
 const GameCardImage = React.forwardRef<
   HTMLImageElement,
   React.ImgHTMLAttributes<HTMLImageElement>
->(({ className, alt, ...props}, ref) => (
-  <div className="relative col-span-1 row-span-4 md:row-span-4">
-    <img ref={ref} alt={alt} className={cn("absolute inset-0 m-auto z-[1] object-contain h-[80%] w-[90%] overflow-hidden", className)} {...props} />
-    <img ref={ref} alt={alt} className={cn("absolute inset-0 m-auto h-[75%] w-[75%] overflow-hidden blur-sm", className)} {...props} />
+>(({ className, alt, ...props }, ref) => (
+  <div className="relative col-start-1 col-span-1 row-span-4 md:row-span-4">
+    <img
+      ref={ref}
+      alt={alt}
+      className={cn(
+        'absolute inset-0 m-auto z-[1] object-contain h-[80%] w-[90%] overflow-hidden',
+        className
+      )}
+      {...props}
+    />
+    <img
+      ref={ref}
+      alt={alt}
+      className={cn(
+        'absolute inset-0 m-auto h-[75%] w-[75%] overflow-hidden blur-sm',
+        className
+      )}
+      {...props}
+    />
   </div>
 ));
-GameCardImage.displayName = "CardImage";
+GameCardImage.displayName = 'CardImage';
 
 const GameCardHeader = React.forwardRef<
   HTMLDivElement,
@@ -41,7 +56,10 @@ const GameCardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex flex-col col-span-2 row-span-2 m-4 gap-1', className)}
+    className={cn(
+      'flex flex-col col-start-2 col-span-2 row-start-1 row-span-2 gap-1',
+      className
+    )}
     {...props}
   />
 ));
@@ -53,7 +71,7 @@ const GameCardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('font-semibold leading-none tracking-tight', className)}
+    className={cn('font-semibold truncate', className)}
     {...props}
   />
 ));
@@ -65,7 +83,7 @@ const GameCardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex gap-1 flex-row text-muted-foreground', className)}
+    className={cn('flex items-center gap-1 text-muted-foreground', className)}
     {...props}
   />
 ));
@@ -77,7 +95,10 @@ const GameCardSocial = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('m-2 col-span-2 row-start-3 row-end-4 row-span-4', className)}
+    className={cn(
+      'flex items-end col-start-1 col-span-2 row-start-5 md:col-start-2 md:col-span-3 md:row-start-4 p-1',
+      className
+    )}
     {...props}
   />
 ));
@@ -87,7 +108,14 @@ const GameCardContent1 = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('m-auto row-span-4', className)} {...props} />
+  <div
+    ref={ref}
+    className={cn(
+      'flex items-center gap-2 col-start-2 col-span-3 row-start-3',
+      className
+    )}
+    {...props}
+  />
 ));
 GameCardContent1.displayName = 'GameCardContent1';
 
@@ -132,12 +160,14 @@ const GameCardContent4 = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('m-auto gap-4 flex flex-col col-start-4 col-span-1 row-span-5 md:col-start-7 md:col-span-1 md:row-span-4', className)}    {...props}
+    className={cn(
+      'm-auto gap-4 flex flex-col col-start-4 col-span-1 row-span-5 md:col-start-7 md:col-span-1 md:row-span-4',
+      className
+    )}
+    {...props}
   />
 ));
 GameCardContent4.displayName = 'GameCardContent4';
-
-
 
 export {
   GameCard,
