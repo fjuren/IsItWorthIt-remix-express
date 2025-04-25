@@ -1,5 +1,6 @@
 import { LoaderFunctionArgs, MetaFunction, useLoaderData } from 'react-router';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
+import { gameLookupResponse } from '~/types/gameLookup';
 import { invariantResponse } from '~/utils/misc';
 // import { useOptionalUser } from '~/utils/user';
 
@@ -18,32 +19,13 @@ export const meta: MetaFunction<typeof loader> = () => {
     ];
   };
 
-  interface gameLookupTypes {
-    info: {
-      title: string;
-      steamAppID: string;
-      thumb: string;
-    };
-    cheapestPriceEver: {
-      price: string;
-      date: number;
-    };
-    deals: Array<{
-      storeID: string;
-      dealID: string;
-      price: string;
-      retailPrice: string;
-      savings: string;
-    }>;
-  }
-
   export async function loader({ params }: LoaderFunctionArgs) {
 
     const gameData = await fetch(
       `https://www.cheapshark.com/api/1.0/games?id=${params.gameID}`,
       requestOptions
     )
-    const gameDataJson: gameLookupTypes = await gameData.json();
+    const gameDataJson: gameLookupResponse = await gameData.json();
   
     // throw new Error('Component error');
     invariantResponse(gameDataJson, `Game information not found`, { status: 404 });
