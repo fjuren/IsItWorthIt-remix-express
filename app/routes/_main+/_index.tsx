@@ -32,7 +32,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-interface dealsList {
+interface Deal {
   internalName: string;
   title: string;
   metacriticLink: string;
@@ -53,8 +53,9 @@ interface dealsList {
   dealRating: string;
   thumb: string;
 }
+type DealsList = Deal[];
 
-interface storeList {
+interface Store {
   storeID: string;
   storeName: string;
   isActive: number;
@@ -64,6 +65,8 @@ interface storeList {
     icon: string
   }
 }
+
+type StoreList  = Store[]
 
 const requestOptions = {
   method: 'GET',
@@ -79,8 +82,8 @@ export async function loader() {
     'https://www.cheapshark.com/api/1.0/stores',
     requestOptions
   )
-  const listOfDeals = await gamesList.json();
-  const listOfStores = await storeList.json();
+  const listOfDeals: DealsList = await gamesList.json();
+  const listOfStores: StoreList = await storeList.json();
 
   return { listOfDeals, listOfStores };
 }
@@ -94,15 +97,15 @@ export default function HomeRoute() {
   // const theme: string = useOutletContext(); TODO determine if I still need theme
   return (
     <>
-    {listOfDeals.map((game: dealsList, index: number) =>
-      <GameCard key={index}>
+    {listOfDeals.map((game: Deal, index: number) =>
+      <GameCard key={index} gameId={game.gameID}>
           <GameCardImage src={game.thumb} alt={`${game.title} image`}>
           </GameCardImage>
         <GameCardHeader>
           <GameCardTitle>{game.title}</GameCardTitle>
           <GameCardDescription>
-          <img className='' src={`https://www.cheapshark.com${listOfStores.find((o: storeList) => o.storeID === game.storeID)["images"]["icon"]}`} alt={`${listOfStores.find((o: storeList) => o.storeID === game.storeID)["storeName"]}'s logo`} />
-          <p>{listOfStores.find((o: storeList) => o.storeID === game.storeID)["storeName"]}</p>
+          <img className='' src={`https://www.cheapshark.com${listOfStores.find((o: Store) => o.storeID === game.storeID)?.["images"]["icon"]}`} alt={`${listOfStores.find((o: Store) => o.storeID === game.storeID)?.["storeName"]}'s logo`} />
+          <p>{listOfStores.find((o: Store) => o.storeID === game.storeID)?.["storeName"]}</p>
           </GameCardDescription>
           <GameCardSocial>
             <UpvoteButton />
@@ -129,8 +132,6 @@ export default function HomeRoute() {
           <Button variant={'default'}  asChild>
             <Link to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}>Store</Link>
           </Button>
-          <Button variant={'outline'} onClick={() => {alert(`Detials page for ${game.title} not available yet. \nCome back again later!`)}}>
-            <Link to=''>Details</Link></Button>
         </GameCardContent4>
       </GameCard>
     )}

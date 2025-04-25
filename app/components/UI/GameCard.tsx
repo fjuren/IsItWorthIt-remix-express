@@ -1,19 +1,26 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 
 import { cn } from '~/lib/utils';
 
+interface GameCardProps extends React.HTMLAttributes<HTMLAnchorElement> {
+  gameId?: string;
+}
+
 const GameCard = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      'grid h-32 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4',
+HTMLAnchorElement,
+GameCardProps
+>(({ className, gameId, ...props }, ref) => (
+  <Link
+  to={`/games/${gameId}`}
+  onClick={() => console.log('card')}
+  ref={ref}
+  className={cn(
+      'grid h-32 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4 hover:bg-secondary/40 transition-colors',
       className
     )}
     {...props}
-  />
+    />
 ));
 GameCard.displayName = 'GameCard';
 

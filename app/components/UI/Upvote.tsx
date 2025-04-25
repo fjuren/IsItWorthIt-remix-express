@@ -20,6 +20,11 @@ export function UpvoteButton({
         variant={variant}
         size={size}
         className={cn("relative", className)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation(); // Stops the event from bubbling up to the gamecard
+          console.log('Upvote');
+        }}
         {...props}
       >
         <ThumbsUp className={cn(
