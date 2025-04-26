@@ -137,7 +137,7 @@ const GameCardContent3 = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('m-4 row-span-4 hidden md:block', className)}
+    className={cn('col-start-4 row-start-1 md:col-start-5', className)}
     {...props}
   />
 ));
@@ -161,7 +161,7 @@ const GameCardContent4 = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'm-auto gap-4 flex flex-col col-start-4 col-span-1 row-span-5 md:col-start-7 md:col-span-1 md:row-span-4',
+      'flex flex-col col-start-4 row-start-4 md:col-start-6 md:row-start-4',
       className
     )}
     {...props}
