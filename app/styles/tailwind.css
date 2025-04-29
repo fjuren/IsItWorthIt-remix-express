@@ -167,7 +167,7 @@
   }
 
   p {
-    font-size: small;
+    font-size: text-sm;
     @apply tracking-tight leading-relaxed;
   }
 }
