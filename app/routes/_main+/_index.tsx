@@ -34,7 +34,7 @@ import { getFormProps, useForm } from '@conform-to/react';
 import { z } from 'zod';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
 import { FormOrFieldErrorsList } from '~/utils/misc';
-import { FilterGames } from '~/components/UI/Dialog';
+import { FilterGameDialog, FilterStoreDialog } from '~/components/UI/Dialog';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -200,7 +200,7 @@ export default function HomeRoute() {
 
   // initialGames will be set to either regular games or searched games
   const [gameDeals, setGameDeals] = useState<Deals>(initialGames);
-  console.log('gameDeals: ', gameDeals);
+  console.log('gameDeals: ', gameDeals[0]);
   const [hasMore, setHasMore] = useState(initHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -314,7 +314,7 @@ export default function HomeRoute() {
         </Form>
       </div>
       <div>
-        <FilterGames />
+        <FilterStoreDialog stores={stores}/>
       </div>
       {gameDeals.length > 0 ? (
         gameDeals.map((game: Deal, index: number) => {

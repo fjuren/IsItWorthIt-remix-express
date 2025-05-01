@@ -39,7 +39,7 @@ import { useRef, type ElementRef } from 'react';
 export function CheckboxConform({
   meta,
 }: {
-  meta: FieldMetadata<string | boolean | undefined>;
+  meta: FieldMetadata<string | boolean | number | undefined>;
 }) {
   const checkboxRef = useRef<ElementRef<typeof Checkbox>>(null);
   const control = useControl(meta);

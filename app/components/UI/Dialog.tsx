@@ -129,32 +129,61 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName;
 import { Button } from './Button';
 import { Label } from './Label';
 import { Checkbox } from './Checkbox';
-import { Form, LoaderFunctionArgs } from 'react-router-dom';
-import { getFormProps, useForm } from '@conform-to/react';
+import { Form, useSearchParams  } from 'react-router-dom';
+import { useForm } from '@conform-to/react';
+import { getZodConstraint, parseWithZod } from '@conform-to/zod';
+import { z } from 'zod';
+import { Stores } from '~/types/store';
+import { useState } from 'react';
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const url = new URL(request.url);
-  // const category = url.searchParams.getAll('category');
-  console.log(url.searchParams);
+
+// Define the schema for our filter form
+const StoreFilterSchema = z.object({
+  storeIDs: z.array(z.string()).default([]),
+});
+
+
+interface FilterStoreDialogProps {
+  stores: Stores;
 }
 
-export function FilterGames() {
-  const [form] = useForm({
-    id: 'filter',
-    defaultValue: {},
-    // constraint: getZodConstraint(LoginSchema),
-    // lastResult: lastResult?.result,
-    // onValidate({ formData }) {
-    //   return parseWithZod(formData, { schema: LoginSchema });
-    // },
+export function FilterStoreDialog({ stores }: FilterStoreDialogProps) {
+  const [searchParams] = useSearchParams();
+  
+  // Get initial store IDs from URL
+  const initialStoreIDs = searchParams.getAll("storeIDs");
+  
+  // Tracks local state/checkbox selection. Required in order to see ShadCN checkbox component UI updates on clicked
+  const [selectedStoreIDs, setSelectedStoreIDs] = useState<string[]>(initialStoreIDs);
+  
+  const [form, fields] = useForm({
+    id: "store-filter",
+    defaultValue: {
+      storeIDs: initialStoreIDs,
+    },
+    constraint: getZodConstraint(StoreFilterSchema),
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: StoreFilterSchema });
+    },
   });
+
+  // Filter only active stores since API includes stores marked as inactive
+  const activeStores = stores.filter(store => store.isActive === 1);
+
+  // Toggle store selection; This is to handle checkmark state and tell shadcn that its checkbox was clicked. Otherwise the checkbox UI won't change; the input field is only 'clicked' .
+  const toggleStore = (storeID: string) => {
+    setSelectedStoreIDs(prev => 
+      prev.includes(storeID)
+        ? prev.filter(id => id !== storeID)
+        : [...prev, storeID]
+    );
+  };
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
+          <DialogTrigger asChild>
         <Button variant="outline">Filter</Button>
       </DialogTrigger>
-      <Form method="GET" {...getFormProps(form)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Filter</DialogTitle>
@@ -162,110 +191,51 @@ export function FilterGames() {
               Modify your search results. Click save when you&apos;re done
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-4 py-4">
-              <h5 className="text-left">Price</h5>
-              <div className="flex items-center gap-1">
-                <Label htmlFor="steamworks">Add price range component</Label>
+          <Form method="get" id={form.id} onSubmit={form.onSubmit}>
+      <fieldset>
+        <legend className="text-md font-medium">Stores</legend>
+        <div className="space-y-2 mt-2">
+          {/* Handles hidden inputs for all selected store IDs*/}
+          {/* Why? According to docs: Shadcn's Checkbox component doesn't automatically sync its internal state with the native checkbox — and clicking the label triggers the native input (which is visually hidden), not the Shadcn one */}
+          {selectedStoreIDs.map(storeID => (
+            <input 
+              key={storeID}
+              type="hidden" 
+              name={fields.storeIDs.name} 
+              value={storeID} 
+            />
+          ))}
+          
+          {activeStores.map((store) => {
+            const isChecked = selectedStoreIDs.includes(store.storeID);
+            
+            return (
+              <div key={store.storeID} className="flex items-center space-x-2">
+                <Checkbox
+                  checked={isChecked}
+                  onCheckedChange={() => toggleStore(store.storeID)}
+                  id={`store-checkbox-${store.storeID}`}
+                />
+                <Label 
+                  htmlFor={`store-checkbox-${store.storeID}`}
+                  onClick={() => toggleStore(store.storeID)} // Also toggle on label click
+                  className="cursor-pointer"
+                >
+                  {store.storeName}
+                </Label>
               </div>
-            </div>
-
-            <div className="grid gap-4 py-4">
-              <h5 className="text-left">On Sale</h5>
-              <div className="flex items-center gap-1">
-                <Checkbox id="on-sale" />
-                <Label htmlFor="on-sale">Only Show Discounts</Label>
-              </div>
-            </div>
-
-            <div className="grid gap-4 py-4">
-              <h5 className="text-left">Stores</h5>
-              <div className="flex items-center gap-1">
-                <Checkbox id="steam" />
-                <Label htmlFor="steam">Steam</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="gamersgate" />
-                <Label htmlFor="gamersgate">GamersGate</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="greenmangaming" />
-                <Label htmlFor="greenmangaming">GreenManGaming</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="gog" />
-                <Label htmlFor="gog">GOG</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="humble-store" />
-                <Label htmlFor="humble-store">Humble Store</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="uplay" />
-                <Label htmlFor="uplay">Uplay</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="fanatical" />
-                <Label htmlFor="fanatical">Fanatical</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="wingamestore" />
-                <Label htmlFor="wingamestore">WinGameStore</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="gamebillet" />
-                <Label htmlFor="gamebillet">GameBillet</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="voidu" />
-                <Label htmlFor="voidu">Voidu</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="epic-games-store" />
-                <Label htmlFor="epic-games-store">Epic Games Store</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="gamesplanet" />
-                <Label htmlFor="gamesplanet">Gamesplanet</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="gamesload" />
-                <Label htmlFor="gamesload">Gamesload</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="2game" />
-                <Label htmlFor="2game">2Game</Label>
-              </div>
-              <div className="flex items-center gap-1">
-                <Checkbox id="indiegala" />
-                <Label htmlFor="indiegala">IndieGala</Label>
-              </div>
-            </div>
-
-            <div className="grid gap-4 py-4">
-              <h5 className="text-left">Steamworks</h5>
-              <div className="flex items-center gap-1">
-                <Checkbox id="steamworks" />
-                <Label htmlFor="steamworks">Requires Steam</Label>
-              </div>
-            </div>
-
-            <div className="grid gap-4 py-4">
-              <h5 className="text-left">AAA Titles</h5>
-              <div className="flex items-center gap-1">
-                <Checkbox id="aaa" />
-                <Label htmlFor="aaa">Only AAA</Label>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="submit" name="intent" value="filter">
-              Save changes
-            </Button>
-          </DialogFooter>
+            );
+          })}
+        </div>
+      </fieldset>
+            <DialogFooter>
+            <Button type="submit" className="mt-4">
+        Apply Filters
+      </Button>
+            </DialogFooter>
+    </Form>
         </DialogContent>
-      </Form>
     </Dialog>
+
   );
 }
