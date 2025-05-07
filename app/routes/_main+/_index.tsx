@@ -197,7 +197,6 @@ export async function action({ request }: ActionFunctionArgs) {
   // console.log('action formdata', formData)
   const PAGE_NUM = parseInt(formData.get('pageNumber') as string) || 0;
   const PAGE_SIZE = parseInt(formData.get('pageSize') as string) || 60;
-  const searchGameTitle = formData.get('gameTitle') as string;
 
   const url = new URL(request.url);
   // game keyword queried
@@ -216,16 +215,6 @@ export async function action({ request }: ActionFunctionArgs) {
   // create url to check whether user uses search
 
   const gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter);
-
-
-  // let gameDeals;
-  // if (searchGameTitle) {
-  //   // fetch games per search search game title
-  //   gameDeals = await fetchGameCheapShark(searchGameTitle, PAGE_NUM, PAGE_SIZE);
-  // } else {
-  //   // fetch regular deal list
-  //   gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE);
-  // }
 
   return { gameDeals, hasMore: gameDeals.length === PAGE_SIZE };
 }
