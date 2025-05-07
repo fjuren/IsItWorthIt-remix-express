@@ -36,11 +36,11 @@ export function DialogCheckboxFilters({ stores }: FilterStoreDialogProps) {
   // Get initial params from URL
   const initMinPrice = searchParams.get(filterOptions.lowerPrice) ?? "0";
   const initMaxPrice = searchParams.get(filterOptions.upperPrice) ?? "300";
-  const initRecentSales = searchParams.get(filterOptions.recentSales) ?? "2500";
+  const initRecentSales = searchParams.get(filterOptions.maxAge) ?? "2500";
   const initSteamRatings = searchParams.get(filterOptions.steamRating) ?? "0";
   const initMetacritic = searchParams.get(filterOptions.metacritic) ?? "0";
   const initOnlyGameSales = searchParams.get(filterOptions.onlyGameSales);
-  const iniSteamWorks = searchParams.get(filterOptions.steamworks);
+  // const iniSteamWorks = searchParams.get(filterOptions.steamworks);
   const initstoreID = searchParams.getAll(filterOptions.storeID);
   const initAAA = searchParams.get(filterOptions.AAA);
 
@@ -53,7 +53,7 @@ const [steamRatings, setSteamRatings] = useState<string>(initSteamRatings);
 const [metacriticRatings, setMetacriticRatings] = useState<string>(initMetacritic);
 
 const [gameSales, setGameSales] = useState<string | null>(initOnlyGameSales);
-const [steamWorks, setSteamWorks] = useState<string | null>(iniSteamWorks);
+// const [steamWorks, setSteamWorks] = useState<string | null>(iniSteamWorks);
 const [storeIDs, setStoreIDs] = useState<string[]>(initstoreID);
 const [AAA, setAAA] = useState<string | null>(initAAA);
 
@@ -189,8 +189,10 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
             <legend className="text-md font-medium">Stores</legend>
             
             {/* Only redeemable on Steam */}
-            <div className="space-y-2 mt-2">
-                {/* note: cheap shark booleans are 0 & 1 */}
+            {/* ------------ */}
+            {/* NOTE: Leaving steamworks out for now due to reliability of data. From api author: "that particular flag is available on the request, but doesn't show in response. Mostly because it is more a "best guess" and not very reliable" */}
+            {/* ------------ */}
+            {/* <div className="space-y-2 mt-2">
                 {steamWorks === "1" && <input type='hidden' name='steamworks' value={1} />}
                 <div className="flex items-center space-x-2">
                     <Checkbox id='steamworks' checked={steamWorks === "1"} onCheckedChange={() => setSteamWorks((prev) => prev === null ? "1" : null)}/>
@@ -200,7 +202,7 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
                     >Only redeemable on Steam (turn into switch?)</Label>
                     <span className='text-sm italic'>Only shows games that include a Steam key</span>
                 </div>
-            </div>
+            </div> */}
 
             {/* Store filters */}
             <div className="space-y-2 mt-2">

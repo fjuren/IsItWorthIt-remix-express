@@ -11,7 +11,7 @@ export interface InputProps
 }
 
 const InputWithIcon = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, startIcon, endIcon, ...props }, ref) => {
+  ({ className,type, startIcon, endIcon, defaultValue,  ...props }, ref) => {
     const StartIcon = startIcon;
     const EndIcon = endIcon;
 
@@ -32,6 +32,7 @@ const InputWithIcon = React.forwardRef<HTMLInputElement, InputProps>(
             className
           )}
           ref={ref}
+          defaultValue={defaultValue}
           {...props}
         />
         {EndIcon && (

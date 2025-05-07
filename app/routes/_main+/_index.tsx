@@ -5,6 +5,7 @@ import {
   MetaFunction,
   useFetcher,
   useLocation,
+  useNavigate,
   useSearchParams,
 } from 'react-router';
 import { useLoaderData, Link, Form } from 'react-router-dom';
@@ -170,17 +171,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const lowerPriceFilter = url.searchParams.get(filterOptions.lowerPrice) || '';
   const upperPriceFilter = url.searchParams.get(filterOptions.upperPrice) || '';
   const onSaleFilter = url.searchParams.get(filterOptions.onlyGameSales) || '';
-  const maxAgeFilter = url.searchParams.get(filterOptions.recentSales) || '';
+  const maxAgeFilter = url.searchParams.get(filterOptions.maxAge) || '';
   const metacriticFilter = url.searchParams.get(filterOptions.metacritic) || '';
   const steamRatingFilter = url.searchParams.get(filterOptions.steamRating) || '';
-  const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
+  // const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
   const aaaFilter = url.searchParams.get(filterOptions.AAA) || '';
 
   // create url to check whether user uses search
 
-  const gameDeals = await fetchDealsCheapShark(INITIAL_PAGE, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, steamworksFilter, aaaFilter);
-  console.log(lowerPriceFilter)
-  // console.log('gameDeals loaded: ', gameDeals[0]);
+  const gameDeals = await fetchDealsCheapShark(INITIAL_PAGE, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter);
 
   const stores = await fetchStoresCheapShark();
 
@@ -199,29 +198,46 @@ export async function action({ request }: ActionFunctionArgs) {
   const PAGE_NUM = parseInt(formData.get('pageNumber') as string) || 0;
   const PAGE_SIZE = parseInt(formData.get('pageSize') as string) || 60;
   const searchGameTitle = formData.get('gameTitle') as string;
-  const storeFilters = formData.getAll('storeID')
 
-  let gameDeals;
-  if (searchGameTitle) {
-    // fetch games per search search game title
-    gameDeals = await fetchGameCheapShark(searchGameTitle, PAGE_NUM, PAGE_SIZE);
-  } else {
-    // fetch regular deal list
-    gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE);
-  }
+  const url = new URL(request.url);
+  // game keyword queried
+  const gameTitleSearch = url.searchParams.get(gameTitle) || '';
+  // filtered options
+  const storeIDFilter = (url.searchParams.getAll(filterOptions.storeID) || ['']).join(',');
+  const lowerPriceFilter = url.searchParams.get(filterOptions.lowerPrice) || '';
+  const upperPriceFilter = url.searchParams.get(filterOptions.upperPrice) || '';
+  const onSaleFilter = url.searchParams.get(filterOptions.onlyGameSales) || '';
+  const maxAgeFilter = url.searchParams.get(filterOptions.maxAge) || '';
+  const metacriticFilter = url.searchParams.get(filterOptions.metacritic) || '';
+  const steamRatingFilter = url.searchParams.get(filterOptions.steamRating) || '';
+  // const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
+  const aaaFilter = url.searchParams.get(filterOptions.AAA) || '';
+
+  // create url to check whether user uses search
+
+  const gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter);
+
+
+  // let gameDeals;
+  // if (searchGameTitle) {
+  //   // fetch games per search search game title
+  //   gameDeals = await fetchGameCheapShark(searchGameTitle, PAGE_NUM, PAGE_SIZE);
+  // } else {
+  //   // fetch regular deal list
+  //   gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE);
+  // }
 
   return { gameDeals, hasMore: gameDeals.length === PAGE_SIZE };
 }
 
 export default function HomeRoute() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate()
   const {
     initialGames,
     stores,
     hasMore: initHasMore,
   } = useLoaderData<typeof loader>();
-
-  // console.log('initialGames', initialGames[0]);
 
   // initialGames will be set to either regular games or searched games
   const [gameDeals, setGameDeals] = useState<Deals>(initialGames);
@@ -317,6 +333,19 @@ export default function HomeRoute() {
     },
   });
 
+
+  function resetInputs(inputType: 'filter' | 'search') {
+    const params = new URLSearchParams(location.search);
+    if (inputType === 'search') {
+      params.delete('gameTitle')
+    } else if (inputType === 'filter') {
+      for (const k in filterOptions) {
+        params.delete(k)
+      }
+    }
+    navigate(`?${params.toString()}`)
+  }
+
   return (
     <>
       <h1 className="font-bold text-center text-4xl m-0">
@@ -326,10 +355,12 @@ export default function HomeRoute() {
       <div>
         <Form method="GET" {...getFormProps(form)} className="flex gap-2">
           <InputWithIcon
+            key={searchParams.get('gameTitle') ?? 'empty'} // forces re-render (remix prevents re-render which would prevent the defaultValue from working when reseting search)
             startIcon={Search}
             name="gameTitle"
             type="search"
             placeholder="Search game title"
+            defaultValue={searchParams.get('gameTitle') ?? ''}
           />
           <Button type="submit" variant={'secondary'}>
             Search
@@ -341,9 +372,11 @@ export default function HomeRoute() {
             handleSearchParams(searchParams, [gameTitle])
           }
         </Form>
+          <Button variant={"link"} onClick={() => {resetInputs('search')}}>Reset search</Button>
       </div>
       <div>
         <DialogCheckboxFilters stores={stores}/>
+        <Button variant={"link"} onClick={() => {resetInputs('filter')}}>Clear filters</Button>
       </div>
       {gameDeals.length > 0 ? (
         gameDeals.map((game: Deal, index: number) => {

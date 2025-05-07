@@ -24,11 +24,11 @@ export const gameTitle = 'gameTitle'
 export const filterOptions = {
     lowerPrice: 'lowerPrice',
     upperPrice: 'upperPrice',
-    recentSales: 'maxAge',
+    maxAge: 'maxAge',
     steamRating: 'steamRating',
     metacritic: 'metacritic',
     onlyGameSales: 'onlyGameSales',
-    steamworks: 'steamworks',
+    // steamworks: 'steamworks',
     storeID: 'storeID',
     AAA: 'AAA'
   };
