@@ -118,128 +118,13 @@ const DialogDescription = React.forwardRef<
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
-// export {
-//   Dialog,
-//   DialogTrigger,
-//   DialogContent,
-//   DialogHeader,
-//   DialogFooter,
-//   DialogTitle,
-//   DialogDescription,
-// };
-
-import { Button } from './Button';
-import { Label } from './Label';
-import { Checkbox } from './Checkbox';
-import { Form, useSearchParams } from 'react-router-dom';
-import { useForm } from '@conform-to/react';
-import { getZodConstraint, parseWithZod } from '@conform-to/zod';
-import { z } from 'zod';
-import { Stores } from '~/types/store';
-import { useState } from 'react';
-
-// Define the schema for our filter form
-const StoreFilterSchema = z.object({
-  storeIDs: z.array(z.string()).default([]),
-});
-
-interface FilterStoreDialogProps {
-  stores: Stores;
-}
-
-export function FilterStoreDialog({ stores }: FilterStoreDialogProps) {
-  const [searchParams] = useSearchParams();
-
-  // Get initial store IDs from URL
-  const initialStoreIDs = searchParams.getAll('storeIDs');
-
-  // Tracks local state/checkbox selection. Required in order to see ShadCN checkbox component UI updates on clicked
-  const [selectedStoreIDs, setSelectedStoreIDs] =
-    useState<string[]>(initialStoreIDs);
-
-  const [form, fields] = useForm({
-    id: 'store-filter',
-    defaultValue: {
-      storeIDs: initialStoreIDs,
-    },
-    constraint: getZodConstraint(StoreFilterSchema),
-    onValidate({ formData }) {
-      return parseWithZod(formData, { schema: StoreFilterSchema });
-    },
-  });
-
-  // Filter only active stores since API includes stores marked as inactive
-  const activeStores = stores.filter((store) => store.isActive === 1);
-
-  // Toggle store selection; This is to handle checkmark state and tell shadcn that its checkbox was clicked. Otherwise the checkbox UI won't change; the input field is only 'clicked' .
-  const toggleStore = (storeID: string) => {
-    setSelectedStoreIDs((prev) =>
-      prev.includes(storeID)
-        ? prev.filter((id) => id !== storeID)
-        : [...prev, storeID]
-    );
-  };
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Filter</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Filter</DialogTitle>
-          <DialogDescription>
-            Modify your search results. Click save when you&apos;re done
-          </DialogDescription>
-        </DialogHeader>
-        <Form method="get" id={form.id} onSubmit={form.onSubmit}>
-          <fieldset>
-            <legend className="text-md font-medium">Stores</legend>
-            <div className="space-y-2 mt-2">
-              {/* Handles hidden inputs for all selected store IDs*/}
-              {/* Why? According to docs: Shadcn's Checkbox component doesn't automatically sync its internal state with the native checkbox — and clicking the label triggers the native input (which is visually hidden), not the Shadcn one */}
-              {selectedStoreIDs.map((storeID) => (
-                <input
-                  key={storeID}
-                  type="hidden"
-                  name={fields.storeIDs.name}
-                  value={storeID}
-                />
-              ))}
-
-              {activeStores.map((store) => {
-                const isChecked = selectedStoreIDs.includes(store.storeID);
-
-                return (
-                  <div
-                    key={store.storeID}
-                    className="flex items-center space-x-2"
-                  >
-                    <Checkbox
-                      checked={isChecked}
-                      onCheckedChange={() => toggleStore(store.storeID)}
-                      id={`store-checkbox-${store.storeID}`}
-                    />
-                    <Label
-                      htmlFor={`store-checkbox-${store.storeID}`}
-                      className="cursor-pointer"
-                    >
-                      {store.storeName}
-                    </Label>
-                  </div>
-                );
-              })}
-            </div>
-          </fieldset>
-          <DialogFooter>
-            <DialogClose>
-              <Button type="submit" className="mt-4">
-                Apply Filters
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+export {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose
+};

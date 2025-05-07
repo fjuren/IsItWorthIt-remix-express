@@ -16,3 +16,20 @@ export const changeEmailType = 'change-email';
 export const codeSearchParams = 'code';
 export const typeSearchParams = 'type';
 export const targetSearchParams = 'target';
+
+// game search params
+export const gameTitle = 'gameTitle'
+
+// Filter search params
+export const filterOptions = {
+    lowerPrice: 'lowerPrice',
+    upperPrice: 'upperPrice',
+    recentSales: 'maxAge',
+    steamRating: 'steamRating',
+    metacritic: 'metacritic',
+    onlyGameSales: 'onlyGameSales',
+    steamworks: 'steamworks',
+    storeID: 'storeID',
+    AAA: 'AAA'
+  };
+  

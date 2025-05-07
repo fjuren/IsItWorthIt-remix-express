@@ -92,3 +92,19 @@ export function capitalizeFirstLetter(word: string) {
   if (word.length === 0) return word;
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
+
+// excludedParmakey = params that are part of the regular form submission; includedParamkey = params you wish to keep on form submit 
+export function handleSearchParams(
+  searchParams: URLSearchParams,
+  excludedParamKey?: string | string[]
+) {
+  const excludedKeys = Array.isArray(excludedParamKey)
+    ? excludedParamKey
+    : excludedParamKey ? [excludedParamKey] : [];
+
+  return Array.from(searchParams.entries())
+    .filter(([k]) => !excludedKeys.includes(k))
+    .map(([k, v]) => (
+      <input key={k} type="hidden" name={k} value={v} />
+    ));
+}

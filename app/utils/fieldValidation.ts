@@ -69,3 +69,16 @@ export const verifySchema = z.object({
   [typeSearchParams]: z.string(),
   redirectTo: z.string().optional(),
 });
+
+export const SearchSchema = z.object({
+  gameTitle: z.string({ required_error: 'Please enter a game title' }),
+});
+
+export const GameFilterSchema = z.object({
+  minPrice: z.string().optional(),
+  maxPrice: z.string().optional(),
+  saleOnly: z.array(z.string()).default([]),
+  recentSales: z.array(z.string()).optional(),
+  steamworks: z.array(z.string()).default([]),
+  storeID: z.array(z.string()).default([]),
+});

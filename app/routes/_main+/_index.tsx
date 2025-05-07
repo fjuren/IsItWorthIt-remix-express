@@ -5,6 +5,7 @@ import {
   MetaFunction,
   useFetcher,
   useLocation,
+  useSearchParams,
 } from 'react-router';
 import { useLoaderData, Link, Form } from 'react-router-dom';
 import { Badge } from '~/components/UI/Badge';
@@ -33,8 +34,10 @@ import { Search } from 'lucide-react';
 import { getFormProps, useForm } from '@conform-to/react';
 import { z } from 'zod';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
-import { FormOrFieldErrorsList } from '~/utils/misc';
-import { FilterGameDialog, FilterStoreDialog } from '~/components/UI/Dialog';
+import { FormOrFieldErrorsList, handleSearchParams } from '~/utils/misc';
+import { SearchSchema } from '~/utils/fieldValidation';
+import { DialogCheckboxFilters } from '~/components/UI/DialogCheckboxFilters';
+import { gameTitle, filterOptions } from '~/utils/constants';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -51,9 +54,6 @@ function formatPercentage(value: string) {
   return `${Math.round(parseFloat(value))}%`;
 }
 
-const SearchSchema = z.object({
-  gameTitle: z.string({ required_error: 'Please enter a game title' }),
-});
 
 async function fetchStoresCheapShark(): Promise<Stores> {
   const requestOptions = {
@@ -80,14 +80,38 @@ async function fetchStoresCheapShark(): Promise<Stores> {
 
 async function fetchDealsCheapShark(
   pageNum: number,
-  pageSize: number
+  pageSize: number,
+  gameTitle?: string,
+  storeID?: string,
+  lowerPrice?: string,
+  upperPrice?: string,
+  onSale?: string,
+  maxAge?: string,
+  metacritic?: string,
+  steamRating?: string,
+  steamworks?: string,
+  AAA?: string
 ): Promise<Deals> {
   const requestOptions = {
     method: 'GET',
   };
 
+  // determines whether the respective filter is applied. If so, add it as a query param to the cheapshark api endpoint
+  const includeGameTitle = gameTitle ? `&title=${gameTitle}` : ''
+  const includeStoreID = storeID ? `&storeID=${storeID}` : ''
+  const includeLowerPrice = lowerPrice ? `&lowerPrice=${lowerPrice}` : '';
+  const includeUpperPrice = upperPrice ? `&upperPrice=${upperPrice}` : '';
+  const includeOnSale = onSale ? `&onSale=${onSale}` : '';
+  const includeMaxAge = maxAge ? `&maxAge=${maxAge}` : '';
+  const includeMetacritic = metacritic ? `&metacritic=${metacritic}` : '';
+  const includeSteamRating = steamRating ? `&steamRating=${steamRating}` : '';
+  const includeSteamworks = steamworks ? `&steamworks=${steamworks}` : '';
+  const includeAAA = AAA ? `&AAA=${AAA}` : '';
+
+console.log(includeSteamRating)
+
   const response = await fetch(
-    `https://www.cheapshark.com/api/1.0/deals?onSale=0&pageNumber=${pageNum}&pageSize=${pageSize}`,
+    `https://www.cheapshark.com/api/1.0/deals?pageNumber=${pageNum}&pageSize=${pageSize}${includeGameTitle}${includeStoreID}${includeLowerPrice}${includeUpperPrice}${includeOnSale}${includeMaxAge}${includeMetacritic}${includeSteamRating}${includeSteamworks}${includeAAA}`,
     requestOptions
   );
 
@@ -108,7 +132,8 @@ async function fetchDealsCheapShark(
 async function fetchGameCheapShark(
   gameTitle: string,
   pageNum: number,
-  pageSize: number
+  pageSize: number,
+  
 ): Promise<any> {
   const requestOptions = {
     method: 'GET',
@@ -137,26 +162,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const INITIAL_PAGE = 0;
   const PAGE_SIZE = 60;
 
-  let gameDeals;
+  const url = new URL(request.url);
+  // game keyword queried
+  const gameTitleSearch = url.searchParams.get(gameTitle) || '';
+  // filtered options
+  const storeIDFilter = (url.searchParams.getAll(filterOptions.storeID) || ['']).join(',');
+  const lowerPriceFilter = url.searchParams.get(filterOptions.lowerPrice) || '';
+  const upperPriceFilter = url.searchParams.get(filterOptions.upperPrice) || '';
+  const onSaleFilter = url.searchParams.get(filterOptions.onlyGameSales) || '';
+  const maxAgeFilter = url.searchParams.get(filterOptions.recentSales) || '';
+  const metacriticFilter = url.searchParams.get(filterOptions.metacritic) || '';
+  const steamRatingFilter = url.searchParams.get(filterOptions.steamRating) || '';
+  const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
+  const aaaFilter = url.searchParams.get(filterOptions.AAA) || '';
 
   // create url to check whether user uses search
-  const url = new URL(request.url);
-  if (url.search) {
-    // for search data
-    console.log(true);
-    // search min length is 1; url searchparams will not = null, only string
-    const gameTitleSearch = url.searchParams.get('gameTitle') || '';
-    console.log(url);
-    gameDeals = await fetchGameCheapShark(
-      gameTitleSearch,
-      INITIAL_PAGE,
-      PAGE_SIZE
-    );
-  } else {
-    gameDeals = await fetchDealsCheapShark(INITIAL_PAGE, PAGE_SIZE);
-  }
 
-  console.log('gameDeals loaded: ', gameDeals[0]);
+  const gameDeals = await fetchDealsCheapShark(INITIAL_PAGE, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, steamworksFilter, aaaFilter);
+  console.log(lowerPriceFilter)
+  // console.log('gameDeals loaded: ', gameDeals[0]);
 
   const stores = await fetchStoresCheapShark();
 
@@ -175,7 +199,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const PAGE_NUM = parseInt(formData.get('pageNumber') as string) || 0;
   const PAGE_SIZE = parseInt(formData.get('pageSize') as string) || 60;
   const searchGameTitle = formData.get('gameTitle') as string;
-  console.log('searchGameTitle', searchGameTitle);
+  const storeFilters = formData.getAll('storeID')
 
   let gameDeals;
   if (searchGameTitle) {
@@ -190,17 +214,18 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function HomeRoute() {
+  const [searchParams] = useSearchParams();
   const {
     initialGames,
     stores,
     hasMore: initHasMore,
   } = useLoaderData<typeof loader>();
 
-  console.log('initialGames', initialGames[0]);
+  // console.log('initialGames', initialGames[0]);
 
   // initialGames will be set to either regular games or searched games
   const [gameDeals, setGameDeals] = useState<Deals>(initialGames);
-  console.log('gameDeals: ', gameDeals[0]);
+  // console.log('gameDeals: ', gameDeals[0]);
   const [hasMore, setHasMore] = useState(initHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -294,9 +319,10 @@ export default function HomeRoute() {
 
   return (
     <>
-      <h1 className="font-bold text-center text-4xl">
+      <h1 className="font-bold text-center text-4xl m-0">
         Find games worth <br /> your while
       </h1>
+      <h5>(<em>At the right price</em>)</h5>
       <div>
         <Form method="GET" {...getFormProps(form)} className="flex gap-2">
           <InputWithIcon
@@ -311,10 +337,13 @@ export default function HomeRoute() {
           <div>
             <FormOrFieldErrorsList data={form.errors} errorID={form.errorId} />
           </div>
+          {
+            handleSearchParams(searchParams, [gameTitle])
+          }
         </Form>
       </div>
       <div>
-        <FilterStoreDialog stores={stores}/>
+        <DialogCheckboxFilters stores={stores}/>
       </div>
       {gameDeals.length > 0 ? (
         gameDeals.map((game: Deal, index: number) => {
@@ -374,6 +403,8 @@ export default function HomeRoute() {
             </GameCardContent2> */}
               <GameCardContent3>
                 <p>Deal rating: {game.dealRating}</p>
+                <p>Steam rating: {game.steamRatingPercent}%</p>
+                <p>Comes with steam key:%</p>
               </GameCardContent3>
               <GameCardContent4>
                 <Button className="z-10" variant={'default'} asChild>
