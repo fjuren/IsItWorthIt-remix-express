@@ -10,7 +10,7 @@ assignees: ''
 ## ✨ Description
 
 ## 📚 Context (why is this needed?)
-Why is this feature needed? What problem does it solve, or what value does it add?
+What problem does it solve?
 
 ## ✅ Acceptance Criteria
 
@@ -19,4 +19,4 @@ Why is this feature needed? What problem does it solve, or what value does it ad
 
 ## 🖼️ Mockups / Examples (Optional) 
 
-## 🔗 Related issues / links (Optional) 
+## 🔗 Related issues / links (Optional)
