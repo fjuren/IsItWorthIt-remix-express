@@ -39,6 +39,7 @@ import { FormOrFieldErrorsList, handleSearchParams } from '~/utils/misc';
 import { SearchSchema } from '~/utils/fieldValidation';
 import { DialogCheckboxFilters } from '~/components/UI/DialogCheckboxFilters';
 import { gameTitle, filterOptions } from '~/utils/constants';
+import { SelectSort } from '~/components/UI/Select';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -90,15 +91,21 @@ async function fetchDealsCheapShark(
   maxAge?: string,
   metacritic?: string,
   steamRating?: string,
-  steamworks?: string,
-  AAA?: string
+  // steamworks?: string,
+  AAA?: string,
+  sortBy?: string,
+  desc?: string
+
 ): Promise<Deals> {
   const requestOptions = {
     method: 'GET',
   };
 
-  // determines whether the respective filter is applied. If so, add it as a query param to the cheapshark api endpoint
+  // For search
   const includeGameTitle = gameTitle ? `&title=${gameTitle}` : ''
+  
+  // determines whether the respective filter is applied. If so, add it as a query param to the cheapshark api endpoint
+  // For Filter
   const includeStoreID = storeID ? `&storeID=${storeID}` : ''
   const includeLowerPrice = lowerPrice ? `&lowerPrice=${lowerPrice}` : '';
   const includeUpperPrice = upperPrice ? `&upperPrice=${upperPrice}` : '';
@@ -106,13 +113,15 @@ async function fetchDealsCheapShark(
   const includeMaxAge = maxAge ? `&maxAge=${maxAge}` : '';
   const includeMetacritic = metacritic ? `&metacritic=${metacritic}` : '';
   const includeSteamRating = steamRating ? `&steamRating=${steamRating}` : '';
-  const includeSteamworks = steamworks ? `&steamworks=${steamworks}` : '';
+  // const includeSteamworks = steamworks ? `&steamworks=${steamworks}` : '';
   const includeAAA = AAA ? `&AAA=${AAA}` : '';
 
-console.log(includeSteamRating)
+  // For sort
+  const includeSortBy = sortBy ? `&sortBy=${sortBy}` : '';
+  const includeDesc = desc ? `&desc=${desc}` : '';
 
   const response = await fetch(
-    `https://www.cheapshark.com/api/1.0/deals?pageNumber=${pageNum}&pageSize=${pageSize}${includeGameTitle}${includeStoreID}${includeLowerPrice}${includeUpperPrice}${includeOnSale}${includeMaxAge}${includeMetacritic}${includeSteamRating}${includeSteamworks}${includeAAA}`,
+    `https://www.cheapshark.com/api/1.0/deals?pageNumber=${pageNum}&pageSize=${pageSize}${includeGameTitle}${includeStoreID}${includeLowerPrice}${includeUpperPrice}${includeOnSale}${includeMaxAge}${includeMetacritic}${includeSteamRating}${includeAAA}${includeSortBy}${includeDesc}`,
     requestOptions
   );
 
@@ -129,34 +138,34 @@ console.log(includeSteamRating)
   return listOfDeals;
 }
 
-// gameTitle can be any string; doesnn't need to fully match a game title from the api
-async function fetchGameCheapShark(
-  gameTitle: string,
-  pageNum: number,
-  pageSize: number,
+// // gameTitle can be any string; doesnn't need to fully match a game title from the api
+// async function fetchGameCheapShark(
+//   gameTitle: string,
+//   pageNum: number,
+//   pageSize: number,
   
-): Promise<any> {
-  const requestOptions = {
-    method: 'GET',
-  };
+// ): Promise<any> {
+//   const requestOptions = {
+//     method: 'GET',
+//   };
 
-  const response = await fetch(
-    `https://www.cheapshark.com/api/1.0/deals?onSale=0&title=${gameTitle}&pageNumber=${pageNum}&pageSize=${pageSize}`,
-    requestOptions
-  );
+//   const response = await fetch(
+//     `https://www.cheapshark.com/api/1.0/deals?onSale=0&title=${gameTitle}&pageNumber=${pageNum}&pageSize=${pageSize}`,
+//     requestOptions
+//   );
 
-  if (!response.ok) {
-    if (response.status === 429) {
-      // console.log("Retry-After", response.headers.get('Retry-After'))
-      throw new Error('Rate limit reached. Try again later');
-    }
-    throw new Error('Failed to fetch game deals');
-  }
+//   if (!response.ok) {
+//     if (response.status === 429) {
+//       // console.log("Retry-After", response.headers.get('Retry-After'))
+//       throw new Error('Rate limit reached. Try again later');
+//     }
+//     throw new Error('Failed to fetch game deals');
+//   }
 
-  const game = await response.json();
+//   const game = await response.json();
 
-  return game;
-}
+//   return game;
+// }
 
 export async function loader({ request }: LoaderFunctionArgs) {
   // for infitine scroll
@@ -176,10 +185,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const steamRatingFilter = url.searchParams.get(filterOptions.steamRating) || '';
   // const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
   const aaaFilter = url.searchParams.get(filterOptions.AAA) || '';
+  // get sort params (sort gives what to sort by, desc says whether to sort descending (0) or ascending (1))
+  const sortBy = url.searchParams.get("sortBy") || ''
+  const desc = url.searchParams.get("desc") || ''
+
 
   // create url to check whether user uses search
 
-  const gameDeals = await fetchDealsCheapShark(INITIAL_PAGE, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter);
+  const gameDeals = await fetchDealsCheapShark(INITIAL_PAGE, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter, sortBy, desc);
 
   const stores = await fetchStoresCheapShark();
 
@@ -211,10 +224,14 @@ export async function action({ request }: ActionFunctionArgs) {
   const steamRatingFilter = url.searchParams.get(filterOptions.steamRating) || '';
   // const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
   const aaaFilter = url.searchParams.get(filterOptions.AAA) || '';
+  // get sort params (sort gives what to sort by, desc says whether to sort descending (0) or ascending (1))
+  const sortBy = url.searchParams.get("sortBy") || ''
+  const desc = url.searchParams.get("desc") || ''
+
 
   // create url to check whether user uses search
 
-  const gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter);
+  const gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter, sortBy, desc);
 
   return { gameDeals, hasMore: gameDeals.length === PAGE_SIZE };
 }
@@ -364,6 +381,9 @@ export default function HomeRoute() {
           <Button variant={"link"} onClick={() => {resetInputs('search')}}>Reset search</Button>
       </div>
       <div>
+        <SelectSort  />
+      </div>
+      <div>
         <DialogCheckboxFilters stores={stores}/>
         <Button variant={"link"} onClick={() => {resetInputs('filter')}}>Clear filters</Button>
       </div>
@@ -426,6 +446,7 @@ export default function HomeRoute() {
               <GameCardContent3>
                 <p>Deal rating: {game.dealRating}</p>
                 <p>Steam rating: {game.steamRatingPercent}%</p>
+                <p>Metacritic: {game.metacriticScore}%</p>
                 <p>Comes with steam key:%</p>
               </GameCardContent3>
               <GameCardContent4>
