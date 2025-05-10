@@ -6,6 +6,7 @@ import {
   useFetcher,
   useLocation,
   useNavigate,
+  useNavigation,
   useSearchParams,
 } from 'react-router';
 import { useLoaderData, Link, Form } from 'react-router-dom';
@@ -40,6 +41,7 @@ import { SearchSchema } from '~/utils/fieldValidation';
 import { DialogCheckboxFilters } from '~/components/UI/DialogCheckboxFilters';
 import { gameTitle, filterOptions } from '~/utils/constants';
 import { SelectSort } from '~/components/UI/Select';
+import { SkeletonCard } from '~/components/UI/Loading';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -239,6 +241,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function HomeRoute() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate()
+  const navigation = useNavigation();
   const {
     initialGames,
     stores,
@@ -249,7 +252,11 @@ export default function HomeRoute() {
   const [gameDeals, setGameDeals] = useState<Deals>(initialGames);
   // console.log('gameDeals: ', gameDeals[0]);
   const [hasMore, setHasMore] = useState(initHasMore);
-  const [isLoading, setIsLoading] = useState(false);
+  // for infinite scroll
+  const [isInfinite, setIsInfinite] = useState(false);
+  // for search, filter, sort
+  const isLoading = navigation.state === "loading" && navigation.location?.pathname === "/" &&
+  navigation.state === "loading"
   const [currentPage, setCurrentPage] = useState(0);
   // const theme: string = useOutletContext(); TODO determine if I still need theme
 
@@ -261,9 +268,9 @@ export default function HomeRoute() {
 
   // loads next set of games
   const loadNextPage = useCallback(() => {
-    if (isLoading || !hasMore || fetcher.state !== 'idle') return;
+    if (isInfinite || !hasMore || fetcher.state !== 'idle') return;
 
-    setIsLoading(true);
+    setIsInfinite(true);
     const nextPage = currentPage + 1;
 
     const formData = new FormData();
@@ -280,18 +287,18 @@ export default function HomeRoute() {
     // console.log('homeroute formdata', formData)
     fetcher.submit(formData, { method: 'POST' });
     setCurrentPage(nextPage);
-  }, [isLoading, hasMore, fetcher, currentPage]);
+  }, [isInfinite, hasMore, fetcher, currentPage]);
 
   // handles data from fetcher, appending next set of 60 games to prior list
   useEffect(() => {
-    if (fetcher.data && fetcher.state === 'idle' && isLoading) {
+    if (fetcher.data && fetcher.state === 'idle' && isInfinite) {
       const { gameDeals: newGameDeals, hasMore: moreGames } = fetcher.data;
 
       setGameDeals((prev) => [...prev, ...newGameDeals]);
       setHasMore(moreGames);
-      setIsLoading(false);
+      setIsInfinite(false);
     }
-  }, [fetcher.data, fetcher.state, isLoading]);
+  }, [fetcher.data, fetcher.state, isInfinite]);
 
   // handles search
   const location = useLocation();
@@ -303,7 +310,7 @@ export default function HomeRoute() {
   }, [location.search]);
 
   useEffect(() => {
-    if (!hasMore || isLoading) return;
+    if (!hasMore || isInfinite) return;
 
     // cleans (by disconnecting) previous observer in case it exists
     if (observeRef.current) {
@@ -312,7 +319,7 @@ export default function HomeRoute() {
 
     observeRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
+        if (entries[0].isIntersecting && hasMore && !isInfinite) {
           loadNextPage();
         }
       },
@@ -328,7 +335,7 @@ export default function HomeRoute() {
         observeRef.current.disconnect();
       }
     };
-  }, [hasMore, isLoading, loadNextPage]);
+  }, [hasMore, isInfinite, loadNextPage]);
 
   const [form] = useForm({
     id: 'gameTitle',
@@ -357,7 +364,6 @@ export default function HomeRoute() {
       <h1 className="font-bold text-center text-4xl m-0">
         Find games worth <br /> your while
       </h1>
-      <h5>(<em>At the right price</em>)</h5>
       <div>
         <Form method="GET" {...getFormProps(form)} className="flex gap-2">
           <InputWithIcon
@@ -390,86 +396,94 @@ export default function HomeRoute() {
       {gameDeals.length > 0 ? (
         gameDeals.map((game: Deal, index: number) => {
           return (
-            <GameCard
-              key={index}
-              gameId={game.gameID}
-              // handles ref observation for determining last game card; support infinite scroll
-              ref={index === gameDeals.length - 1 ? lastGameRef : null}
-            >
-              <GameCardImage
-                src={game.thumb}
-                alt={`${game.title} image`}
-              ></GameCardImage>
-              <GameCardHeader>
-                <GameCardTitle>{game.title}</GameCardTitle>
-                <GameCardDescription>
-                  <img
-                    className="h-4 w-4"
-                    src={`https://www.cheapshark.com${
-                      stores.find((o: Store) => o.storeID === game.storeID)?.[
-                        'images'
-                      ]['icon']
-                    }`}
-                    alt={`${
-                      stores.find((o: Store) => o.storeID === game.storeID)?.[
-                        'storeName'
-                      ]
-                    }'s logo`}
-                  />
-                  <p>
-                    {
-                      stores.find((o: Store) => o.storeID === game.storeID)?.[
-                        'storeName'
-                      ]
-                    }
-                  </p>
-                </GameCardDescription>
-              </GameCardHeader>
-              <GameCardSocial>
-                <UpvoteButton />
-                <DownvoteButton />
-                <CommentButton />
-                <WishlistButton />
-              </GameCardSocial>
-              <GameCardContent1>
-                <p className="">${game.salePrice} USD</p>
-                <p className="line-through text-slate-500">
-                  ${game.normalPrice}
-                </p>
-                <Badge>-{formatPercentage(game.savings)}</Badge>
-              </GameCardContent1>
-              {/* <GameCardContent2>
-              <p>{game.steamRatingCount} votes</p>
-              <p>{game.steamRatingPercent}%</p>
-              <p>{game.steamRatingText} rating</p>
-            </GameCardContent2> */}
-              <GameCardContent3>
-                <p>Deal rating: {game.dealRating}</p>
-                <p>Steam rating: {game.steamRatingPercent}%</p>
-                <p>Metacritic: {game.metacriticScore}%</p>
-                <p>Comes with steam key:%</p>
-              </GameCardContent3>
-              <GameCardContent4>
-                <Button className="z-10" variant={'default'} asChild>
-                  <Link
-                    onClick={(e) => {
-                      e.stopPropagation(); // Stops the event from bubbling up to the gamecard (let's you access the link)
-                    }}
-                    to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}
-                  >
-                    Store
-                  </Link>
-                </Button>
-              </GameCardContent4>
-            </GameCard>
+            <>
+            {isLoading ? <SkeletonCard /> : 
+                      <GameCard
+                      key={index}
+                      gameId={game.gameID}
+                      // handles ref observation for determining last game card; support infinite scroll
+                      ref={index === gameDeals.length - 1 ? lastGameRef : null}
+                    >
+                      <GameCardImage
+                        src={game.thumb}
+                        alt={`${game.title} image`}
+                      ></GameCardImage>
+                      <GameCardHeader>
+                        <GameCardTitle>{game.title}</GameCardTitle>
+                        <GameCardDescription>
+                          <img
+                            className="h-4 w-4"
+                            src={`https://www.cheapshark.com${
+                              stores.find((o: Store) => o.storeID === game.storeID)?.[
+                                'images'
+                              ]['icon']
+                            }`}
+                            alt={`${
+                              stores.find((o: Store) => o.storeID === game.storeID)?.[
+                                'storeName'
+                              ]
+                            }'s logo`}
+                          />
+                          <p>
+                            {
+                              stores.find((o: Store) => o.storeID === game.storeID)?.[
+                                'storeName'
+                              ]
+                            }
+                          </p>
+                        </GameCardDescription>
+                      </GameCardHeader>
+                      <GameCardSocial>
+                        <UpvoteButton />
+                        <DownvoteButton />
+                        <CommentButton />
+                        <WishlistButton />
+                      </GameCardSocial>
+                      <GameCardContent1>
+                        <p className="">${game.salePrice} USD</p>
+                        <p className="line-through text-slate-500">
+                          ${game.normalPrice}
+                        </p>
+                        <Badge>-{formatPercentage(game.savings)}</Badge>
+                      </GameCardContent1>
+                      {/* <GameCardContent2>
+                      <p>{game.steamRatingCount} votes</p>
+                      <p>{game.steamRatingPercent}%</p>
+                      <p>{game.steamRatingText} rating</p>
+                    </GameCardContent2> */}
+                      <GameCardContent3>
+                        <p>Deal rating: {game.dealRating}</p>
+                        <p>Steam rating: {game.steamRatingPercent}%</p>
+                        <p>Metacritic: {game.metacriticScore}%</p>
+                        <p>Comes with steam key:%</p>
+                      </GameCardContent3>
+                      <GameCardContent4>
+                        <Button className="z-10" variant={'default'} asChild>
+                          <Link
+                            onClick={(e) => {
+                              e.stopPropagation(); // Stops the event from bubbling up to the gamecard (let's you access the link)
+                            }}
+                            to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}
+                          >
+                            Store
+                          </Link>
+                        </Button>
+                      </GameCardContent4>
+                    </GameCard>
+          }
+
+            </>
           );
         })
       ) : (
         <div className="no-search-found">Sorry, no games found</div>
       )}
 
-      {(isLoading || fetcher.state !== 'idle') && (
-        <div className="loading-indicator">Loading more games...</div>
+      {(isInfinite || fetcher.state !== 'idle') && (
+        <>
+        <SkeletonCard />
+        {/* <div>Loading more games...</div> */}
+        </>
       )}
 
       {!hasMore && gameDeals.length > 0 && (
