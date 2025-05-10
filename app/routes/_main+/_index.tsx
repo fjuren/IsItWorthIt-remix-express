@@ -364,34 +364,38 @@ export default function HomeRoute() {
       <h1 className="font-bold text-center text-4xl m-0">
         Find games worth <br /> your while
       </h1>
-      <div>
-        <Form method="GET" {...getFormProps(form)} className="flex gap-2">
-          <InputWithIcon
-            key={searchParams.get('gameTitle') ?? 'empty'} // forces re-render (remix prevents re-render which would prevent the defaultValue from working when reseting search)
-            startIcon={Search}
-            name="gameTitle"
-            type="search"
-            placeholder="Search game title"
-            defaultValue={searchParams.get('gameTitle') ?? ''}
-          />
-          <Button type="submit" variant={'secondary'}>
-            Search
-          </Button>
-          <div>
-            <FormOrFieldErrorsList data={form.errors} errorID={form.errorId} />
+      <div className='flex flex-col mb-4 gap-5 w-[90%] md:items-center'>
+        <div className='flex flex-col md:flex-row'>
+          <Form method="GET" {...getFormProps(form)} className="flex flex-col md:flex-row gap-2">
+            <InputWithIcon
+              key={searchParams.get('gameTitle') ?? 'empty'} // forces re-render (remix prevents re-render which would prevent the defaultValue from working when reseting search)
+              startIcon={Search}
+              name="gameTitle"
+              type="search"
+              placeholder="Search game title"
+              defaultValue={searchParams.get('gameTitle') ?? ''}
+            />
+            <Button type="submit" variant={'secondary'}>
+              Search
+            </Button>
+            <div>
+              <FormOrFieldErrorsList data={form.errors} errorID={form.errorId} />
+            </div>
+            {
+              handleSearchParams(searchParams, [gameTitle])
+            }
+          </Form>
+          <Button className='self-end' variant={"link"} onClick={() => {resetInputs('search')}}>Reset search</Button>
+        </div>
+        <div className='flex flex-col md:flex-row gap-2'>
+          <div className='flex flex-col md:flex-row'>
+            <SelectSort  />
           </div>
-          {
-            handleSearchParams(searchParams, [gameTitle])
-          }
-        </Form>
-          <Button variant={"link"} onClick={() => {resetInputs('search')}}>Reset search</Button>
-      </div>
-      <div>
-        <SelectSort  />
-      </div>
-      <div>
-        <DialogCheckboxFilters stores={stores}/>
-        <Button variant={"link"} onClick={() => {resetInputs('filter')}}>Clear filters</Button>
+          <div className='flex flex-col md:flex-row'>
+            <DialogCheckboxFilters stores={stores}/>
+            <Button className='self-end' variant={"link"} onClick={() => {resetInputs('filter')}}>Clear filters</Button>
+          </div>
+        </div>
       </div>
       {gameDeals.length > 0 ? (
         gameDeals.map((game: Deal, index: number) => {
@@ -455,7 +459,6 @@ export default function HomeRoute() {
                         <p>Deal rating: {game.dealRating}</p>
                         <p>Steam rating: {game.steamRatingPercent}%</p>
                         <p>Metacritic: {game.metacriticScore}%</p>
-                        <p>Comes with steam key:%</p>
                       </GameCardContent3>
                       <GameCardContent4>
                         <Button className="z-10" variant={'default'} asChild>
@@ -482,7 +485,7 @@ export default function HomeRoute() {
       {(isInfinite || fetcher.state !== 'idle') && (
         <>
         <SkeletonCard />
-        {/* <div>Loading more games...</div> */}
+        <div>More games coming your way...</div>
         </>
       )}
 

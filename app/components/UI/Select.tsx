@@ -183,7 +183,7 @@ export function SelectSort() {
 
   return (
     <Select value={sortBy} onValueChange={handleSortChange}>
-      <SelectTrigger className="w-[300px]">
+      <SelectTrigger className="h-10">
         <SelectValue placeholder={sortOptions.DealRating.id} />
       </SelectTrigger>
       <SelectContent>

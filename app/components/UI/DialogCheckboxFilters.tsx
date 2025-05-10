@@ -88,7 +88,7 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
         <Button variant="outline">Filter {searchParams.size === 0 ? '': searchParams.get('gameTitle') ? (searchParams.size - 1 === 0 ? '' : `(${searchParams.size - 1})`) : `(${searchParams.size})`}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Filter</DialogTitle>
           <DialogDescription>

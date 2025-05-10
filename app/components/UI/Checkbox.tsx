@@ -53,7 +53,7 @@ export function CheckboxConform({
         name={meta.name}
         tabIndex={-1}
         defaultValue={meta.initialValue}
-        onFocus={() => checkboxRef.current?.focus()}
+        // onFocus={() => checkboxRef.current?.focus()}
       />
       <Checkbox
         ref={checkboxRef}
