@@ -1,5 +1,8 @@
 // Throws error if user doesn't exist and redirects to login
 
+import { NavigateFunction } from "react-router";
+import { filterOptions } from "./constants";
+
 export async function requireUser(testUser: string) {
   const user = testUser;
   if (!user) {
@@ -108,3 +111,16 @@ export function handleSearchParams(
       <input key={k} type="hidden" name={k} value={v} />
     ));
 }
+
+
+export function resetInputs(inputType: 'filter' | 'search', navigate: NavigateFunction) {
+    const params = new URLSearchParams(location.search);
+    if (inputType === 'search') {
+      params.delete('gameTitle')
+    } else if (inputType === 'filter') {
+      for (const k in filterOptions) {
+        params.delete(k)
+      }
+    }
+    navigate(`?${params.toString()}`)
+  }

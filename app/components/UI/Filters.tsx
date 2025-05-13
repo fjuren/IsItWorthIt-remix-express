@@ -8,18 +8,6 @@ import { getZodConstraint, parseWithZod } from '@conform-to/zod';
 import { Stores } from '~/types/store';
 import { useState } from 'react';
 import { GameFilterSchema } from '~/utils/fieldValidation'
-import { 
-      Dialog,
-      DialogTrigger,
-      DialogContent,
-      DialogHeader,
-      DialogFooter,
-      DialogTitle,
-      DialogDescription,
-      DialogClose
-
- }
- from './Dialog'
 import { Slider } from './Slider';
 import { InputWithIcon } from './InputWithIcon';
 import { Clock9Icon, DollarSignIcon, PercentIcon} from 'lucide-react';
@@ -30,7 +18,7 @@ interface FilterStoreDialogProps {
   stores: Stores;
 }
 
-export function DialogCheckboxFilters({ stores }: FilterStoreDialogProps) {
+export function Filters({ stores }: FilterStoreDialogProps) {
   const [searchParams] = useSearchParams();
 
   // Get initial params from URL
@@ -81,20 +69,49 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
     );
   };
 
+  // Show more functionality to show/hide stores in side nav. 
+  // TODO this has an issue due to rerenders when checkboxes are clicked... Might need a different implementation
+//   function StoreCheckboxList({ activeStores, storeIDs, toggleStore }) {
+//   const [showAll, setShowAll] = useState(false);
+//   const visibleCount = 5;
+
+//   return (
+//     <div className="space-y-2">
+//       {activeStores.map((store, index) => {
+//         const isChecked = storeIDs.includes(store.storeID);
+//         const isVisible = showAll || index < visibleCount;
+
+//         return isVisible ? (
+//           <div key={store.storeID} className="flex items-center space-x-2">
+//             <Checkbox
+//               checked={isChecked}
+//               onCheckedChange={() => toggleStore(store.storeID)}
+//               id={`store-checkbox-${store.storeID}`}
+//             />
+//             <Label
+//               htmlFor={`store-checkbox-${store.storeID}`}
+//               className="cursor-pointer"
+//             >
+//               {store.storeName}
+//             </Label>
+//           </div>
+//         ) : null;
+//       })}
+
+//       {
+//         <button
+//           type="button"
+//           onClick={() => setShowAll((prev) => !prev)}
+//           className="text-sm text-blue-600 hover:underline"
+//         >
+//           {showAll ? "Show less..." : "Show more..."}
+//         </button>
+//       }
+//     </div>
+//   );
+// }
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {/* handling count visible on filter button UI; ignoring count if gameTitle part of params */}
-        <Button variant="outline">Filter {searchParams.size === 0 ? '': searchParams.get('gameTitle') ? (searchParams.size - 1 === 0 ? '' : `(${searchParams.size - 1})`) : `(${searchParams.size})`}
-        </Button>
-      </DialogTrigger>
-      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Filter</DialogTitle>
-          <DialogDescription>
-            Modify your search results. Click save when you&apos;re done
-          </DialogDescription>
-        </DialogHeader>
         <Form method="get" id={form.id} onSubmit={form.onSubmit}>
         {/* Price */}
         {/* lowerPrice */}
@@ -220,6 +237,7 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
 
               {activeStores.map((store) => {
                 const isChecked = storeIDs.includes(store.storeID);
+                console.log(store)
                 return (
                   <div
                     key={store.storeID}
@@ -239,6 +257,8 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
                   </div>
                 );
               })}
+
+
             </div>
           </fieldset>
           
@@ -258,10 +278,8 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
                 </div>
             </div>
         </fieldset>
-
-          <DialogFooter>
-            <DialogClose>
-              <Button type="submit" className="mt-4">
+          <div>
+          <Button type="submit" className="w-[100%] mt-4">
                 Apply Filters
               </Button>
             {
@@ -269,10 +287,7 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
                   Object.values(filterOptions)
                 )
             }
-            </DialogClose>
-          </DialogFooter>
+          </div>
         </Form>
-      </DialogContent>
-    </Dialog>
   );
 }

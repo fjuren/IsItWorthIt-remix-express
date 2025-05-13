@@ -1,5 +1,4 @@
 import { Form, Link } from 'react-router-dom';
-import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/UI/Avatar';
 import {
   DropdownMenu,
@@ -11,6 +10,8 @@ import {
 } from '~/components/UI/DropdownMenu';
 import { Button } from './Button';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
+import { GameSearch } from './GameSearch';
+import { HamburgerMenu } from './HamburgerMenu'
 
 function ProfileDesktopMenu({ username }: { username: string }) {
   const firstLetter = username.charAt(0).toUpperCase();
@@ -66,45 +67,72 @@ function ProfileDesktopMenu({ username }: { username: string }) {
 }
 
 export function TopNav({ loggedInUser }: { loggedInUser: any }) {
-  const [open, setOpen] = useState(false);
 
   return (
     <>
       <header className="relative">
-        <nav className="h-full border-b border-black">
+        <nav className="h-full border-b border-grey">
           {/* Desktop top navigation */}
-          <ul className="hidden md:flex items-center justify-between h-16">
-            <li className="grow px-3">
+          <div className="hidden md:flex justify-items-center content-center justify-between h-16">
+            <div className="px-3 w-3/12 self-center">
               <Link to="/">Home (logo)</Link>
-            </li>
+            </div>
+            <div className='w-6/12 self-center'>
+              <GameSearch />
+            </div>
             {loggedInUser ? (
-              <li className="flex-none px-3">
+              <div className="px-3 w-3/12 self-center">
                 <ProfileDesktopMenu username={loggedInUser.username} />
                 {/* <Link to="/">{username}</Link> */}
-              </li>
+              </div>
             ) : (
               <>
-                <li className="flex-none px-3">
+              <div className='flex self-center'>
+                <div className="px-3">
                   <Link to="/signup">Sign up</Link>
-                </li>
-                <li className="flex-none px-3">
+                </div>
+                <div className="px-3">
                   <Link to="/login">Login</Link>
-                </li>
+                </div>
+              </div>
               </>
             )}
-          </ul>
+          </div>
 
           {/* Mobile top navigation */}
-          <ul className="flex md:hidden items-center justify-between h-16">
-            <button className="grow px-3" onClick={() => setOpen(!open)}>
-              Hamburger menu
-            </button>
+          <div className="flex items-center flex-row md:hidden h-16">
+            <div className='flex justify-center w-1/6'>
+              <HamburgerMenu />
+            </div>
+            <div className='flex justify-center w-4/6'>
+              <GameSearch />
+            </div>
             {loggedInUser ? (
-              <li className="flex-none px-3">
+              <div className="w-1/6 px-3">
                 <ProfileDesktopMenu username={loggedInUser.username} />
-              </li>
+              </div>
             ) : (
-              <>
+              <div className='w-1/6 '>
+                
+              </div>
+            )}
+            <div>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile menu (same as sidenav but for mobile) */}
+      {/* <aside
+        className={`md:hidden ${
+          open
+            ? 'z-10 flex flex-col w-full h-full fixed overflow-x-hidden'
+            : 'hidden'
+        } bg-inherit dark: bg-inherit
+        `}
+      >
+        <nav>
+          <ul className="flex-col ">
                 <li className="flex-none px-3">
                   <Link
                     to="/signup"
@@ -121,41 +149,9 @@ export function TopNav({ loggedInUser }: { loggedInUser: any }) {
                     Login
                   </Link>
                 </li>
-              </>
-            )}
           </ul>
         </nav>
-      </header>
-
-      {/* Mobile menu (same as sidenav but for mobile) */}
-      <aside
-        className={`md:hidden ${
-          open
-            ? 'z-10 flex flex-col w-full h-full fixed overflow-x-hidden'
-            : 'hidden'
-        } bg-inherit dark: bg-inherit
-        `}
-      >
-        <nav>
-          <ul className="flex-col ">
-            <li>
-              <Link to="/" onClick={() => setOpen(!open)}>
-                Games
-              </Link>
-            </li>
-            <li>
-              <Link to="/" onClick={() => setOpen(!open)}>
-                Placeholder
-              </Link>
-            </li>
-            <li>
-              <Link to="/" onClick={() => setOpen(!open)}>
-                Placeholder
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      </aside> */}
     </>
   );
 }
