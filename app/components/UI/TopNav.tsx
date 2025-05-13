@@ -17,7 +17,7 @@ function ProfileDesktopMenu({ username }: { username: string }) {
   const firstLetter = username.charAt(0).toUpperCase();
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-20 justify-between">
+      <DropdownMenuTrigger className="flex justify-between">
         <div>
           <Avatar>
             <AvatarImage
@@ -81,7 +81,7 @@ export function TopNav({ loggedInUser }: { loggedInUser: any }) {
               <GameSearch />
             </div>
             {loggedInUser ? (
-              <div className="px-3 w-3/12 self-center">
+              <div className="px-3 self-center">
                 <ProfileDesktopMenu username={loggedInUser.username} />
                 {/* <Link to="/">{username}</Link> */}
               </div>

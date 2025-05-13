@@ -22,7 +22,7 @@ import {
  from './Dialog'
 import { Slider } from './Slider';
 import { InputWithIcon } from './InputWithIcon';
-import { Clock9Icon, DollarSignIcon, PercentIcon} from 'lucide-react';
+import { Clock9Icon, DollarSignIcon, ListFilter, PercentIcon} from 'lucide-react';
 import { filterOptions } from '~/utils/constants';
 import { handleSearchParams } from '~/utils/misc';
 
@@ -85,7 +85,7 @@ const [AAA, setAAA] = useState<string | null>(initAAA);
     <Dialog>
       <DialogTrigger asChild>
         {/* handling count visible on filter button UI; ignoring count if gameTitle part of params */}
-        <Button variant="outline">Filter {searchParams.size === 0 ? '': searchParams.get('gameTitle') ? (searchParams.size - 1 === 0 ? '' : `(${searchParams.size - 1})`) : `(${searchParams.size})`}
+        <Button variant="outline"><ListFilter className='mr-2 size-4' /> Filter {searchParams.size === 0 ? '': searchParams.get('gameTitle') ? (searchParams.size - 1 === 0 ? '' : `(${searchParams.size - 1})`) : `(${searchParams.size})`}
         </Button>
       </DialogTrigger>
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="sm:max-w-[425px]">

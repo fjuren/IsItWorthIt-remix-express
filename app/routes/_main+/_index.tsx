@@ -180,13 +180,13 @@ export default function HomeRoute() {
 
   return (
     <>
-      <h1 className="font-bold text-center text-4xl m-0">
+      {/* <h1 className="font-bold text-center text-4xl m-0">
         Find games worth <br /> your while
-      </h1>
-      <div className='flex flex-col mb-4 gap-5 w-[96%] md:items-center'>
+      </h1> */}
+      <div className='flex flex-col pt-3 gap-5 w-[96%] max-w-[80rem] md:items-center'>
         {/* <GameSearch /> */}
-        <div className='flex flex-col md:self-start gap-2'>
-          <div className='flex flex-col'>
+        <div className='flex flex-row justify-between md:self-start gap-2'>
+          <div className='flex'>
             <SelectSort  />
           </div>
           <div className='flex flex-col md:hidden'>

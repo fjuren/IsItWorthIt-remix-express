@@ -138,7 +138,7 @@ export default function MainLayout() {
         <SideNav data={data.stores} />
       </aside>
       {/* main content */}
-      <main className="flex flex-col flex-1 items-center gap-4 overflow-auto mt-2">
+      <main className="flex flex-col flex-1 items-center gap-4 overflow-auto">
         <Outlet context={data} />
       </main>
     </>
