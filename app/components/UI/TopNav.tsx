@@ -11,7 +11,7 @@ import {
 import { Button } from './Button';
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react';
 import { GameSearch } from './GameSearch';
-import { HamburgerMenu } from './HamburgerMenu'
+import { HamburgerMenu } from './HamburgerMenu';
 
 function ProfileDesktopMenu({ username }: { username: string }) {
   const firstLetter = username.charAt(0).toUpperCase();
@@ -67,7 +67,6 @@ function ProfileDesktopMenu({ username }: { username: string }) {
 }
 
 export function TopNav({ loggedInUser }: { loggedInUser: any }) {
-
   return (
     <>
       <header className="relative">
@@ -77,7 +76,7 @@ export function TopNav({ loggedInUser }: { loggedInUser: any }) {
             <div className="px-3 w-3/12 self-center">
               <Link to="/">Home (logo)</Link>
             </div>
-            <div className='w-6/12 self-center'>
+            <div className="w-6/12 self-center">
               <GameSearch />
             </div>
             {loggedInUser ? (
@@ -87,24 +86,24 @@ export function TopNav({ loggedInUser }: { loggedInUser: any }) {
               </div>
             ) : (
               <>
-              <div className='flex self-center'>
-                <div className="px-3">
-                  <Link to="/signup">Sign up</Link>
+                <div className="flex self-center">
+                  <div className="px-3">
+                    <Link to="/signup">Sign up</Link>
+                  </div>
+                  <div className="px-3">
+                    <Link to="/login">Login</Link>
+                  </div>
                 </div>
-                <div className="px-3">
-                  <Link to="/login">Login</Link>
-                </div>
-              </div>
               </>
             )}
           </div>
 
           {/* Mobile top navigation */}
           <div className="flex items-center flex-row md:hidden h-16">
-            <div className='flex justify-center w-1/6'>
+            <div className="flex justify-center w-1/6">
               <HamburgerMenu />
             </div>
-            <div className='flex justify-center w-4/6'>
+            <div className="flex justify-center w-4/6">
               <GameSearch />
             </div>
             {loggedInUser ? (
@@ -112,12 +111,9 @@ export function TopNav({ loggedInUser }: { loggedInUser: any }) {
                 <ProfileDesktopMenu username={loggedInUser.username} />
               </div>
             ) : (
-              <div className='w-1/6 '>
-                
-              </div>
+              <div className="w-1/6 "></div>
             )}
-            <div>
-            </div>
+            <div></div>
           </div>
         </nav>
       </header>

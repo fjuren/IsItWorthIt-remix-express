@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActionFunctionArgs,
   MetaFunction,
   useFetcher,
   useLocation,
-  useNavigate,
   useNavigation,
   useOutletContext,
 } from 'react-router';
@@ -34,7 +33,6 @@ import { gameTitle, filterOptions } from '~/utils/constants';
 import { SelectSort } from '~/components/UI/Select';
 import { SkeletonCard } from '~/components/UI/Loading';
 import { fetchDealsCheapShark } from './_layout';
-import { resetInputs } from '~/utils/misc';
 
 // look at data mutations
 export const meta: MetaFunction = () => {
@@ -62,29 +60,44 @@ export async function action({ request }: ActionFunctionArgs) {
   // game keyword queried
   const gameTitleSearch = url.searchParams.get(gameTitle) || '';
   // filtered options
-  const storeIDFilter = (url.searchParams.getAll(filterOptions.storeID) || ['']).join(',');
+  const storeIDFilter = (
+    url.searchParams.getAll(filterOptions.storeID) || ['']
+  ).join(',');
   const lowerPriceFilter = url.searchParams.get(filterOptions.lowerPrice) || '';
   const upperPriceFilter = url.searchParams.get(filterOptions.upperPrice) || '';
   const onSaleFilter = url.searchParams.get(filterOptions.onlyGameSales) || '';
   const maxAgeFilter = url.searchParams.get(filterOptions.maxAge) || '';
   const metacriticFilter = url.searchParams.get(filterOptions.metacritic) || '';
-  const steamRatingFilter = url.searchParams.get(filterOptions.steamRating) || '';
+  const steamRatingFilter =
+    url.searchParams.get(filterOptions.steamRating) || '';
   // const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
   const aaaFilter = url.searchParams.get(filterOptions.AAA) || '';
   // get sort params (sort gives what to sort by, desc says whether to sort descending (0) or ascending (1))
-  const sortBy = url.searchParams.get("sortBy") || ''
-  const desc = url.searchParams.get("desc") || ''
-
+  const sortBy = url.searchParams.get('sortBy') || '';
+  const desc = url.searchParams.get('desc') || '';
 
   // create url to check whether user uses search
 
-  const gameDeals = await fetchDealsCheapShark(PAGE_NUM, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter, sortBy, desc);
+  const gameDeals = await fetchDealsCheapShark(
+    PAGE_NUM,
+    PAGE_SIZE,
+    gameTitleSearch,
+    storeIDFilter,
+    lowerPriceFilter,
+    upperPriceFilter,
+    onSaleFilter,
+    maxAgeFilter,
+    metacriticFilter,
+    steamRatingFilter,
+    aaaFilter,
+    sortBy,
+    desc
+  );
 
   return { gameDeals, hasMore: gameDeals.length === PAGE_SIZE };
 }
 
 export default function HomeRoute() {
-  const navigate = useNavigate()
   const navigation = useNavigation();
   const { initialGames, stores, initHasMore } = useOutletContext<any>();
 
@@ -95,8 +108,10 @@ export default function HomeRoute() {
   // for infinite scroll
   const [isInfinite, setIsInfinite] = useState(false);
   // for search, filter, sort
-  const isLoading = navigation.state === "loading" && navigation.location?.pathname === "/" &&
-  navigation.state === "loading"
+  const isLoading =
+    navigation.state === 'loading' &&
+    navigation.location?.pathname === '/' &&
+    navigation.state === 'loading';
   const [currentPage, setCurrentPage] = useState(0);
   // const theme: string = useOutletContext(); TODO determine if I still need theme
 
@@ -177,103 +192,110 @@ export default function HomeRoute() {
     };
   }, [hasMore, isInfinite, loadNextPage]);
 
-
   return (
     <>
       {/* <h1 className="font-bold text-center text-4xl m-0">
         Find games worth <br /> your while
       </h1> */}
-      <div className='flex flex-col pt-3 gap-5 w-[96%] max-w-[80rem] md:items-center'>
+      <div className="flex flex-col pt-3 gap-5 w-[96%] max-w-[80rem]">
         {/* <GameSearch /> */}
-        <div className='flex flex-row justify-between md:self-start gap-2'>
-          <div className='flex'>
-            <SelectSort  />
+        <div className="flex flex-row justify-between md:justify-end gap-2 ">
+          <div className="flex flex-col md:hidden">
+            <DialogFilters stores={stores} />
+            {/* <Button
+              className="self-end"
+              variant={'link'}
+              onClick={() => {
+                resetInputs('filter', navigate);
+              }}
+            >
+              Clear filters
+            </Button> */}
           </div>
-          <div className='flex flex-col md:hidden'>
-            <DialogFilters stores={stores}/>
-            <Button className='self-end' variant={"link"} onClick={() => {resetInputs('filter', navigate)}}>Clear filters</Button>
+          <div className="flex">
+            <SelectSort />
           </div>
         </div>
       </div>
       {gameDeals.length > 0 ? (
         gameDeals.map((game: Deal, index: number) => {
           return (
-            <>
-            {isLoading ? <SkeletonCard /> : 
-                      <GameCard
-                      key={index}
-                      gameId={game.gameID}
-                      // handles ref observation for determining last game card; support infinite scroll
-                      ref={index === gameDeals.length - 1 ? lastGameRef : null}
-                    >
-                      <GameCardImage
-                        src={game.thumb}
-                        alt={`${game.title} image`}
-                      ></GameCardImage>
-                      <GameCardHeader>
-                        <GameCardTitle>{game.title}</GameCardTitle>
-                        <GameCardDescription>
-                          <img
-                            className="h-4 w-4"
-                            src={`https://www.cheapshark.com${
-                              stores.find((o: Store) => o.storeID === game.storeID)?.[
-                                'images'
-                              ]['icon']
-                            }`}
-                            alt={`${
-                              stores.find((o: Store) => o.storeID === game.storeID)?.[
-                                'storeName'
-                              ]
-                            }'s logo`}
-                          />
-                          <p>
-                            {
-                              stores.find((o: Store) => o.storeID === game.storeID)?.[
-                                'storeName'
-                              ]
-                            }
-                          </p>
-                        </GameCardDescription>
-                      </GameCardHeader>
-                      <GameCardSocial>
-                        <UpvoteButton />
-                        <DownvoteButton />
-                        <CommentButton />
-                        <WishlistButton />
-                      </GameCardSocial>
-                      <GameCardContent1>
-                        <p className="">${game.salePrice} USD</p>
-                        <p className="line-through text-slate-500">
-                          ${game.normalPrice}
-                        </p>
-                        <Badge>-{formatPercentage(game.savings)}</Badge>
-                      </GameCardContent1>
-                      {/* <GameCardContent2>
+            <React.Fragment key={index}>
+              {isLoading ? (
+                <SkeletonCard />
+              ) : (
+                <GameCard
+                  gameId={game.gameID}
+                  // handles ref observation for determining last game card; support infinite scroll
+                  ref={index === gameDeals.length - 1 ? lastGameRef : null}
+                >
+                  <GameCardImage
+                    src={game.thumb}
+                    alt={`${game.title} image`}
+                  ></GameCardImage>
+                  <GameCardHeader>
+                    <GameCardTitle>{game.title}</GameCardTitle>
+                    <GameCardDescription>
+                      <img
+                        className="h-4 w-4"
+                        src={`https://www.cheapshark.com${
+                          stores.find(
+                            (o: Store) => o.storeID === game.storeID
+                          )?.['images']['icon']
+                        }`}
+                        alt={`${
+                          stores.find(
+                            (o: Store) => o.storeID === game.storeID
+                          )?.['storeName']
+                        }'s logo`}
+                      />
+                      <p>
+                        {
+                          stores.find(
+                            (o: Store) => o.storeID === game.storeID
+                          )?.['storeName']
+                        }
+                      </p>
+                    </GameCardDescription>
+                  </GameCardHeader>
+                  <GameCardSocial>
+                    <UpvoteButton />
+                    <DownvoteButton />
+                    <CommentButton />
+                    <WishlistButton />
+                  </GameCardSocial>
+                  <GameCardContent1>
+                    <p className="">${game.salePrice} USD</p>
+                    <p className="line-through text-slate-500">
+                      ${game.normalPrice}
+                    </p>
+                    <Badge>-{formatPercentage(game.savings)}</Badge>
+                  </GameCardContent1>
+                  {/* <GameCardContent2>
                       <p>{game.steamRatingCount} votes</p>
                       <p>{game.steamRatingPercent}%</p>
                       <p>{game.steamRatingText} rating</p>
                     </GameCardContent2> */}
-                      <GameCardContent3>
-                        <p>Deal rating: {game.dealRating}</p>
-                        <p>Steam rating: {game.steamRatingPercent}%</p>
-                        <p>Metacritic: {game.metacriticScore}%</p>
-                      </GameCardContent3>
-                      <GameCardContent4>
-                        <Button className="z-10" variant={'default'} asChild>
-                          <Link
-                            onClick={(e) => {
-                              e.stopPropagation(); // Stops the event from bubbling up to the gamecard (let's you access the link)
-                            }}
-                            to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}
-                          >
-                            Store
-                          </Link>
-                        </Button>
-                      </GameCardContent4>
-                    </GameCard>
-          }
-
-            </>
+                  <GameCardContent3>
+                    <p>Deal rating: {game.dealRating}</p>
+                    <p>Steam rating: {game.steamRatingPercent}%</p>
+                    <p>Metacritic: {game.metacriticScore}%</p>
+                  </GameCardContent3>
+                  <GameCardContent4>
+                    <Button className="z-10" variant={'default'} asChild>
+                      <Link
+                        onClick={(e) => {
+                          e.stopPropagation(); // Stops the event from bubbling up to the gamecard (let's you access the link)
+                        }}
+                        to={`https://www.cheapshark.com/redirect?dealID=${game.dealID}`}
+                      >
+                        Store
+                      </Link>
+                    </Button>
+                  </GameCardContent4>
+                </GameCard>
+              )}
+            </React.Fragment>
           );
         })
       ) : (
@@ -282,8 +304,8 @@ export default function HomeRoute() {
 
       {(isInfinite || fetcher.state !== 'idle') && (
         <>
-        <SkeletonCard />
-        <div>More games coming your way...</div>
+          <SkeletonCard />
+          <div>More games coming your way...</div>
         </>
       )}
 

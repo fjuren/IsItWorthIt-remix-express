@@ -5,26 +5,30 @@ import { filterOptions } from '~/utils/constants';
 import { useNavigate } from 'react-router';
 import { Filters } from './Filters';
 
-export function SideNav( storeData:any ) {
-  const navigate = useNavigate()
+export function SideNav(storeData: any) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(true);
 
-    function resetInputs(inputType: 'filter' | 'search') {
-      const params = new URLSearchParams(location.search);
-      if (inputType === 'search') {
-        params.delete('gameTitle')
-      } else if (inputType === 'filter') {
-        for (const k in filterOptions) {
-          params.delete(k)
-        }
+  function resetInputs(inputType: 'filter' | 'search') {
+    const params = new URLSearchParams(location.search);
+    if (inputType === 'search') {
+      params.delete('gameTitle');
+    } else if (inputType === 'filter') {
+      for (const k in filterOptions) {
+        params.delete(k);
       }
-      navigate(`?${params.toString()}`)
     }
+    navigate(`?${params.toString()}`);
+  }
 
   return (
     <>
       {/* Desktop side navigation */}
-      <div className={`hidden pb-20 md:flex flex-col h-full border-r border-black ${open ? 'h-screen overflow-y-auto p-3 w-80' : 'w-20'} relative`}>
+      <div
+        className={`hidden pb-20 md:flex flex-col h-full border-r border-black ${
+          open ? 'h-screen overflow-y-auto p-3 w-80' : 'w-20'
+        } relative`}
+      >
         <button className="absolute right-0" onClick={() => setOpen(!open)}>
           <svg
             width="15"
@@ -48,17 +52,19 @@ export function SideNav( storeData:any ) {
           <ul className="flex-col ">
             {open ? (
               <>
-                {/* <li>
-                  <Link to="/">Games</Link>
-                </li>
-                <li>
-                  <Link to="/">Placeholder</Link>
-                </li>
-                <li>
-                  <Link to="/">Placeholder</Link>
-                </li>{' '} */}
-                <Filters stores={storeData.data}/>
-                <Button className='self-end' variant={"link"} onClick={() => {resetInputs('filter')}}>Clear filters</Button>
+                <div className="text-lg font-semibold leading-none tracking-tight">
+                  Filter
+                </div>
+                <Button
+                  className="p-0"
+                  variant={'link'}
+                  onClick={() => {
+                    resetInputs('filter');
+                  }}
+                >
+                  Clear filters
+                </Button>
+                <Filters stores={storeData.data} />
               </>
             ) : (
               <>

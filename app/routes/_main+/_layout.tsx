@@ -46,18 +46,17 @@ export async function fetchDealsCheapShark(
   AAA?: string,
   sortBy?: string,
   desc?: string
-
 ): Promise<Deals> {
   const requestOptions = {
     method: 'GET',
   };
 
   // For search
-  const includeGameTitle = gameTitle ? `&title=${gameTitle}` : ''
-  
+  const includeGameTitle = gameTitle ? `&title=${gameTitle}` : '';
+
   // determines whether the respective filter is applied. If so, add it as a query param to the cheapshark api endpoint
   // For Filter
-  const includeStoreID = storeID ? `&storeID=${storeID}` : ''
+  const includeStoreID = storeID ? `&storeID=${storeID}` : '';
   const includeLowerPrice = lowerPrice ? `&lowerPrice=${lowerPrice}` : '';
   const includeUpperPrice = upperPrice ? `&upperPrice=${upperPrice}` : '';
   const includeOnSale = onSale ? `&onSale=${onSale}` : '';
@@ -89,7 +88,7 @@ export async function fetchDealsCheapShark(
   return listOfDeals;
 }
 
-  export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   // for infitine scroll
   const INITIAL_PAGE = 0;
   const PAGE_SIZE = 60;
@@ -98,23 +97,39 @@ export async function fetchDealsCheapShark(
   // game keyword queried
   const gameTitleSearch = url.searchParams.get(gameTitle) || '';
   // filtered options
-  const storeIDFilter = (url.searchParams.getAll(filterOptions.storeID) || ['']).join(',');
+  const storeIDFilter = (
+    url.searchParams.getAll(filterOptions.storeID) || ['']
+  ).join(',');
   const lowerPriceFilter = url.searchParams.get(filterOptions.lowerPrice) || '';
   const upperPriceFilter = url.searchParams.get(filterOptions.upperPrice) || '';
   const onSaleFilter = url.searchParams.get(filterOptions.onlyGameSales) || '';
   const maxAgeFilter = url.searchParams.get(filterOptions.maxAge) || '';
   const metacriticFilter = url.searchParams.get(filterOptions.metacritic) || '';
-  const steamRatingFilter = url.searchParams.get(filterOptions.steamRating) || '';
+  const steamRatingFilter =
+    url.searchParams.get(filterOptions.steamRating) || '';
   // const steamworksFilter = url.searchParams.get(filterOptions.steamworks) || '';
   const aaaFilter = url.searchParams.get(filterOptions.AAA) || '';
   // get sort params (sort gives what to sort by, desc says whether to sort descending (0) or ascending (1))
-  const sortBy = url.searchParams.get("sortBy") || ''
-  const desc = url.searchParams.get("desc") || ''
-
+  const sortBy = url.searchParams.get('sortBy') || '';
+  const desc = url.searchParams.get('desc') || '';
 
   // create url to check whether user uses search
 
-  const gameDeals = await fetchDealsCheapShark(INITIAL_PAGE, PAGE_SIZE, gameTitleSearch, storeIDFilter, lowerPriceFilter, upperPriceFilter, onSaleFilter, maxAgeFilter, metacriticFilter, steamRatingFilter, aaaFilter, sortBy, desc);
+  const gameDeals = await fetchDealsCheapShark(
+    INITIAL_PAGE,
+    PAGE_SIZE,
+    gameTitleSearch,
+    storeIDFilter,
+    lowerPriceFilter,
+    upperPriceFilter,
+    onSaleFilter,
+    maxAgeFilter,
+    metacriticFilter,
+    steamRatingFilter,
+    aaaFilter,
+    sortBy,
+    desc
+  );
 
   const stores = await fetchStoresCheapShark();
 
@@ -133,11 +148,11 @@ export default function MainLayout() {
   // throw new Error('Component error');
   return (
     <>
-      {/* desktop sidenav (sidenav hidden on mobile) */}
-      <aside >
+      {/* desktop sidenav (sidenav hidden on mobile) /} */}
+      <aside>
         <SideNav data={data.stores} />
       </aside>
-      {/* main content */}
+      {/* {/ main content */}
       <main className="flex flex-col flex-1 items-center gap-4 overflow-auto">
         <Outlet context={data} />
       </main>
