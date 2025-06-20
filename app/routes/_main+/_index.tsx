@@ -164,6 +164,15 @@ export default function HomeRoute() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
+  // handle time conversion of seconds; gives a count of days since timestamp
+  function getDaysSince(timestampInSeconds) {
+    const now = Date.now();
+    const timestampInMs = timestampInSeconds * 1000;
+    const diffInMs = now - timestampInMs;
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    return diffInDays;
+  }
+
   useEffect(() => {
     if (!hasMore || isInfinite) return;
 
@@ -280,6 +289,7 @@ export default function HomeRoute() {
                     <p>Deal rating: {game.dealRating}</p>
                     <p>Steam rating: {game.steamRatingPercent}%</p>
                     <p>Metacritic: {game.metacriticScore}%</p>
+                    <p>Days since sale: {getDaysSince(game.lastChange)} days</p>
                   </GameCardContent3>
                   <GameCardContent4>
                     <Button className="z-10" variant={'default'} asChild>
