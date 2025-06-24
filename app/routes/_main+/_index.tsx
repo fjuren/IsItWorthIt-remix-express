@@ -9,7 +9,7 @@ import {
 } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Badge } from '~/components/UI/Badge';
-import { CommentButton } from '~/components/UI/CommentsAndIcon';
+import { CommentButton } from '~/components/Icons/CommentsAndIcon';
 import { GeneralErrorBoundary } from '~/components/error-boundary';
 import {
   GameCard,
@@ -23,9 +23,9 @@ import {
   GameCardContent4,
 } from '~/components/UI/GameCard';
 import { Button } from '~/components/UI/Button';
-import { UpvoteButton } from '~/components/UI/UpvoteIcon';
-import { DownvoteButton } from '~/components/UI/Downvote';
-import { WishlistButton } from '~/components/UI/WishlistIcon';
+import { UpvoteButton } from '~/components/Icons/UpvoteIcon';
+import { DownvoteButton } from '~/components/Icons/Downvote';
+import { WishlistButton } from '~/components/Icons/WishlistIcon';
 import { Deal, Deals } from '~/types/deal';
 import { Store } from '~/types/store';
 import { DialogFilters } from '~/components/UI/DialogFilters';
@@ -165,7 +165,7 @@ export default function HomeRoute() {
   }, [location.search]);
 
   // handle time conversion of seconds; gives a count of days since timestamp
-  function getDaysSince(timestampInSeconds) {
+  function getDaysSince(timestampInSeconds: number) {
     const now = Date.now();
     const timestampInMs = timestampInSeconds * 1000;
     const diffInMs = now - timestampInMs;
@@ -206,7 +206,7 @@ export default function HomeRoute() {
       {/* <h1 className="font-bold text-center text-4xl m-0">
         Find games worth <br /> your while
       </h1> */}
-      <div className="flex flex-col pt-3 gap-5 w-[96%] max-w-[80rem]">
+      <div className="flex flex-col pt-3 gap-5 w-[95%] max-w-7xl mx-auto">
         {/* <GameSearch /> */}
         <div className="flex flex-row justify-between md:justify-end gap-2 ">
           <div className="flex flex-col md:hidden">
@@ -235,12 +235,13 @@ export default function HomeRoute() {
               ) : (
                 <GameCard
                   gameId={game.gameID}
+                  dealId={game.dealID}
                   // handles ref observation for determining last game card; support infinite scroll
                   ref={index === gameDeals.length - 1 ? lastGameRef : null}
                 >
                   <GameCardImage
                     src={game.thumb}
-                    alt={`${game.title} image`}
+                    alt={`${game.title}`}
                   ></GameCardImage>
                   <GameCardHeader>
                     <GameCardTitle>{game.title}</GameCardTitle>
@@ -275,7 +276,7 @@ export default function HomeRoute() {
                   </GameCardSocial>
                   <GameCardContent1>
                     <p className="">${game.salePrice} USD</p>
-                    <p className="line-through text-slate-500">
+                    <p className="text-lg text-muted-foreground line-through">
                       ${game.normalPrice}
                     </p>
                     <Badge>-{formatPercentage(game.savings)}</Badge>

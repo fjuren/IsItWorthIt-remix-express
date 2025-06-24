@@ -114,7 +114,7 @@ export function Document({ children }: { children: React.ReactNode }) {
   const theme = useOptimisticUITheme();
 
   return (
-    <html lang="en" className={theme}>
+    <html lang="en" className={`${theme} h-full`}>
       <head>
         <Meta />
         <meta charSet="utf-8" />

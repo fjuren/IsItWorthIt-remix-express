@@ -1,7 +1,7 @@
 // Throws error if user doesn't exist and redirects to login
 
-import { NavigateFunction } from "react-router";
-import { filterOptions } from "./constants";
+import { NavigateFunction } from 'react-router';
+import { filterOptions } from './constants';
 
 export async function requireUser(testUser: string) {
   const user = testUser;
@@ -96,31 +96,44 @@ export function capitalizeFirstLetter(word: string) {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
-// excludedParmakey = params that are part of the regular form submission; includedParamkey = params you wish to keep on form submit 
+// excludedParmakey = params that are part of the regular form submission; includedParamkey = params you wish to keep on form submit
 export function handleSearchParams(
   searchParams: URLSearchParams,
   excludedParamKey?: string | string[]
 ) {
   const excludedKeys = Array.isArray(excludedParamKey)
     ? excludedParamKey
-    : excludedParamKey ? [excludedParamKey] : [];
+    : excludedParamKey
+    ? [excludedParamKey]
+    : [];
 
   return Array.from(searchParams.entries())
     .filter(([k]) => !excludedKeys.includes(k))
-    .map(([k, v]) => (
-      <input key={k} type="hidden" name={k} value={v} />
-    ));
+    .map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />);
 }
 
-
-export function resetInputs(inputType: 'filter' | 'search', navigate: NavigateFunction) {
-    const params = new URLSearchParams(location.search);
-    if (inputType === 'search') {
-      params.delete('gameTitle')
-    } else if (inputType === 'filter') {
-      for (const k in filterOptions) {
-        params.delete(k)
-      }
+export function resetInputs(
+  inputType: 'filter' | 'search',
+  navigate: NavigateFunction
+) {
+  const params = new URLSearchParams(location.search);
+  if (inputType === 'search') {
+    params.delete('gameTitle');
+  } else if (inputType === 'filter') {
+    for (const k in filterOptions) {
+      params.delete(k);
     }
-    navigate(`?${params.toString()}`)
   }
+  navigate(`?${params.toString()}`);
+}
+
+export function convertToMMYYYY(unixTimeStamp: number) {
+  const convertedDate = new Date(unixTimeStamp * 1000).toLocaleDateString(
+    'en-US',
+    {
+      month: 'short',
+      year: 'numeric',
+    }
+  );
+  return convertedDate;
+}

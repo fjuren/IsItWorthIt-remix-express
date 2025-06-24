@@ -5,30 +5,30 @@ import { cn } from '~/lib/utils';
 
 interface GameCardProps extends React.HTMLAttributes<HTMLAnchorElement> {
   gameId?: string;
+  dealId?: string;
 }
 
 const GameCard = React.forwardRef<HTMLAnchorElement, GameCardProps>(
-  ({ className, gameId, ...props }, ref) => (
-    <article 
-    ref={ref}
-    className={cn(
-      'grid h-36 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4 hover:bg-secondary/40 transition-colors overflow-visible',
-      className
-    )}
-    >
-    <Link
-      to={`/games/${gameId}`}
-      onClick={() => console.log('card')}
-      // ref={ref}
+  ({ className, gameId, dealId, ...props }, ref) => (
+    <article
+      ref={ref}
       className={cn(
-        // 'grid h-36 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4 hover:bg-secondary/40 transition-colors overflow-visible',
-        'contents',
+        'grid h-36 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4 hover:bg-secondary/40 transition-colors overflow-visible',
         className
       )}
-      
-      {...props}
+    >
+      <Link
+        to={`/games/${gameId}/deals/${dealId}`}
+        onClick={() => console.log('card')}
+        // ref={ref}
+        className={cn(
+          // 'grid h-36 w-[96%] max-w-[80rem] rounded-xl border bg-card text-card-foreground shadow grid-cols-4 grid-rows-5 md:grid-cols-7 md:grid-rows-4 hover:bg-secondary/40 transition-colors overflow-visible',
+          'contents',
+          className
+        )}
+        {...props}
       />
-      </article>
+    </article>
   )
 );
 GameCard.displayName = 'GameCard';
